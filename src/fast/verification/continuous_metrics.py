@@ -1,4 +1,4 @@
-from .individual_wrappers import index_of_agreement_, pearson_p_, pearson_coef_, spearman_p_, spearman_coef_, root_mean_squared_error_, mean_squared_error_, mean_absolute_error_, index_of_agreement_
+from .individual_wrappers import index_of_agreement_, pearson_p_, pearson_coef_, spearman_p_, spearman_coef_, root_mean_squared_error_, mean_squared_error_, mean_absolute_error_, index_of_agreement_, roc_auc_score_, average_precision_score_
 from .pointwise_skill import *
 
 def index_of_agreement(X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'},  verbose=False):
@@ -24,6 +24,22 @@ def mean_squared_error(X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T'}, y_coords={'X'
 
 def mean_absolute_error(X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'},  verbose=False):
 	return pointwise_skill(X, Y, mean_absolute_error_, x_coords=x_coords, y_coords=y_coords, verbose=verbose)
+
+def area_under_roc(X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'C':'C'}, y_coords={'X':'X', 'Y':'Y', 'T':'T', 'C':'C'},  verbose=False):
+	return pointwise_skill_proba(X, Y, roc_auc_score_, x_coords=x_coords, y_coords=y_coords, verbose=verbose)
+
+def precision(X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'C':'C'}, y_coords={'X':'X', 'Y':'Y', 'T':'T', 'C':'C'},  verbose=False):
+	return pointwise_skill_proba(X, Y, average_precision_score_, x_coords=x_coords, y_coords=y_coords, verbose=verbose)
+
+def skill_proba(X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'C':'C'}, y_coords={'X':'X', 'Y':'Y', 'T':'T', 'C':'C'},  verbose=False):
+	roc = area_under_roc(X, Y, x_coords=x_coords, y_coords=y_coords,  verbose=False)
+	prec = precision(X, Y, x_coords=x_coords, y_coords=y_coords,  verbose=False)
+
+	data_vars = {
+		'roc': roc.skill_measure,
+		'precision': prec.skill_measure,
+	}
+	return xr.Dataset(data_vars, coords=roc.coords)
 
 def skill(X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'},  verbose=False):
 	ioa = index_of_agreement(X, Y,  x_coords=x_coords, y_coords=y_coords, verbose=verbose)

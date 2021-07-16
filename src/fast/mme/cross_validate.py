@@ -55,38 +55,45 @@ def validate(mme, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords=
 			print('\n{} -------------Start Validation Window {} -------------'.format(dt.datetime.now(), i))
 
 		hindcasts.append( [])
-
-		if str(rescale_y).upper() == 'NORMAL':
-			scaler_y = NormalScaler(**kwargs)
-			scaler_y.fit(Y, y_coords, verbose=verbose)
-			y_train[i] = scaler_y.transform(y_train[i], y_coords, verbose=verbose)
-			y_test[i] = scaler_y.transform(y_test[i], y_coords, verbose=verbose)
-		elif str(rescale_y).upper() == 'MINMAX':
-			scaler_y = MinMaxScaler(**kwargs)
-			scaler_y.fit(Y, y_coords, verbose=verbose)
-			y_train[i] = scaler_y.transform(y_train[i], y_coords, verbose=verbose)
-			y_test[i] = scaler_y.transform(y_test[i], y_coords, verbose=verbose)
+		if 'Prob' not in mme:
+			if str(rescale_y).upper() == 'NORMAL':
+				scaler_y = NormalScaler(**kwargs)
+				scaler_y.fit(Y, y_coords, verbose=verbose)
+				y_train = scaler_y.transform(y_train, y_coords, verbose=verbose)
+				y_test = scaler_y.transform(y_test, y_coords, verbose=verbose)
+			elif str(rescale_y).upper() == 'MINMAX':
+				scaler_y = MinMaxScaler(**kwargs)
+				scaler_y.fit(Y, y_coords, verbose=verbose)
+				y_train = scaler_y.transform(y_train, y_coords, verbose=verbose)
+				y_test = scaler_y.transform(y_test, y_coords, verbose=verbose)
+			else:
+				pass
 		else:
+			#scaler_y = ProbabilisticScaler(**kwargs)
+			#scaler_y.fit(Y, y_coords, verbose=verbose)
+			#y_train = scaler_y.transform(y_train, y_coords, verbose=verbose)
+			#y_test = scaler_y.transform(y_test, y_coords, verbose=verbose)
+			y_coords['C'] = 'C'
 			pass
 
 		if str(rescale_x).upper() == 'NORMAL':
 			scaler_x = NormalScaler(**kwargs)
 			scaler_x.fit(X, x_coords, verbose=verbose)
-			x_train[i] = scaler_x.transform(x_train[i], x_coords, verbose=verbose)
-			x_test[i] = scaler_x.transform(x_test[i], x_coords, verbose=verbose)
+			x_train = scaler_x.transform(x_train, x_coords, verbose=verbose)
+			x_test = scaler_x.transform(x_test, x_coords, verbose=verbose)
 		elif str(rescale_x).upper() == 'MINMAX':
 			scaler_x = MinMaxScaler(**kwargs)
 			scaler_x.fit(X, x_coords, verbose=verbose)
-			x_train[i] = scaler_x.transform(x_train[i], x_coords, verbose=verbose)
-			x_test[i] = scaler_x.transform(x_test[i], x_coords, verbose=verbose)
+			x_train = scaler_x.transform(x_train, x_coords, verbose=verbose)
+			x_test = scaler_x.transform(x_test, x_coords, verbose=verbose)
 		else:
 			pass
 
 		if pca_x:
 			pca_x = PrincipalComponents(**kwargs)
-			pca_x.fit(x_train[i], x_coords, verbose=verbose)
-			x_train[i] = pca_x.transform(x_train[i], x_coords, verbose=verbose)
-			x_test[i] = pca_x.transform(x_test[i], x_coords, verbose=verbose)
+			pca_x.fit(x_train, x_coords, verbose=verbose)
+			x_train = pca_x.transform(x_train, x_coords, verbose=verbose)
+			x_test = pca_x.transform(x_test, x_coords, verbose=verbose)
 
 		for j in range(nd):
 			count += 1
@@ -97,10 +104,15 @@ def validate(mme, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords=
 			val_mme = mme_codes[mme](**kwargs)
 			val_mme.fit(x_train, y_train, x_coords=x_coords, y_coords=y_coords, rescale_x='NONE', rescale_y='NONE', pca_x=False, verbose=verbose)
 			#train = val_mme.predict(x_train, x_coords=x_coords, verbose=verbose)
-			val = val_mme.predict(x_test, x_coords=x_coords, verbose=verbose)
-			if scaler_y is not None:
-			#	train = scaler_y.inverse_transform(train, x_coords, verbose=verbose)
-				val = scaler_y.inverse_transform(val, x_coords, verbose=verbose)
+			if 'Prob' not in mme:
+				val = val_mme.predict(x_test, x_coords=x_coords, verbose=verbose)
+				if scaler_y is not None:
+				#	train = scaler_y.inverse_transform(train, x_coords, verbose=verbose)
+					val = scaler_y.inverse_transform(val, x_coords, verbose=verbose)
+			else:
+				val = val_mme.predict(x_test, x_coords=x_coords, verbose=verbose)
+
+
 			varname = [iii for iii in val.data_vars][0]
 			hindcasts[i-1].append(getattr(val, varname).values)
 		hindcasts[i - 1] = np.asarray(hindcasts[i-1])
@@ -109,39 +121,70 @@ def validate(mme, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords=
 	if verbose == 1:
 		print('{} {} Validation for {}: ['.format(dt.datetime.now(), method.upper(), mme) + '*'*25 + '] 100% ({}/{})'.format( total, total) )
 
-	hindcasts = np.concatenate(hindcasts, axis=-1)
+	if 'Prob' not in mme:
+		hindcasts = np.concatenate(hindcasts, axis=-1)
 
-	coords = {
-		x_coords['X']:X.coords[x_coords['X']].values,
-		x_coords['Y']:X.coords[x_coords['Y']].values,
-		x_coords['T']:X.coords[x_coords['T']].values,
-	}
+		coords = {
+			x_coords['X']:X.coords[x_coords['X']].values,
+			x_coords['Y']:X.coords[x_coords['Y']].values,
+			x_coords['T']:X.coords[x_coords['T']].values,
+		}
 
-	x_coords_slice = {'X': x_coords['X'], 'Y': x_coords['Y'], 'T':x_coords['T']}
-	y_coords_slice = {'X': y_coords['X'], 'Y': y_coords['Y'], 'T':y_coords['T']}
+		x_coords_slice = {'X': x_coords['X'], 'Y': x_coords['Y'], 'T':x_coords['T']}
+		y_coords_slice = {'X': y_coords['X'], 'Y': y_coords['Y'], 'T':y_coords['T']}
 
-	iseldict = {x_coords['M']: 0}
-	preds = xr.Dataset({'predictions': ([ x_coords['Y'], x_coords['X'], x_coords['T']], np.nanmean(hindcasts, axis=0))}, coords=coords)
-	ioa = index_of_agreement(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
-	pearson_coef = pearson_coefficient(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
-	pearson_p = pearson_significance(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
-	spearman_coef = spearman_coefficient(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
-	spearman_p = spearman_significance(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
-	rmse = root_mean_squared_error(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
-	mse = mean_squared_error(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
-	mae = mean_absolute_error(preds, Y, x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
+		iseldict = {x_coords['M']: 0}
+		preds = xr.Dataset({'predictions': ([ x_coords['Y'], x_coords['X'], x_coords['T']], np.nanmean(hindcasts, axis=0))}, coords=coords)
+		ioa = index_of_agreement(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
+		pearson_coef = pearson_coefficient(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
+		pearson_p = pearson_significance(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
+		spearman_coef = spearman_coefficient(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
+		spearman_p = spearman_significance(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
+		rmse = root_mean_squared_error(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
+		mse = mean_squared_error(preds, Y,  x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
+		mae = mean_absolute_error(preds, Y, x_coords=x_coords_slice, y_coords=y_coords_slice, verbose=verbose).skill_measure.isel(**iseldict)
 
-	data_vars = {
-		'hindcasts': ([x_coords['Y'], x_coords['X'], x_coords['T']], np.nanmean(hindcasts, axis=0)), # axis = 1 takes mean over ND
-		'index_of_agreement': ([x_coords['Y'], x_coords['X']], ioa),
-		'pearson_coefficient': ([x_coords['Y'], x_coords['X']], pearson_coef),
-		'pearson_significance': ([x_coords['Y'], x_coords['X']], pearson_p),
-		'spearman_coefficient': ([x_coords['Y'], x_coords['X']], spearman_coef),
-		'spearman_significance': ([x_coords['Y'], x_coords['X']], spearman_p),
-		'mean_absolute_error': ([x_coords['Y'], x_coords['X']], mae),
-		'mean_squared_error': ([x_coords['Y'], x_coords['X']], mse),
-		'root_mean_squared_error': ([x_coords['Y'], x_coords['X']], rmse)
-	}
+		data_vars = {
+			'hindcasts': ([x_coords['Y'], x_coords['X'], x_coords['T']], np.nanmean(hindcasts, axis=0)), # axis = 1 takes mean over ND
+			'index_of_agreement': ([x_coords['Y'], x_coords['X']], ioa),
+			'pearson_coefficient': ([x_coords['Y'], x_coords['X']], pearson_coef),
+			'pearson_significance': ([x_coords['Y'], x_coords['X']], pearson_p),
+			'spearman_coefficient': ([x_coords['Y'], x_coords['X']], spearman_coef),
+			'spearman_significance': ([x_coords['Y'], x_coords['X']], spearman_p),
+			'mean_absolute_error': ([x_coords['Y'], x_coords['X']], mae),
+			'mean_squared_error': ([x_coords['Y'], x_coords['X']], mse),
+			'root_mean_squared_error': ([x_coords['Y'], x_coords['X']], rmse)
+		}
+
+	else:
+		hindcasts = np.concatenate(hindcasts, axis=-2)
+
+		coords = {
+			'C': [0, 1, 2],
+			x_coords['X']:X.coords[x_coords['X']].values,
+			x_coords['Y']:X.coords[x_coords['Y']].values,
+			x_coords['T']:X.coords[x_coords['T']].values,
+		}
+
+		x_coords_slice = {'X': x_coords['X'], 'Y': x_coords['Y'], 'C':'C', 'T':x_coords['T']}
+		y_coords_slice = {'X': y_coords['X'], 'Y': y_coords['Y'], 'C':'C', 'T':y_coords['T']}
+
+		iseldict = {x_coords['M']: 0}
+		print()
+		scaler_y = ProbabilisticScaler(**kwargs)
+		scaler_y.fit(Y, y_coords, verbose=verbose)
+		Y2 = scaler_y.transform(Y, y_coords, verbose=verbose)
+		preds = xr.Dataset({'predictions': ([ x_coords['Y'], x_coords['X'], x_coords['T'], 'C' ], np.nanmean(hindcasts, axis=0))}, coords=coords)
+		prec = precision(preds, Y2, x_coords=x_coords_slice, y_coords=y_coords_slice,  verbose=verbose).skill_measure
+		roc = area_under_roc(preds, Y2, x_coords=x_coords_slice, y_coords=y_coords_slice,  verbose=verbose).skill_measure
+		#prec = precision(preds, Y, x_coords=x_coords_slice, y_coords=y_coords_slice,  verbose=False).skill_measure
+
+		data_vars = {
+			'hindcasts': ([x_coords['Y'], x_coords['X'], x_coords['T'], 'C'], np.nanmean(hindcasts, axis=0)), # axis = 1 takes mean over ND
+			'area_under_roc': ([x_coords['Y'], x_coords['X'], 'C'], roc),
+			'precision': ([x_coords['Y'], x_coords['X'], 'C'], prec),
+		}
+
 
 	return xr.Dataset(data_vars, coords=coords)
 

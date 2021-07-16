@@ -2,6 +2,60 @@ from ..core.data_validation import *
 from ..core.utilities import *
 import datetime as dt
 
+def pointwise_skill_proba(X, Y, skill_func, x_coords={'X':'X', 'Y':'Y', 'T':'T'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False):
+	if 'C' not in x_coords.keys():
+		x_coords['C'] = 'C'
+	if 'C' not in y_coords.keys():
+		y_coords['C'] = 'C'
+	X = standardize_dims(X, x_coords, verbose=verbose)
+	Y = standardize_dims(Y, y_coords, verbose=verbose)
+	x_coords_slice = {'X':x_coords['X'], 'Y':x_coords['Y'], 'T':x_coords['T']}
+	y_coords_slice = {'X':y_coords['X'], 'Y':y_coords['Y'], 'T':y_coords['T']}
+
+	check_same_shape(X, Y, x_coords=x_coords_slice, y_coords=y_coords_slice)
+
+	X = X.transpose(x_coords['Y'], x_coords['X'], x_coords['T'], x_coords['C'], )
+	Y = Y.transpose(y_coords['Y'], y_coords['X'], y_coords['T'], y_coords['C'], )
+	xvarname, yvarname = [i for i in X.data_vars][0], [i for i in Y.data_vars][0]
+
+	count=0
+	if verbose > 1:
+		total =  len(X.coords[x_coords['Y']].values) * len(X.coords[x_coords['X']].values)
+		print('{} PointWiseSkill Eval for {}: ['.format(dt.datetime.now(), skill_func.__name__) + '*'*int(25 * count / total) + ' '*int(25 * (1 - (count/total))) +'] {}% ({}/{})'.format(int(count/total*100), count, total) , end='\r')
+
+	x_data = getattr(X, xvarname).values
+	y_data = getattr(Y, yvarname).values
+
+	results = []
+	for i in range(x_data.shape[0]):
+		values = []
+		for j in range(x_data.shape[1]):
+			#isel_x_dict = {x_coords['M']: ii, x_coords['X']: i, x_coords['Y']: j}
+			#isel_y_dict = { y_coords['X']: i, y_coords['Y']: j}
+			x_train = x_data[i, j, :, :]#getattr(X, xvarname).isel(**isel_x_dict).values.reshape((len(X.coords[x_coords['T']].values), 1))
+			y_train = y_data[i, j, :, :]# getattr(Y, yvarname).isel(**isel_y_dict).values.reshape((len(Y.coords[y_coords['T']].values), 1))
+
+			if np.sum(np.isnan(y_train)) > 0 or np.sum(np.isnan(x_train)) > 0:
+				values.append(np.nan)
+			else:
+				val = skill_func(y_train, x_train)
+				values.append(val)
+			count += 1
+			if verbose > 1:
+				print('{} PointWiseSkill Eval for {}: ['.format(dt.datetime.now(), skill_func.__name__) + '*'*int(25 * count / total) + ' '*int(25 * (1 - (count/total))) +'] {}% ({}/{})'.format(int(count/total*100), count, total) , end='\r')
+		res = np.asarray(values)
+		results.append(res)
+	results = np.asarray(results)
+	if verbose > 1:
+		print('{} PointWiseSkill Eval for {}: ['.format(dt.datetime.now(), skill_func.__name__) + '*'*25 +'] 100% ({}/{})'.format( total, total))
+	data_vars = {'skill_measure': ([x_coords['Y'], x_coords['X'], x_coords['C'] ], results)}
+
+	coords = {
+		x_coords['C']: X.coords[x_coords['C']],
+		x_coords['X']: X.coords[x_coords['X']],
+		x_coords['Y']: X.coords[x_coords['Y']]
+	}
+	return xr.Dataset(data_vars, coords=coords)
 
 def pointwise_skill(X, Y, skill_func, x_coords={'X':'X', 'Y':'Y', 'T':'T'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False):
 	if 'M' not in x_coords.keys():

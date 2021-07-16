@@ -8,10 +8,23 @@ class ExtremeLearningMachine:
 		self.kwargs = kwargs
 		self.kwargs['hidden_layer_neurons'] = hidden_layer_neurons
 		self.kwargs['activation'] = activation
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
 		self.model.fit(X, Y, ELM_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
+
+	def predict(self, X, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, verbose=False, fill='mean'):
+		return self.model.predict( X, x_coords=x_coords, verbose=verbose, fill=fill)
+
+class ExtremeLearningMachineProba:
+	def __init__(self, hidden_layer_neurons=5, activation='sigm', **kwargs):
+		self.kwargs = kwargs
+		self.kwargs['hidden_layer_neurons'] = hidden_layer_neurons
+		self.kwargs['activation'] = activation
+		self.model = ProbabilisticPointWiseMME(**self.kwargs)
+
+	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
+		self.model.fit(X, Y, ELM_Prob_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill, one_hot=True)
 
 	def predict(self, X, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, verbose=False, fill='mean'):
 		return self.model.predict( X, x_coords=x_coords, verbose=verbose, fill=fill)
@@ -22,7 +35,7 @@ class ELM_PCA:
 		self.kwargs['hidden_layer_neurons'] = hidden_layer_neurons
 		self.kwargs['activation'] = activation
 		self.kwargs['n_components'] = n_components
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=True, fill='mean'):
 		self.model.fit(X, Y, ELM_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
@@ -30,10 +43,24 @@ class ELM_PCA:
 	def predict(self, X, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, verbose=False, fill='mean'):
 		return self.model.predict( X, x_coords=x_coords, verbose=verbose, fill=fill)
 
+class ELM_PCA_Proba:
+	def __init__(self, hidden_layer_neurons=5, activation='sigm', n_components=1, **kwargs):
+		self.kwargs = kwargs
+		self.kwargs['hidden_layer_neurons'] = hidden_layer_neurons
+		self.kwargs['activation'] = activation
+		self.kwargs['n_components'] = n_components
+		self.model = ProbabilisticPointWiseMME(**self.kwargs)
+
+	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=True, fill='mean'):
+		self.model.fit(X, Y, ELM_Prob_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill, one_hot=True)
+
+	def predict(self, X, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, verbose=False, fill='mean'):
+		return self.model.predict( X, x_coords=x_coords, verbose=verbose, fill=fill)
+
 class EnsembleMean:
 	def __init__(self, **kwargs):
 		self.kwargs = kwargs
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NONE', rescale_y='NONE', pca_x=False, fill='mean'):
 		self.model.fit(X, Y, EnsembleMean_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
@@ -44,7 +71,7 @@ class EnsembleMean:
 class BiasCorrectedEnsembleMean:
 	def __init__(self, **kwargs):
 		self.kwargs = kwargs
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
 		self.model.fit(X, Y, EnsembleMean_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
@@ -55,7 +82,7 @@ class BiasCorrectedEnsembleMean:
 class MultipleLinearRegression:
 	def __init__(self, **kwargs):
 		self.kwargs = kwargs
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
 		self.model.fit(X, Y, LinearRegression_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
@@ -67,7 +94,7 @@ class ModelPCR:
 	def __init__(self, n_components=1,  **kwargs):
 		self.kwargs = kwargs
 		self.kwargs['n_components'] = n_components
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=True, fill='mean'):
 		self.model.fit(X, Y, LinearRegression_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
@@ -80,7 +107,7 @@ class SpatialPCR:
 		self.kwargs = kwargs
 		self.kwargs['n_components'] = n_components
 		self.n_components = n_components
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='None', rescale_y='NORMAL', pca_x=True, fill='mean'):
 		self.spatial_pca = SpatialPrincipalComponents(n_components=self.n_components)
@@ -141,7 +168,7 @@ class SM_PCR:
 		self.kwargs = kwargs
 		self.kwargs['n_components'] = n_components
 		self.n_components = n_components
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='None', rescale_y='NORMAL', pca_x=True, fill='mean'):
 		self.spatial_pca = SpatioModelPrincipalComponents(n_components=self.n_components)
@@ -162,7 +189,7 @@ class SM_PCR:
 class MultiLayerPerceptron:
 	def __init__(self, **kwargs):
 		self.kwargs = kwargs
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
 		self.model.fit(X, Y, MLPRegressor_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
@@ -170,11 +197,23 @@ class MultiLayerPerceptron:
 	def predict(self, X, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, verbose=False, fill='mean'):
 		return self.model.predict( X, x_coords=x_coords, verbose=verbose, fill=fill)
 
+class MultiLayerPerceptronProba:
+	def __init__(self, **kwargs):
+		self.kwargs = kwargs
+		self.model = ProbabilisticPointWiseMME(**self.kwargs)
+
+	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
+		self.model.fit(X, Y, MLPClassifier_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
+
+	def predict(self, X, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, verbose=False, fill='mean'):
+		return self.model.predict( X, x_coords=x_coords, verbose=verbose, fill=fill)
+
+
 
 class RandomForest:
 	def __init__(self, **kwargs):
 		self.kwargs = kwargs
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
 		self.model.fit(X, Y, RandomForestRegressor_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
@@ -182,11 +221,23 @@ class RandomForest:
 	def predict(self, X, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, verbose=False, fill='mean'):
 		return self.model.predict( X, x_coords=x_coords, verbose=verbose, fill=fill)
 
+class RandomForestProba:
+	def __init__(self, **kwargs):
+		self.kwargs = kwargs
+		self.model = ProbabilisticPointWiseMME(**self.kwargs)
+
+	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
+		self.model.fit(X, Y, RandomForestClassifier_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
+
+	def predict(self, X, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, verbose=False, fill='mean'):
+		return self.model.predict( X, x_coords=x_coords, verbose=verbose, fill=fill)
+
+
 
 class RidgeRegressor:
 	def __init__(self, **kwargs):
 		self.kwargs = kwargs
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
 		self.model.fit(X, Y, Ridge_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
@@ -197,7 +248,7 @@ class RidgeRegressor:
 class SingularValueDecomposition:
 	def __init__(self, **kwargs):
 		self.kwargs = kwargs
-		self.model = PointWiseMME(**self.kwargs)
+		self.model = DeterministicPointWiseMME(**self.kwargs)
 
 	def fit(self, X, Y, x_coords={'X':'X', 'Y':'Y', 'T':'T', 'M':'M'}, y_coords={'X':'X', 'Y':'Y', 'T':'T'}, verbose=False, rescale_x='NORMAL', rescale_y='NORMAL', pca_x=False, fill='mean'):
 		self.model.fit(X, Y, SVDRegressor_, x_coords=x_coords, y_coords=y_coords, verbose=verbose, rescale_x=rescale_x, rescale_y=rescale_y, pca_x=pca_x, fill=fill)
@@ -206,6 +257,7 @@ class SingularValueDecomposition:
 		return self.model.predict( X, x_coords=x_coords, verbose=verbose, fill=fill)
 
 mme_codes = {
+	# Deterministic
 	'ELM':ExtremeLearningMachine,
 	'ELMPCA': ELM_PCA,
 	'EM': EnsembleMean,
@@ -219,4 +271,11 @@ mme_codes = {
 	'SPCR': SpatialPCR,
 	'SM_PCR': SM_PCR,
 	'CNN': ConvolutionalNeuralNetwork,
+
+	# Probabilistic
+	'ProbMLP': MultiLayerPerceptronProba,
+	'ProbRF': RandomForestProba,
+	'ProbCNN': ConvolutionalNeuralNetworkProba,
+	'ProbELM':ExtremeLearningMachineProba,
+	'ProbELMPCA': ELM_PCA_Proba
 }
