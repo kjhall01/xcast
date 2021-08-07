@@ -24,7 +24,7 @@ class BaseSpatialMME:
 		self.model_type = LinearRegression
 
 	def fit(self, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', lat_chunks=1, lon_chunks=1,  feat_chunks=1, samp_chunks=1,an_thresh=None, bn_thresh=None, verbose=False ):
-		self.normx = Normal()
+		self.normx = SpaceNormal()
 		self.normx.fit(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.normx.transform(X.isel(), x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
@@ -42,7 +42,7 @@ class BaseSpatialMME:
 		self.total = Y1.shape[list(Y1.dims).index(y_lat_dim)]* Y1.shape[list(Y1.dims).index(y_lon_dim)]
 		self.count = 0
 		if verbose:
-			self.prog = ProgressBar(self.total, label='Fitting SPCR:', step=1)
+			self.prog = ProgressBar(self.total, label='Fitting:', step=1)
 			self.prog.show(self.count)
 
 		self.y_coords = Y1.coords
@@ -64,6 +64,8 @@ class BaseSpatialMME:
 
 	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M',  lat_chunks=1, lon_chunks=1,  feat_chunks=1, samp_chunks=1, verbose=False ):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+		self.normx = SpaceNormal()
+		self.normx.fit(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.normx.transform(X.isel(), x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
 		X1 = self.pca.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim, verbose=verbose)

@@ -132,7 +132,6 @@ class SpatialPCA:
 			self.sample_dim: X1.coords[x_sample_dim].values,
 			self.feature_dim: X1.coords[x_feature_dim].values
 		}
-
 		dims = [ self.feature_dim, self.sample_dim, self.lat_dim, self.lon_dim]
 		return xr.DataArray(data=results, coords=coords, dims=dims)
 
@@ -140,6 +139,7 @@ class SpatialPCA:
 	def _apply_transform_to_chunk(self, X1, feat_ndx_low, samp_ndx_low, x_lat_dim='Y', x_lon_dim='X', verbose=False):
 		x_data = X1.values
 		results = []
+		print(x_data.shape)
 		for i in range(x_data.shape[0]):
 			results.append([])
 			for j in range(x_data.shape[1]):
@@ -161,7 +161,7 @@ class SpatialPCA:
 			results = np.expand_dims(results, 0)
 		if len(results.shape) < 4 and x_data.shape[1] == 1:
 			results = np.expand_dims(results, 1)
-
+		print(results.shape)
 		assert len(results.shape) == 4, 'Must be Feat x Samp x Mode x Fake Long'
 
 		if self.use_dask:
@@ -206,7 +206,7 @@ class SpatialPCA:
 
 
 
-def regrid(X, lats, lons, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', use_dask=False, feat_chunks=1, samp_chunks=1 ):
+def regrid(X, lons, lats, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', use_dask=False, feat_chunks=1, samp_chunks=1 ):
 	check_all(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
 	X1 = fill_space_mean(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim )
 	X1 = X1.chunk({x_feature_dim: max(X.shape[list(X.dims).index(x_feature_dim)] // feat_chunks, 1), x_sample_dim: max(X.shape[list(X.dims).index(x_sample_dim)] // samp_chunks, 1) }).transpose(x_feature_dim, x_sample_dim, x_lat_dim, x_lon_dim)
@@ -236,17 +236,23 @@ def regrid(X, lats, lons, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feat
 		hdf.close()
 		hdf = h5py.File(id, 'r')
 		feature_ndx = 0
-		for i in range(len(X1.chunks[x_feature_dim])):
+		for i in range(len(X1.chunks[list(X.dims).index(x_feature_dim)])):
 			sample_ndx = 0
 			results.append([])
-			for j in range(len(X1.chunks[x_sample_dim])):
+			for j in range(len(X1.chunks[list(X.dims).index(x_sample_dim)])):
 				results[i].append(da.from_array(hdf['data_{}_{}'.format(feature_ndx, sample_ndx)]))
 				sample_ndx += X1.chunks[list(X.dims).index(x_sample_dim)][j]
 			results[i] = da.concatenate(results[i], axis=0)
 			feature_ndx += X1.chunks[list(X.dims).index(x_feature_dim)][i]
 		results = da.concatenate(results, axis=1)
-	X1 = X1.transpose(x_feature_dim, x_sample_dim, x_lon_dim, x_lat_dim)
-	return xr.DataArray(data=results, coords=X1.coords, dims=X1.dims)
+	X1 = X1.transpose(x_feature_dim, x_sample_dim, x_lat_dim, x_lon_dim)
+	coords = {
+		x_lat_dim: lats,
+		x_lon_dim: lons,
+		x_feature_dim: X1.coords[x_feature_dim].values,
+		x_sample_dim: X1.coords[x_sample_dim].values
+	}
+	return xr.DataArray(data=results, coords=coords, dims=X1.dims)
 
 
 def regrid_chunk(X, lats, lons, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', use_dask=False, hdf=None ):
@@ -270,6 +276,7 @@ def regrid_chunk(X, lats, lons, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', 
 
 
 
+
 def gaussian_smooth(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', kernel=(9,9), use_dask=False, feature_chunks=1, sample_chunks=1 ):
 	check_all(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
 	#X1 = fill_space_mean(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim )
@@ -283,14 +290,14 @@ def gaussian_smooth(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature
 
 	results, seldct = [], {}
 	feature_ndx = 0
-	for i in range(len(X1.chunks[x_feature_dim])):
+	for i in range(len(X1.chunks[list(X1.dims).index(x_feature_dim)])):
 		sample_ndx = 0
 		results.append([])
-		for j in range(len(X1.chunks[x_sample_dim])):
-			x_isel = {x_feature_dim: slice(feature_ndx, feature_ndx + X1.chunks[list(X.dims).index(x_feature_dim)][i]), x_sample_dim: slice(sample_ndx, sample_ndx + X1.chunks[list(X.dims).index(x_sample_dim)][j])}
+		for j in range(len(X1.chunks[list(X1.dims).index(x_sample_dim)])):
+			x_isel = {x_feature_dim: slice(feature_ndx, feature_ndx + X1.chunks[list(X1.dims).index(x_feature_dim)][i]), x_sample_dim: slice(sample_ndx, sample_ndx + X1.chunks[list(X1.dims).index(x_sample_dim)][j])}
 			results[i].append(gaussian_smooth_chunk(X1.isel(**x_isel), x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , use_dask=use_dask, kernel=kernel, hdf=hdf))
-			sample_ndx += X1.chunks[list(X.dims).index(x_sample_dim)][j]
-		feature_ndx += X1.chunks[list(X.dims).index(x_feature_dim)][i]
+			sample_ndx += X1.chunks[list(X1.dims).index(x_sample_dim)][j]
+		feature_ndx += X1.chunks[list(X1.dims).index(x_feature_dim)][i]
 		if not use_dask:
 			results[i] = np.concatenate(results[i], axis=1)
 	if not use_dask:
@@ -300,16 +307,16 @@ def gaussian_smooth(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature
 		hdf.close()
 		hdf = h5py.File(id, 'r')
 		feature_ndx = 0
-		for i in range(len(X1.chunks[x_feature_dim])):
+		for i in range(len(X1.chunks[list(X1.dims).index(x_feature_dim)])):
 			sample_ndx = 0
 			results.append([])
-			for j in range(len(X1.chunks[x_sample_dim])):
+			for j in range(len(X1.chunks[list(X1.dims).index(x_sample_dim)])):
 				results[i].append(da.from_array(hdf['data_{}_{}'.format(feature_ndx, sample_ndx)]))
-				sample_ndx += X1.chunks[list(X.dims).index(x_sample_dim)][j]
+				sample_ndx += X1.chunks[list(X1.dims).index(x_sample_dim)][j]
 			results[i] = da.concatenate(results[i], axis=0)
-			feature_ndx += X1.chunks[list(X.dims).index(x_feature_dim)][i]
+			feature_ndx += X1.chunks[list(X1.dims).index(x_feature_dim)][i]
 		results = da.concatenate(results, axis=1)
-	X1 = X1.transpose(x_sample_dim, x_feature_dim, x_lat_dim, x_lon_dim)
+	#X1 = X1.transpose(x_sample_dim, x_feature_dim, x_lat_dim, x_lon_dim)
 	return xr.DataArray(data=results, coords=X1.coords, dims=X1.dims)
 
 

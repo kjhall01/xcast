@@ -172,7 +172,7 @@ class BaseMME:
 			self.models.append([])
 			for j in range(self.shape['LONGITUDE']):
 				self.models[i].append(self.model_type(**self.kwargs))
-				if self.model_type in [ELR, MultipleELR]:
+				if self.model_type in [ELR, MultipleELR, ExtendedPOELM, ExtendedNB, ExtendedMultiLayerPerceptronProbabilistic]:
 					isd = { y_lat_dim: i, y_lon_dim: j}
 					self.models[i][j].bn_thresh = self.onehot.low_threshold.isel(**isd).values
 					self.models[i][j].an_thresh = self.onehot.high_threshold.isel(**isd).values
