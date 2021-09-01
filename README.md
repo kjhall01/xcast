@@ -25,7 +25,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/kjhall01/xcast/">
-    <img src="images/logo.png" alt="Logo" width="200" height="200">
+    <img src="images/logo.png" alt="Logo" width="500" height="500">
   </a>
 
   <h3 align="center">XCast: Big-Data Climate Forecasting </h3>
@@ -36,7 +36,7 @@
     <a href="https://github.com/kjhall01/xcast/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/kjhall01/xcast/">View Demo</a>
+    <a href="https://github.com/kjhall01/xcast/blob/main/XCastDeterministic.ipynb">View Demo</a>
     ·
     <a href="https://github.com/kjhall01/xcast/issues">Report Bug</a>
     ·
