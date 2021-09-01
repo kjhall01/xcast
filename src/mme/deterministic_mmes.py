@@ -3,7 +3,7 @@ from sklearn.linear_model import LinearRegression, GammaRegressor, PoissonRegres
 from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
-from .wrappers import *
+from .deterministic_wrappers import *
 from .base_mme import *
 from ..preprocessing import *
 

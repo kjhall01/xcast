@@ -2,7 +2,6 @@ import xskillscore as xs
 import xarray as xr
 from ..core.utilities import *
 import numpy as np
-from ..preprocessing.onehot import *
 
 def deterministic_skill(X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M'):
 	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim) # X is predictions

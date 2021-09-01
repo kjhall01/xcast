@@ -6,7 +6,7 @@ import uuid
 import h5py
 from ..core.utilities import *
 from ..core.progressbar import *
-from .wrappers import *
+from .deterministic_wrappers import *
 
 class BaseMME:
 	""" Base MME class
@@ -14,7 +14,7 @@ class BaseMME:
 	can be sub-classed to extend to new statistical methods
 	new methods must implement .fit(x, y) and .predict(x)
 	and then sub-class's .model_type must be set to the constructor of the new method """
-	
+
 	def __init__(self, use_dask=False, **kwargs):
 		self.use_dask=use_dask
 		self.model_type = LinearRegression

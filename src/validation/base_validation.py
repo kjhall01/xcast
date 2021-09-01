@@ -2,7 +2,6 @@ import xarray as xr
 import xskillscore as xs
 from ..core.utilities import *
 from ..core.progressbar import *
-from ..preprocessing.onehot import *
 import numpy as np
 
 
