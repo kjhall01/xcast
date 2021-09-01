@@ -28,7 +28,7 @@
     <img src="images/logo.png" alt="Logo" width="200" height="200">
   </a>
 
-  <h3 align="center">XCast: A Gridpoint-Wise Climate Forecasting Library </h3>
+  <h3 align="center">XCast: A Gridpoint-Wise Statistical Modelling Library for the Earth Sciences </h3>
 
   <p>
     Numerous problems in the Earth Sciences are solved by finding statistical relationships between variables measured at a given point in space, across time. Often, it's desirable to apply these approaches at many points in space, on a 'gridpoint-wise' basis. While Python has numerous statistical and machine learning libraries, none are designed to accomodate fitting more than one statistical model at once, i.e., at many points in space, as is required by this gridpoint-wise approach. 
@@ -56,7 +56,6 @@
     <li>
       <a href="#getting-started">Getting Started</a>
     </li>
-    <li><a href="#usage">Usage</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
