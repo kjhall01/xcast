@@ -28,10 +28,12 @@
     <img src="images/logo.png" alt="Logo" width="200" height="200">
   </a>
 
-  <h3 align="center">XCast: Big-Data Climate Forecasting </h3>
+  <h3 align="center">XCast: A Gridpoint-Wise Climate Forecasting Library </h3>
 
   <p align="center">
-    Expanding Python's Statistics and AI utilities to Gridpoint-wise Climate Forecasting and Multi-Model Ensemble construction with Xarray and Dask.
+    Numerous problems in the Earth Sciences are solved by finding statistical relationships between variables measured at a given point in space, across time. Often, it's desirable to apply these approaches at many points in space, on a 'gridpoint-wise' basis. While Python has numerous statistical and machine learning libraries, none are designed to accomodate fitting more than one statistical model at once, i.e., at many points in space, as is required by this gridpoint-wise approach. 
+  
+  XCast enables users to apply Python's various statistical tools to spatial gridded data on a gridpoint-wise basis, without having to manually track and manage different dimensions, lists of model instances, or metadata. Built on Xarray and Dask, two powerful data science libraries, XCast is capable of analyzing "Big-Data" that won't fit in RAM, and can be scaled to supercomputer clusters easily. It is designed to be extended to accomodate new statistical libraries easily, and to maximize synergy with the PanGEO stack and other Earth Science data analytics packages like XClim, ClimPred, and XSkillScore. 
     <br />
     <a href="https://github.com/kjhall01/xcast/"><strong>Explore the docs »</strong></a>
     <br />
