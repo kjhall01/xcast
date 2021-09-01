@@ -68,7 +68,7 @@
 <!-- GETTING STARTED -->
 ## Getting Started
 
-1. Install with Anaconda
+1. Install with [Anaconda](https://anaconda.org/)
    ```sh
    conda install -c hallkjc01 xcast
    ```
