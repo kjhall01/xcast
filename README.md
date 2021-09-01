@@ -76,20 +76,14 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
-Here's a blank template to get started:
-**To avoid retyping too much info. Do a search and replace with your text editor for the following:**
-`github_username`, `repo_name`, `twitter_handle`, `email`, `project_title`, `project_description`
-
+XCast grew out of the PyELM-MME project
 
 ### Built With
 
-* []()
-* []()
-* []()
-
+* [http://xarray.pydata.org/en/stable/](Xarray)
+* [https://dask.org/](Dask)
+* [https://scikit-learn.org/stable/](SciKit-Learn)
+* [https://hpelm.readthedocs.io/en/latest/](HPELM)
 
 
 <!-- GETTING STARTED -->
@@ -99,15 +93,6 @@ Here's a blank template to get started:
    ```sh
    conda install -c hallkjc01 https://github.com/kjhall01/xcast.git
    ```
-
-
-
-<!-- USAGE EXAMPLES -->
-## Usage
-
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
-
-_For more examples, please refer to the [Documentation](https://example.com)_
 
 
 
