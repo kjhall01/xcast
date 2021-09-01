@@ -4,40 +4,6 @@ from ..core.utilities import *
 import numpy as np
 from ..preprocessing.onehot import *
 
-def probabilistic_skill(X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', bn_thresh=0.33, an_thresh=0.67):
-	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim) # X is predictions
-	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim) # Y is observatiosn
-
-	ohe = RankedTerciles()
-	ohe.fit(Y, x_lat_dim=y_lat_dim, x_lon_dim=y_lon_dim, x_sample_dim=y_sample_dim, x_feature_dim=y_feature_dim)
-	y_prob = ohe.transform(Y, x_lat_dim=y_lat_dim, x_lon_dim=y_lon_dim, x_sample_dim=y_sample_dim, x_feature_dim=y_feature_dim)
-	y_prob= to_xss(y_prob, y_lat_dim, y_lon_dim, y_sample_dim, 'C' )
-	preds  = to_xss(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-
-	y_prob.coords['time'] = preds.coords['time'].values
-	y_prob.coords['member'] = preds.coords['member'].values
-	y_prob.coords['lat'] = preds.coords['lat'].values
-	y_prob.coords['lon'] = preds.coords['lon'].values
-
-	thresholds = np.array([0.0, bn_thresh, an_thresh, 1.0])
-	rpss = []
-	for i in range(3):
-		rpss.append(xs.rps(y_prob.isel(member=i), preds, thresholds, dim=['time']))
-	rps = xr.concat(rpss, 'C').assign_coords({'C': [0,1,2]})
-	roc = xs.roc(y_prob, preds, bin_edges=np.linspace(0, 1, 11), dim=['time'])
-	tercile_contingency = xs.Contingency(y_prob, preds, thresholds, thresholds, dim=['time'])
-	rps.name = 'ranked_probability_score'
-	roc.name = 'reciever_operating_curve'
-	ger = tercile_contingency.gerrity_score()
-	ger.name = 'gerrity_score'
-	heid = tercile_contingency.heidke_score()
-	heid.name = 'heidke_score'
-	peri = tercile_contingency.peirce_score()
-	peri.name = 'peirce_score'
-	acc = tercile_contingency.accuracy()
-	acc.name = 'accuracy'
-	return xr.merge([rps, roc, ger, heid, peri, acc], compat='override')
-
 def deterministic_skill(X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M'):
 	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim) # X is predictions
 	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)# Y is observatiosn

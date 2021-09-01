@@ -9,6 +9,7 @@ import numpy as np
 #  4) Of type "Xarray.DataArray"
 
 def to_xss(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
+	"""rename dims to labels required for xskillscore"""
 	return X.rename({
 		x_lat_dim: 'lat',
 		x_lon_dim: 'lon',
@@ -59,6 +60,8 @@ def check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 
 
 def open_CsvDataset(filename, delimiter=',', M='M', T='T', tlabels=False, varnames=False, parameter='climate_var'):
+	"""opens a .csv file formatted like n_samples x m_features. returns Xarray DataArray with X=0, Y=0, Samples=N, features=M.
+	Can include labels for each sample, and labels for each feature. """
 	assert Path(filename).absolute().is_file(), 'Cant find {}'.format(Path(filename).absolute())
 
 	with open(str(Path(filename).absolute()), 'r') as f:

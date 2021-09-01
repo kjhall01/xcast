@@ -1,4 +1,3 @@
 from .base_mme import *
-from .mmes import *
-from .wrappers import *
-from .spatial_mmes import *
+from .deterministic_mmes import *
+from .deterministic_wrappers import *
