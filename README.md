@@ -28,7 +28,7 @@
     <img src="images/logo.png" alt="Logo" width="200" height="200">
   </a>
 
-  <h3 align="center">XCast: A Gridpoint-Wise Statistical Modelling Library for the Earth Sciences </h3>
+  <h3 align="center">XCast: A Gridpoint-Wise Statistical Modeling Library for the Earth Sciences </h3>
 
   <p>
     Numerous problems in the Earth Sciences are solved by finding statistical relationships between variables measured at a given point in space, across time. Often, it's desirable to apply these approaches at many points in space, on a 'gridpoint-wise' basis. While Python has numerous statistical and machine learning libraries, none are designed to accomodate fitting more than one statistical model at once, i.e., at many points in space, as is required by this gridpoint-wise approach. 
@@ -105,16 +105,14 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- CONTACT -->
 ## Contact
-Email: kjhall@iri.columbia.edu
-Project Link: [https://github.com/kjhall01/xcast/](https://github.com/kjhall01/xcast)
-
-
+Email: kjhall@iri.columbia.edu (This is a side project, so it may take a while to get back to you)
 
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
 
 * [SciKit-Learn](https://scikit-learn.org/stable/)
 * [HPELM](https://hpelm.readthedocs.io/en/latest/)
+* This README template comes from [here](https://github.com/othneildrew/Best-README-Template/edit/master/BLANK_README.md) - thank you!
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
