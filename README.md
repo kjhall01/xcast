@@ -76,10 +76,9 @@ XCast grew out of the PyELM-MME project
 
 ### Built With
 
-* [http://xarray.pydata.org/en/stable/](Xarray)
-* [https://dask.org/](Dask)
-* [https://scikit-learn.org/stable/](SciKit-Learn)
-* [https://hpelm.readthedocs.io/en/latest/](HPELM)
+* [Xarray](http://xarray.pydata.org/en/stable/)
+* [Dask](https://dask.org/)
+
 
 
 <!-- GETTING STARTED -->
@@ -87,7 +86,7 @@ XCast grew out of the PyELM-MME project
 
 1. Install with Anaconda
    ```sh
-   conda install -c hallkjc01 https://github.com/kjhall01/xcast.git
+   conda install -c hallkjc01 xcast
    ```
 
 
@@ -129,13 +128,8 @@ Project Link: [https://github.com/kjhall01/xcast/](https://github.com/kjhall01/x
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
 
-* []()
-* []()
-* []()
-
-
-
-
+* [SciKit-Learn](https://scikit-learn.org/stable/)
+* [HPELM](https://hpelm.readthedocs.io/en/latest/)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
