@@ -82,7 +82,6 @@
 See the [open issues](https://github.com/kjhall01/xcast/issues) for a list of proposed features (and known issues).
 
 
-
 <!-- CONTRIBUTING -->
 ## Contributing
 
@@ -100,8 +99,6 @@ Contributions are what make the open source community such an amazing place to l
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
-
-
 
 <!-- CONTACT -->
 ## Contact
