@@ -25,22 +25,22 @@
 <br />
 <p align="center">
   <a href="https://github.com/kjhall01/xcast/">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
+    <img src="images/logo.png" alt="Logo" width="200" height="200">
   </a>
 
-  <h3 align="center">project_title</h3>
+  <h3 align="center">XCast: Big-Data Climate Forecasting </h3>
 
   <p align="center">
-    project_description
+    Expanding Python's Statistics and AI utilities to Gridpoint-wise Climate Forecasting and Multi-Model Ensemble construction with Xarray and Dask.
     <br />
-    <a href="https://github.com/github_username/repo_name"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/kjhall01/xcast/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/github_username/repo_name">View Demo</a>
+    <a href="https://github.com/kjhall01/xcast/">View Demo</a>
     ·
-    <a href="https://github.com/github_username/repo_name/issues">Report Bug</a>
+    <a href="https://github.com/kjhall01/xcast/issues">Report Bug</a>
     ·
-    <a href="https://github.com/github_username/repo_name/issues">Request Feature</a>
+    <a href="https://github.com/kjhall01/xcast/issues">Request Feature</a>
   </p>
 </p>
 
@@ -95,25 +95,9 @@ Here's a blank template to get started:
 <!-- GETTING STARTED -->
 ## Getting Started
 
-To get a local copy up and running follow these simple steps.
-
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
-
-### Installation
-
-1. Clone the repo
+1. Install with Anaconda
    ```sh
-   git clone https://github.com/github_username/repo_name.git
-   ```
-2. Install NPM packages
-   ```sh
-   npm install
+   conda install -c hallkjc01 https://github.com/kjhall01/xcast.git
    ```
 
 
@@ -130,7 +114,7 @@ _For more examples, please refer to the [Documentation](https://example.com)_
 <!-- ROADMAP -->
 ## Roadmap
 
-See the [open issues](https://github.com/github_username/repo_name/issues) for a list of proposed features (and known issues).
+See the [open issues](https://github.com/kjhall01/xcast//issues) for a list of proposed features (and known issues).
 
 
 
@@ -176,15 +160,15 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/github_username/repo.svg?style=for-the-badge
-[contributors-url]: https://github.com/github_username/repo_name/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/github_username/repo.svg?style=for-the-badge
-[forks-url]: https://github.com/github_username/repo_name/network/members
-[stars-shield]: https://img.shields.io/github/stars/github_username/repo.svg?style=for-the-badge
-[stars-url]: https://github.com/github_username/repo_name/stargazers
-[issues-shield]: https://img.shields.io/github/issues/github_username/repo.svg?style=for-the-badge
-[issues-url]: https://github.com/github_username/repo_name/issues
-[license-shield]: https://img.shields.io/github/license/github_username/repo.svg?style=for-the-badge
-[license-url]: https://github.com/github_username/repo_name/blob/master/LICENSE.txt
+[contributors-shield]: https://img.shields.io/github/contributors/kjhall01/xcast.svg?style=for-the-badge
+[contributors-url]: https://github.com/kjhall01/xcast/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/kjhall01/xcast.svg?style=for-the-badge
+[forks-url]: https://github.com/kjhall01/xcast/network/members
+[stars-shield]: https://img.shields.io/github/stars/kjhall01/xcast.svg?style=for-the-badge
+[stars-url]: https://github.com/kjhall01/xcast/stargazers
+[issues-shield]: https://img.shields.io/github/issues/kjhall01/xcast.svg?style=for-the-badge
+[issues-url]: https://github.com/kjhall01/xcast/issues
+[license-shield]: https://img.shields.io/github/license/kjhall01/xcast.svg?style=for-the-badge
+[license-url]: https://github.com/kjhall01/xcast/blob/master/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/github_username
+[linkedin-url]: https://linkedin.com/in/kjhall01
