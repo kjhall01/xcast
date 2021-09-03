@@ -62,7 +62,7 @@ While Earth Science Data often comes as high-dimensional datatypes, XCast works 
 
 1. Spatial Dimension One: The outer dimension over which operations will loop (ex: Latitude) 
 2. Spatial Dimension Two: The inner dimension over which operations will loop (ex: Longitude) 
-3. Feature Dimension: The dimension that represents the multiple features of a single sample  (ex: independent predictors, SST and GPH in the above example scenario) 
+3. Feature Dimension: The dimension that represents the multiple features of a single sample  (ex: independent predictors, SST and GPH ) 
 4. Sample Dimension: The dimension that represents the multiple samples on which a statistical method will be applied (ex: Years) 
 
 In most XCast functions and class methods, the names of each of the above dimensions on the input data must be specified. This may seem like a pain, but it also allows XCast to accomodate any possible given standard or convention. 
