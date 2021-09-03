@@ -38,7 +38,18 @@
   <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
   <ol>
     <li><a href="#background">Background</a></li>
-    <li><a href="#utilities">Utilities</a></li>
+    <li>
+      <a href="#utilities">Utilities</a>
+      <ol>
+        <li><a href="open-CSV-Dataset">Background</a></li>
+        <li><a href="#utilities">Utilities</a></li>
+        <li><a href="#data-preprocessing">Data Preprocessing</a></li>
+        <li><a href="#training-models">Training Models</a></li>
+        <li><a href="#validation">Validation</a></li>
+        <li><a href="#verification">Verification With XSkillScore</a></li>
+        <li><a href="#extending-basemme">Extending BaseMME</a></li>
+      </ol>
+    </li>
     <li><a href="#data-preprocessing">Data Preprocessing</a></li>
     <li><a href="#training-models">Training Models</a></li>
     <li><a href="#validation">Validation</a></li>
@@ -72,7 +83,8 @@ In most XCast functions and class methods, the names of each of the above dimens
 
 XCast implements a few utilities to assist in the preparation of datasets for use in statistical modeling and machine learning: 
 
-### open_CsvDataset(filename, delimiter=',', M='M', T='T', tlabels=False, varnames=False, parameter='climate_var') 
+### Open CSV Dataset
+```ds = xc.open_CsvDataset(filename, delimiter=',', M='M', T='T', tlabels=False, varnames=False, parameter='climate_var')```
 Opens a .csv file formatted as N_SAMPLES rows of N_FEATURES columns, i.e., Each row is a sample and each column is a features. 
 1. filename - string, representing path to desired file
 2. delimiter - string, representing delimiter between cells of the csv file
@@ -84,7 +96,8 @@ Opens a .csv file formatted as N_SAMPLES rows of N_FEATURES columns, i.e., Each 
 
 Returns: Xarray DataSet with DataArray named as parameter 
 
-### fill_constant(X, val, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', missing_value=np.nan)
+### Fill Constant
+fill_constant(X, val, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', missing_value=np.nan)
 Fills all of the values of X that are equal to missing_value with val
 1. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
 2. val - numeric type (float, int), desired fill-value
