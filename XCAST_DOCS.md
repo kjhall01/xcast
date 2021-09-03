@@ -78,6 +78,12 @@ While Earth Science Data often comes as high-dimensional datatypes, XCast works 
 
 In most XCast functions and class methods, the names of each of the above dimensions on the input data must be specified. This may seem like a pain, but it also allows XCast to accomodate any possible given standard or convention. 
 
+### XCast Format Requirements
+While XCast works directly with Xarray DataArrays, there are some extra requirements. 
+1. Each dimension must have cooresponding coordinates that match the dimension exactly in name and size 
+2. There can be no extra dimensions of size 1 outside of the 4 XCast dimensions, and no un-used coordinates 
+3. All four XCast dimensions must be present, if only of size 1. 
+
 <!-- utilities -->
 ## Utilities
 
