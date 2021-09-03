@@ -49,7 +49,13 @@
         <li><a href="#gaussian-smoothing">gaussian_smooth</a></li>
       </ol>
     </li>
-    <li><a href="#data-preprocessing">Data Preprocessing</a></li>
+    <li>
+      <a href="#data-preprocessing">Data Preprocessing</a>
+      <ol>
+        <li><a href="#dimensionality-reduction">Dimensionality Reduction</a></li>
+        <li><a href="#scaling">Scaling</a></li>
+      </ol>
+    </li>
     <li><a href="#training-models">Training Models</a></li>
     <li><a href="#validation">Validation</a></li>
     <li><a href="#verification">Verification With XSkillScore</a></li>
@@ -187,6 +193,113 @@ Returns: Xarray DataArray of X with gaussian smoothing applied.
 
 <!-- data preprocessing -->
 ## Data Preprocessing
+XCast implements a number of desirable, gridpoint-wise data preprocessing tools based on the standard Python data science tools. 
+
+### Dimensionality Reduction 
+#### Principal Components Analysis
+Applies sklearn.decomposition.PCA across the feature dimension of an XCast dataset. 
+
+    pca = xc.PrincipalComponentsAnalysis(n_components=2, use_dask=False)
+    pca.fit(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1, verbose=False )
+    X = pca.transform(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , verbose=False) 
+    
+1. n_components - int, number of principal components to keep after dimensionality reduction
+2. use_dask - bool, whether or not to perform operations on a 'chunked' basis, out-of-memory, using Dask.
+3. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+4. x_lat_dim - string, name of latitude dimension on X 
+5. x_lon_dim - string, name of longitude dimension on X 
+6. x_sample_dim - string, name of sample dimension on X
+7. x_feature_dim - string, name of feature dimension on X 
+8. lat_chunks - int, desired number of chunks across the latitude dimension to use for out-of-memory computation with dask
+9. lon_chunks - int, desired number of chunks across the longitude dimension to use for out-of-memory computation with dask
+10. verbose - bool, whether or not to print progressbar representing operations
+
+
+#### NMF
+Applies sklearn.decomposition.NMF across the feature dimension of an XCast dataset. 
+
+    nmf = xc.NMF(n_components=2, use_dask=False)
+    nmf.fit(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1, verbose=False )
+    X = nmf.transform(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , verbose=False) 
+    
+1. n_components - int, number of components to keep after dimensionality reduction
+2. use_dask - bool, whether or not to perform operations on a 'chunked' basis, out-of-memory, using Dask.
+3. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+4. x_lat_dim - string, name of latitude dimension on X 
+5. x_lon_dim - string, name of longitude dimension on X 
+6. x_sample_dim - string, name of sample dimension on X
+7. x_feature_dim - string, name of feature dimension on X 
+8. lat_chunks - int, desired number of chunks across the latitude dimension to use for out-of-memory computation with dask
+9. lon_chunks - int, desired number of chunks across the longitude dimension to use for out-of-memory computation with dask
+10. verbose - bool, whether or not to print progressbar representing operations
+
+#### Factor Analysis
+Applies sklearn.decomposition.FactorAnalysis across the feature dimension of an XCast dataset. 
+
+    fa = xc.FactorAnalysis(n_components=2, use_dask=False)
+    fa.fit(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1, verbose=False )
+    X = fa.transform(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , verbose=False) 
+    
+1. n_components - int, number of components to keep after dimensionality reduction
+2. use_dask - bool, whether or not to perform operations on a 'chunked' basis, out-of-memory, using Dask.
+3. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+4. x_lat_dim - string, name of latitude dimension on X 
+5. x_lon_dim - string, name of longitude dimension on X 
+6. x_sample_dim - string, name of sample dimension on X
+7. x_feature_dim - string, name of feature dimension on X 
+8. lat_chunks - int, desired number of chunks across the latitude dimension to use for out-of-memory computation with dask
+9. lon_chunks - int, desired number of chunks across the longitude dimension to use for out-of-memory computation with dask
+10. verbose - bool, whether or not to print progressbar representing operations
+
+
+#### Dictionary Learning
+Applies sklearn.decomposition.DictionaryLearning across the feature dimension of an XCast dataset. 
+
+    dl = xc.DictionaryLearning(n_components=2, use_dask=False)
+    dl.fit(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1, verbose=False )
+    X = dl.transform(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , verbose=False) 
+    
+1. n_components - int, number of components to keep after dimensionality reduction
+2. use_dask - bool, whether or not to perform operations on a 'chunked' basis, out-of-memory, using Dask.
+3. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+4. x_lat_dim - string, name of latitude dimension on X 
+5. x_lon_dim - string, name of longitude dimension on X 
+6. x_sample_dim - string, name of sample dimension on X
+7. x_feature_dim - string, name of feature dimension on X 
+8. lat_chunks - int, desired number of chunks across the latitude dimension to use for out-of-memory computation with dask
+9. lon_chunks - int, desired number of chunks across the longitude dimension to use for out-of-memory computation with dask
+10. verbose - bool, whether or not to print progressbar representing operations
+
+### Scaling 
+#### Normal Scaling 
+Scales a dataset to mean=0, std. dev=1 at each gridpoint by subtracting the time-stddev and dividing by the time-mean for each feature.
+
+    n = xc.Normal()
+    n.fit(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M') 
+    X_Norm = n.transform(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M') 
+    n.inverse_transform(X_Norm, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M') == X # Returns True 
+    
+1. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+2. x_lat_dim - string, name of latitude dimension on X 
+3. x_lon_dim - string, name of longitude dimension on X 
+4. x_sample_dim - string, name of sample dimension on X
+5. x_feature_dim - string, name of feature dimension on X 
+
+#### MinMax Scaling 
+Scales a dataset to \[min, max\] at each gridpoint by subtracting the minimum over time, dividing by the range over time, then multiplying by (max-min) and adding min for each feature. 
+
+    mn = xc.MinMax(min=-1, max=1)
+    mn.fit(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M') 
+    X_mn = mn.transform(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M') 
+    mn.inverse_transform(X_Norm, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M') == X # Returns True 
+    
+1. min - numeric type, represents minimum of desired scaled range
+2. max - numeric type, represents maximum of desired scaled range 
+3. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+4. x_lat_dim - string, name of latitude dimension on X 
+5. x_lon_dim - string, name of longitude dimension on X 
+6. x_sample_dim - string, name of sample dimension on X
+7. x_feature_dim - string, name of feature dimension on X 
 
 <!-- Training Models -->
 ## Training Models
