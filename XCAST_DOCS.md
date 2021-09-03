@@ -84,8 +84,8 @@ In most XCast functions and class methods, the names of each of the above dimens
 XCast implements a few utilities to assist in the preparation of datasets for use in statistical modeling and machine learning: 
 
 ### Open CSV Dataset
-```ds = xc.open_CsvDataset(filename, delimiter=',', M='M', T='T', tlabels=False, varnames=False, parameter='climate_var')```
 Opens a .csv file formatted as N_SAMPLES rows of N_FEATURES columns, i.e., Each row is a sample and each column is a features. 
+```ds = xc.open_CsvDataset(filename, delimiter=',', M='M', T='T', tlabels=False, varnames=False, parameter='climate_var')```
 1. filename - string, representing path to desired file
 2. delimiter - string, representing delimiter between cells of the csv file
 3. M - string, representing desired name of returned Xarray Dataset's Feature dimension
@@ -97,8 +97,8 @@ Opens a .csv file formatted as N_SAMPLES rows of N_FEATURES columns, i.e., Each 
 Returns: Xarray DataSet with DataArray named as parameter 
 
 ### Fill Constant
-fill_constant(X, val, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', missing_value=np.nan)
 Fills all of the values of X that are equal to missing_value with val
+```X = xc.fill_constant(X, val, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', missing_value=np.nan)```
 1. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
 2. val - numeric type (float, int), desired fill-value
 3. x_lat_dim - string, name of latitude dimension on X 
@@ -109,8 +109,9 @@ Fills all of the values of X that are equal to missing_value with val
 
 Returns: Xarray DataArray with missing_values filled with val 
 
-### fill_time_mean(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', missing_value=np.nan)
+### Fill Time Mean
 Fills all of the values of X that are equal to missing_value with the mean of X along the sample dimension at for each lat/lon/feature
+```X = xc.fill_time_mean(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', missing_value=np.nan)```
 1. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
 2. x_lat_dim - string, name of latitude dimension on X 
 3. x_lon_dim - string, name of longitude dimension on X 
