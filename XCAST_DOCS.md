@@ -56,7 +56,28 @@
         <li><a href="#scaling">Scaling</a></li>
       </ol>
     </li>
-    <li><a href="#training-models">Training Models</a></li>
+    <li>
+      <a href="#statistical-models">Model Training</a>
+      <ol>
+        <li>
+          <a href="#deterministic-models">Deterministic Models </a>
+          <ol>
+            <li><a href="#ensemble-mean">Ensemble Mean</a></li>
+            <li><a href="#bias-corrected-ensemble-mean">Bias-Corrected Ensemble Mean</a></li>
+            <li><a href="#multiple-linear-regression">Multiple Linear Regression</a></li>
+            <li><a href="#principal-components-regression">Principal Components Regression</a></li>
+            <li><a href="#poisson-regression">Poisson Regression</a></li>
+            <li><a href="#gamma-regression">Gamma Regression</a></li>
+            <li><a href="#ridge-regression">Ridge Regression</a></li>
+            <li><a href="#random-forest">Random Forest</a></li>
+            <li><a href="#multi-layer-perceptron">Multi-Layer Perceptron</a></li>
+            <li><a href="#extreme-learning-machine">Extreme Learning Machine</a></li>
+            <li><a href="#extreme-learning-machine-with-pca">ELM with PCA</a></li>
+         </ol>
+       </li> 
+       <li><a href="#probabilistic-models">Probabilistic Models </a></li> 
+     </ol> 
+    </li>
     <li><a href="#validation">Validation</a></li>
     <li><a href="#verification">Verification With XSkillScore</a></li>
     <li><a href="#extending-basemme">Extending BaseMME</a></li>
@@ -302,7 +323,48 @@ Scales a dataset to \[min, max\] at each gridpoint by subtracting the minimum ov
 7. x_feature_dim - string, name of feature dimension on X 
 
 <!-- Training Models -->
-## Training Models
+## Statistical Models 
+### Deterministic Models 
+See [XCastDeterministic.ipynb](https://github.com/kjhall01/xcast/blob/main/XCastDeterministic.ipynb) for examples of using the XCast models. 
+All XCast deterministic models currently use fill_space_mean to deal with missing data, and regrid X onto Y's coordinates in order to make sure they're the same size and shape. (Size and shape must be the same in order to use gridpoint-wise statistical and machine learning methods.) 
+Also, all the same transformations applied to predictors before model fitting are applied to predictors for prediction as well, using the same, saved, scaling objects. That way the operation stays 'in-sample', ie, the model doesn't get extra information about the test set from the scaling. 
+
+#### Ensemble Mean
+Produces a deterministic estimate by taking the mean over the values in the feature dimension at each sample, latitude, longitude. 
+
+#### Bias Corrected Ensemble Mean 
+Standardizes input features using xc.Normal() on each independently, then proceeds to produce an estimate by taking the mean at each sample, latitude, and longitude, then xc.Normal.inverse_transform's that estimate onto the distribution of the predictand data. 
+
+#### Multiple Linear Regression 
+Scales input features to \[-1, 1\] using xc.MinMax, each independently, then fits an sklearn.linear_model.LinearRegression between the transformed inputs and raw predictands. 
+
+#### Poisson Regression 
+Scales input features to \[-1, 1\] using xc.MinMax, each independently, then fits an sklearn.linear_model.PoissonRegressor between the transformed inputs and raw predictands. 
+
+#### Gamma Regression 
+Scales input features to \[0.00000001, 2\] using xc.MinMax, each independently, then fits an sklearn.linear_model.GammaRegressor between the transformed inputs and raw predictands. 
+
+#### Principal Components Regression
+Scales input features to \[-1, 1\] using xc.MinMax, each independently, then applies PCA to the predictors, then fits an sklearn.linear_model.LinearRegression between the transformed inputs and raw predictands. 
+
+#### Multi Layer Perceptron
+\* Warning Slow \* Scales input features to \[-1, 1\] using xc.MinMax, each independently, and scales the predictands to 'normal', then fits an sklearn.neural_network.MLPRegressor between the transformed inputs and transformed predictands. Finally, scales predictions back to distribution of raw predictands. 
+
+#### Random Forest 
+\* Warning: Slow \* Scales input features to \[-1, 1\] using xc.MinMax, each independently, and scales the predictands to 'normal', then fits an sklearn.ensemble.RandomForestRegressor between the transformed inputs and transformed predictands. Finally, scales predictions back to distribution of raw predictands. 
+
+#### Ridge Regression 
+Scales input features to \[-1, 1\] using xc.MinMax, each independently, then fits an sklearn.linear_model.Ridge between the transformed inputs and raw predictands. 
+
+#### Extreme Learning Machine 
+Scales input features to \[-1, 1\] using xc.MinMax, each independently, and scales the predictands to 'normal', then fits an hpelm.ELM() between the transformed inputs and transformed predictands. Finally, scales predictions back to distribution of raw predictands. 
+
+#### Extreme Learning Machine with PCA
+Scales input features to \[-1, 1\] using xc.MinMax, each independently, then applies PCA to the predictors, and scales the predictands to 'normal', then fits an hpelm.ELM() between the transformed inputs and transformed predictands. Finally, scales predictions back to distribution of raw predictands. 
+
+
+### Probabilistic Models 
+In the future, XCast will implement probabilistic statistical models as well :)
 
 <!-- Validation -->
 ## Validation
