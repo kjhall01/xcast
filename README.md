@@ -33,7 +33,7 @@
   XCast is a free and open source (passion) project designed to help Earth Scientists scale single-point-in-space regression approaches to spatial gridded data using the popular Earth Science data tool, Xarray. XCast provides a set of tools useful for manipulating and preprocessing Xarray datasets, and implements a 
 "fit-predict" training and prediction framework similar to those of the traditional Python statistical tools. More than just a "double-for-loop" wrapper for machine learning libraries, XCast is designed to be high-performance, intuitive, and easily extensible. It is our hope that XCast will serve to bridge the gap between the two-dimensional world of Python Data Science (Samples x Features), and the four-dimensional world of climate data (Samples x Features x Latitude x Longitude).
     <br />
-    <a href="https://github.com/kjhall01/xcast/"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/kjhall01/xcast/blob/main/XCAST_DOCS.md"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/kjhall01/xcast/blob/main/XCastDeterministic.ipynb">View Demo</a>
