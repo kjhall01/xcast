@@ -45,9 +45,8 @@
         <li><a href="#fill-constant">fill_constant</a></li>
         <li><a href="#fill-time-mean">fill_time_mean</a></li>
         <li><a href="#fill-space-mean">fill_space_mean</a></li>
-        <li><a href="#validation">Validation</a></li>
-        <li><a href="#verification">Verification With XSkillScore</a></li>
-        <li><a href="#extending-basemme">Extending BaseMME</a></li>
+        <li><a href="#regrid">regrid</a></li>
+        <li><a href="#gaussian-smoothing">gaussian_smooth</a></li>
       </ol>
     </li>
     <li><a href="#data-preprocessing">Data Preprocessing</a></li>
