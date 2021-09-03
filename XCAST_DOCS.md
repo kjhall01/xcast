@@ -51,6 +51,22 @@
 <!-- background -->
 ## Background
 
+As described in the [README](https://github.com/kjhall01/xcast/edit/main/README.md), XCast is designed to facilitate the application of standard Python statistical and machine learning tools to spatial gridded data on a "gridpoint-wise" basis-- meaning one point at a time, independently. While XCast is much more than some "for-loops", (implementing chunked, out-of-memory, and parallel computation with dask for example) it can be conceptualized as such.
+
+Imagine that you designed a normal statistical workflow, regressing thirty years of rainfall totals on thirty years of sea surface temperature and geopotential height measurements, averaged over a spatial region. Now imagine you wanted to do that process, except instead of averaging over the spatial region, you wanted to do it independently at each point in space- that's what XCast does! It abstracts out the fact that you're really working with NLATITUDE x NLONGITUDE statistical models, and lets you treat them all as one datatype. 
+
+That being said, the difficulty lies in the fact that standard Python statistical tools are not built to work with the gridded data format that we're hoping to use for our analysis. Our data is now, instead of a two-dimensional, N_Features (sst & gph) x N_Samples (30 years) layout, in a four-dimensional  N_Features x N_Samples x N_Latitudes x N_Longitudes layout. Standard Python statistical tools are designed to work with the first layout, as two-dimensional NumPy Arrays; but in the Earth Sciences, gridded data most commonly comes as high-dimensional Xarray DataArrays, which are incompatible. It is possible to convert between the two, but managing dimensionality can be confusing, especially for novice python programmers. Requiring all of the data to be in-memory at once also dramatically limits the size of the datasets one can work with. Both problems are barriers to entry to earth science.
+
+### XCast Dimensionality
+While Earth Science Data often comes as high-dimensional datatypes, XCast works exclusively with 4D data. Perhaps at some point in the future we will add support for higher dimensionality, but we had to draw the lines somewhere. Those four dimensions each serve very specific purposes: 
+
+1. Spatial Dimension One: The outer dimension over which operations will loop (ex: Latitude) 
+2. Spatial Dimension Two: The inner dimension over which operations will loop (ex: Longitude) 
+3. Feature Dimension: The dimension that represents the multiple features of a single sample  (ex: independent predictors, SST and GPH in the above example scenario) 
+4. Sample Dimension: The dimension that represents the multiple samples on which a statistical method will be applied (ex: Years) 
+
+In most XCast functions and class methods, the names of each of the above dimensions on the input data must be specified. This may seem like a pain, but it also allows XCast to accomodate any possible given standard or convention. 
+
 <!-- utilities -->
 ## Utilities
 
