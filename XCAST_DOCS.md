@@ -88,6 +88,8 @@
 <!-- background -->
 ## Background
 
+For tutorials and help with Xarray, please visit [their webpage!](http://xarray.pydata.org/en/stable/)
+
 As described in the [README](https://github.com/kjhall01/xcast/edit/main/README.md), XCast is designed to facilitate the application of standard Python statistical and machine learning tools to spatial gridded data on a "gridpoint-wise" basis-- meaning one point at a time, independently. While XCast is much more than "just some for-loops", (as it implements chunked, out-of-memory, and parallel computation Dask, as one example) it can be conceptualized as such.
 
 Imagine that you designed a normal statistical workflow, regressing thirty years of rainfall totals on thirty years of sea surface temperature and geopotential height measurements, averaged over a spatial region. Now imagine you wanted to do that process, except instead of averaging over the spatial region, you wanted to do it independently at each point in space- that's what XCast does! It abstracts out the fact that you're really working with many independent statistical models, and lets you treat them all as one unified datatype. 
