@@ -368,12 +368,30 @@ In the future, XCast will implement probabilistic statistical models as well :)
 
 <!-- Validation -->
 ## Validation
+XCast implements leave-n-out cross-validation in order to allow you to accurately and easily evaluate the skill of the models you build. 
+
+    xval_hindcasts = xc.cross_validate( xc.MultipleLinearRegression, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M',  window=3, verbose=0, ND=1, **kwargs )
+    
+1. MME - XCast MME Type, one of the deterministic models 
+2. X - Predictors, Xarray DataArray, satisfying XCast dimensionality and format requirements
+3. Y - Predictands, Xarray DataArray, satisfying XCast dimensionality and format requirements
+4. x_lat_dim - string, name of latitude dimension on X 
+5. x_lon_dim - string, name of longitude dimension on X 
+6. x_sample_dim - string, name of sample dimension on X
+7. x_feature_dim - string, name of feature dimension on X 
+8. y_lat_dim - string, name of latitude dimension on Y
+9. y_lon_dim - string, name of longitude dimension on Y 
+10. y_sample_dim - string, name of sample dimension on Y
+11. y_feature_dim - string, name of feature dimension on Y
+12. window - int, size of cross validation window (N of leave-N-out) 
+13. ND - int, number of times to train model, for non-deterministic statistical models 
+
+Returns: Xarray Dataset containing ND-means and standard deviations for the cross-validated hindcasts
+
 
 <!-- Verification -->
 ## Verification With XSkillScore
-
-<!-- Extending Base Classes -->
-## Extending Base Classes
+Verification can be done with XSkillScore. the xc.to_xss function will help you transfer naming conventions. 
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
