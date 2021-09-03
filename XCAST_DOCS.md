@@ -167,7 +167,7 @@ Returns: Xarray DataArray with missing_values filled
 
 Returns: Xarray DataArray with X interpolated onto new spatial dimensions specified by lons and lats. 
 
-### Gaussian Smoothing
+#### Gaussian Smoothing
 Applies gaussian smoothing over a kernel of size 'kernel' in the LATxLON dimensions. 
 
     X = xc.gaussian_smooth(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', kernel=(9,9), use_dask=False, feature_chunks=1, sample_chunks=1 )
