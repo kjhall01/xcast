@@ -27,17 +27,13 @@
   <a href="https://github.com/kjhall01/xcast/">
     <img src="images/logo.png" alt="Logo" width="200" height="200">
   </a>
-
   <h3 align="center">XCast: Documentation </h3>
- 
     <br />
     <a href="https://github.com/kjhall01/xcast/"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/kjhall01/xcast/blob/main/XCastDeterministic.ipynb">View Demo</a>
-    ·
     <a href="https://github.com/kjhall01/xcast/issues">Report Bug</a>
-    ·
     <a href="https://github.com/kjhall01/xcast/issues">Request Feature</a>
   </p>
 </p>
