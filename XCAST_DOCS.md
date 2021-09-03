@@ -70,6 +70,85 @@ In most XCast functions and class methods, the names of each of the above dimens
 <!-- utilities -->
 ## Utilities
 
+XCast implements a few utilities to assist in the preparation of datasets for use in statistical modeling and machine learning: 
+
+### open_CsvDataset(filename, delimiter=',', M='M', T='T', tlabels=False, varnames=False, parameter='climate_var') 
+Opens a .csv file formatted as N_SAMPLES rows of N_FEATURES columns, i.e., Each row is a sample and each column is a features. 
+1. filename - string, representing path to desired file
+2. delimiter - string, representing delimiter between cells of the csv file
+3. M - string, representing desired name of returned Xarray Dataset's Feature dimension
+4. T - string, representing desired name of returned Xarray Dataset's Sample dimension
+5. tlabels - bool, whether or not the .csv file contains labels for each sample in the first column (i.e., years) 
+6. varnames - bool, whether or not the .csv file contains labels for each feature in the first row (i.e., SST, GPH, etc) 
+7. parameter - string, desired name of Xarray DataArray contained within returned Xarray DataSet 
+
+Returns: Xarray DataSet with DataArray named as parameter 
+
+### fill_constant(X, val, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', missing_value=np.nan)
+Fills all of the values of X that are equal to missing_value with val
+1. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+2. val - numeric type (float, int), desired fill-value
+3. x_lat_dim - string, name of latitude dimension on X 
+4. x_lon_dim - string, name of longitude dimension on X 
+5. x_sample_dim - string, name of sample dimension on X
+6. x_feature_dim - string, name of feature dimension on X 
+7. missing_value - numeric type, value to be replaced
+
+Returns: Xarray DataArray with missing_values filled with val 
+
+### fill_time_mean(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', missing_value=np.nan)
+Fills all of the values of X that are equal to missing_value with the mean of X along the sample dimension at for each lat/lon/feature
+1. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+2. x_lat_dim - string, name of latitude dimension on X 
+3. x_lon_dim - string, name of longitude dimension on X 
+4. x_sample_dim - string, name of sample dimension on X
+5. x_feature_dim - string, name of feature dimension on X 
+6. missing_value - numeric type, value to be replaced
+
+Returns: Xarray DataArray with missing_values filled
+
+### fill_space_mean(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', missing_value=np.nan)
+Fills all of the values of X that are equal to missing_value with the mean of X along the spatial dimensions for that sample/feature
+1. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+2. x_lat_dim - string, name of latitude dimension on X 
+3. x_lon_dim - string, name of longitude dimension on X 
+4. x_sample_dim - string, name of sample dimension on X
+5. x_feature_dim - string, name of feature dimension on X 
+6. missing_value - numeric type, value to be replaced
+
+Returns: Xarray DataArray with missing_values filled
+
+
+### regrid(X, lons, lats, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', use_dask=False, feat_chunks=1, samp_chunks=1 )
+"Regrids" X onto new latitude and longitude coordinates, presumably of a different resolution using SciPy interp2d (bivariate spline interpolation) 
+1. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+2. lons - array-like, new longitude coordinates to be used by scipy.interp2d
+3. lats - array-like, new latitude coordinates to be used by scipy.interp2d
+4. x_lat_dim - string, name of latitude dimension on X 
+5. x_lon_dim - string, name of longitude dimension on X 
+6. x_sample_dim - string, name of sample dimension on X
+7. x_feature_dim - string, name of feature dimension on X 
+8. use_dask - bool, whether or not to perform operations on a 'chunked' basis, out-of-memory, using Dask. 
+9. feat_chunks - int, desired number of chunks across the feature dimension to use for out-of-memory computation with dask. 
+10. samp_chunks - int, desired number of chunks across the sample dimension to use for out-of-memory computation with dask. 
+
+Returns: Xarray DataArray with X interpolated onto new spatial dimensions specified by lons and lats. 
+
+### gaussian_smooth(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', kernel=(9,9), use_dask=False, feature_chunks=1, sample_chunks=1 )
+Applies gaussian smoothing over a kernel of size 'kernel' in the LATxLON dimensions. 
+1. X - Xarray DataArray, satisfying XCast dimensionality and format requirements
+2. x_lat_dim - string, name of latitude dimension on X 
+3. x_lon_dim - string, name of longitude dimension on X 
+4. x_sample_dim - string, name of sample dimension on X
+5. x_feature_dim - string, name of feature dimension on X 
+6. kernel - tuple, length-2 tuple indicating size of kernel in latitude and longitude dimensions.
+7. use_dask - bool, whether or not to perform operations on a 'chunked' basis, out-of-memory, using Dask. 
+8. feat_chunks - int, desired number of chunks across the feature dimension to use for out-of-memory computation with dask. 
+9. samp_chunks - int, desired number of chunks across the sample dimension to use for out-of-memory computation with dask. 
+
+Returns: Xarray DataArray of X with gaussian smoothing applied. 
+
+
 <!-- data preprocessing -->
 ## Data Preprocessing
 
