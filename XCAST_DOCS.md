@@ -384,7 +384,8 @@ XCast implements leave-n-out cross-validation in order to allow you to accuratel
 10. y_sample_dim - string, name of sample dimension on Y
 11. y_feature_dim - string, name of feature dimension on Y
 12. window - int, size of cross validation window (N of leave-N-out) 
-13. ND - int, number of times to train model, for non-deterministic statistical models 
+13. verbose - int, how much printing do you want to happen? 
+14. ND - int, number of times to train model, for non-deterministic statistical models 
 
 Returns: Xarray Dataset containing ND-means and standard deviations for the cross-validated hindcasts
 
