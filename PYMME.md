@@ -50,6 +50,7 @@
   <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
   <ol>
     <li><a href="#why-pymme">Why PyMME?</a></li>
+    <li><a href="#timeline">Timeline</a></li>
     <li><a href="#contact">Research Goals</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
   </ol>
@@ -68,12 +69,8 @@ September 2020 - Development work begins on [PyELM-MME](https://github.com/kjhal
 Fall/Winter 2020 - Development on [PyELM-MME](https://github.com/kjhall01/PyELM-MME) 
 March 2021 - [PyELM-MME](https://github.com/kjhall01/PyELM-MME) presented at the [UCAR SEA's Improving Scientific Software Conference](https://sea.ucar.edu/conference/2021), XCast & PyMME Ideation 
 Summer 2021 - Development of [XCast](https://github.com/kjhall01/xcast/) begins
-September 2021 - [PyMME]( presented at the [3rd Annual NOAA Workshop on Leveraging AI in the Environmental Sciences](https://2021noaaaiworkshop.sched.com/event/lSAN/virtual-poster-walk-part-vii) 
-
-<!-- ROADMAP -->
-## Roadmap
-
-See the [open issues](https://github.com/kjhall01/xcast/issues) for a list of proposed features (and known issues).
+August 2021 - Publication of PyELM-MME paper in the [PROCEEDINGS OF THE 2021 IMPROVING SCIENTIFIC SOFTWARE CONFERENCE](https://opensky.ucar.edu/islandora/object/technotes:589)
+September 2021 - [PyMME](https://github.com/kjhall01/xcast/blob/main/PYMME.md) presented at the [3rd Annual NOAA Workshop on Leveraging AI in the Environmental Sciences](https://2021noaaaiworkshop.sched.com/event/lSAN/virtual-poster-walk-part-vii) 
 
 
 <!-- CONTRIBUTING -->
@@ -100,10 +97,7 @@ Email: kjhall@iri.columbia.edu (This is a side project, so it may take a while t
 
 <!-- ACKNOWLEDGEMENTS -->
 ## Acknowledgements
-
-* [SciKit-Learn](https://scikit-learn.org/stable/)
-* [HPELM](https://hpelm.readthedocs.io/en/latest/)
-* This README template comes from [here](https://github.com/othneildrew/Best-README-Template/edit/master/BLANK_README.md) - thank you!
+* add acknowledgements - pyelm-mme, xcast, xarray, pangeo, dask, iri data library, datasets 
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
