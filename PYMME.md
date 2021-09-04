@@ -28,12 +28,11 @@
     <img src="images/logo.png" alt="Logo" width="200" height="200">
   </a>
 
-  <h3 align="center">XCast: A Gridpoint-Wise Statistical Modeling Library for the Earth Sciences </h3>
+  <h3 align="center">PyMME: Gridpoint-Wise Multi-Model Ensemble Forecasting with XCast </h3>
   
-  XCast is a free and open source (passion) project designed to help Earth Scientists scale single-point-in-space regression approaches to spatial gridded data using the popular Earth Science data tool, Xarray. XCast provides a set of tools useful for manipulating and preprocessing Xarray datasets, and implements a 
-"fit-predict" training and prediction framework similar to those of the traditional Python statistical tools. More than just a "double-for-loop" wrapper for machine learning libraries, XCast is designed to be high-performance, intuitive, and easily extensible. It is our hope that XCast will serve to bridge the gap between the two-dimensional world of Python Data Science (Samples x Features), and the four-dimensional world of climate data (Samples x Features x Latitude x Longitude).
+  PyMME is an effort to use non-traditional statistical methods to construct gridpoint-wise Multi-Model Ensemble forecasts (MMEs) and examine their relative skill. MME construction is a common way to improve the skill of forecasts made by General Circulation Models (GCMs). Traditionally a simple ensemble mean is used, but there is potential for fitted statistical models to improve MME skill.  Although the scope of XCast is not limited to MME construction, PyMME is implemented with XCast and serves as XCast's primary research objective.  
     <br />
-    <a href="https://github.com/kjhall01/xcast/"><strong>Explore the docs »</strong></a>
+    <a href="https://github.com/kjhall01/xcast/blob/main/XCAST_DOCS.md"><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/kjhall01/xcast/blob/main/XCastDeterministic.ipynb">View Demo</a>
@@ -50,36 +49,26 @@
 <details open="open">
   <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
   <ol>
-    <li><a href="#why-xcast">Why XCast?</a></li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-    </li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
+    <li><a href="#why-pymme">Why PyMME?</a></li>
+    <li><a href="#contact">Research Goals</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
   </ol>
 </details>
 
 
-<!-- Why XCast -->
-## Why XCast?
+<!-- Why PyMME -->
+## Why PyMME?
 
-Numerous problems in the Earth Sciences are solved by finding statistical relationships (multiple-regression type) between variables measured at a given point in space, across time. Often, it's desirable to apply these approaches at many points in space, on a 'gridpoint-wise' basis. While Python has numerous [statistical](http://www.scipy.org/) and [machine learning](http://scikit-learn.org/stable/) libraries, none are designed to accomodate fitting more than one statistical model at once, i.e., at many points in space, as is required by this gridpoint-wise approach. 
-
-XCast enables users to apply Python's various statistical tools to spatial gridded data on a gridpoint-wise basis, without having to manually track and manage different dimensions, lists of model instances, or metadata. Built on [Xarray](http://xarray.pydata.org/en/stable/) and [Dask](https://dask.org/), two powerful data science libraries, XCast is capable of analyzing "Big-Data" that won't fit in RAM, and can be scaled to supercomputer clusters. It is designed to be extended to accomodate new statistical libraries easily, and to maximize synergy with the PanGEO stack and other Earth Science data analytics packages like XClim, ClimPred, and XSkillScore. 
+In the age of the climate crisis, seasonal and subseasonal climate variability have become more and more severe. Dry seasons have become drier, wet seasons wetter, and all, harder to predict. Supporting agricultural industries through climate services and information is more important than ever. Exploration of new ways to produce multi-model ensemble forecasts is a critical component of the research that supports those programs. 
 
 <!-- GETTING STARTED -->
-## Getting Started
-
-1. Install with [Anaconda](https://anaconda.org/)
-   ```sh
-   conda install -c hallkjc01 xcast
-   ```
-2. Read the [Documentation](https://github.com/kjhall01/xcast/)
-3. Check out our [blog](blogwebsite.org)
-
+## Timeline
+Spring 2019 - PyELM-MME Ideation & Design Work begins
+September 2020 - Development work begins on [PyELM-MME](https://github.com/kjhall01/PyELM-MME), a predecessor to the PyMME project and XCast 
+Fall/Winter 2020 - Development on [PyELM-MME](https://github.com/kjhall01/PyELM-MME) 
+March 2021 - [PyELM-MME](https://github.com/kjhall01/PyELM-MME) presented at the [UCAR SEA's Improving Scientific Software Conference](https://sea.ucar.edu/conference/2021), XCast & PyMME Ideation 
+Summer 2021 - Development of [XCast](https://github.com/kjhall01/xcast/) begins
+September 2021 - [PyMME]( presented at the [3rd Annual NOAA Workshop on Leveraging AI in the Environmental Sciences](https://2021noaaaiworkshop.sched.com/event/lSAN/virtual-poster-walk-part-vii) 
 
 <!-- ROADMAP -->
 ## Roadmap
