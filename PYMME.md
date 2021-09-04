@@ -74,16 +74,8 @@ September 2021 - [PyMME](https://github.com/kjhall01/xcast/blob/main/PYMME.md) p
 
 
 <!-- CONTRIBUTING -->
-## Contributing
-
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
+## Research Goals 
+The primary goal of the PyMME project is to explore the use of new and interesting statistical methods for the construction of multi-model ensemble forecasts. A secondary goal aims to develop a "general purpose" gridpoint-wise, xarray-based python statistical toolkit named "XCast" to serve as a partner library to ClimPred, XClim, and XSkillScore, and expand the Python Earth Science Machine Learning ecosystem. A tertiary goal is to identify specific combinations of GCM datasets, spatial regions, and statistical/ai methods that exhibit high predictive skill in seasonal or subseasonal forecasts. 
 
 
 <!-- LICENSE -->
