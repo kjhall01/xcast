@@ -64,13 +64,13 @@ In the age of the climate crisis, seasonal and subseasonal climate variability h
 
 <!-- GETTING STARTED -->
 ## Timeline
-Spring 2019 - PyELM-MME Ideation & Design Work begins
-September 2020 - Development work begins on [PyELM-MME](https://github.com/kjhall01/PyELM-MME), a predecessor to the PyMME project and XCast 
-Fall/Winter 2020 - Development on [PyELM-MME](https://github.com/kjhall01/PyELM-MME) 
-March 2021 - [PyELM-MME](https://github.com/kjhall01/PyELM-MME) presented at the [UCAR SEA's Improving Scientific Software Conference](https://sea.ucar.edu/conference/2021), XCast & PyMME Ideation 
-Summer 2021 - Development of [XCast](https://github.com/kjhall01/xcast/) begins
-August 2021 - Publication of PyELM-MME paper in the [PROCEEDINGS OF THE 2021 IMPROVING SCIENTIFIC SOFTWARE CONFERENCE](https://opensky.ucar.edu/islandora/object/technotes:589)
-September 2021 - [PyMME](https://github.com/kjhall01/xcast/blob/main/PYMME.md) presented at the [3rd Annual NOAA Workshop on Leveraging AI in the Environmental Sciences](https://2021noaaaiworkshop.sched.com/event/lSAN/virtual-poster-walk-part-vii) 
+* Spring 2019 - PyELM-MME Ideation & Design Work begins
+* September 2020 - Development work begins on [PyELM-MME](https://github.com/kjhall01/PyELM-MME), a predecessor to the PyMME project and XCast 
+* Fall/Winter 2020 - Development on [PyELM-MME](https://github.com/kjhall01/PyELM-MME) 
+* March 2021 - [PyELM-MME](https://github.com/kjhall01/PyELM-MME) presented at the [UCAR SEA's Improving Scientific Software Conference](https://sea.ucar.edu/conference/2021), XCast & PyMME Ideation 
+* Summer 2021 - Development of [XCast](https://github.com/kjhall01/xcast/) begins
+* August 2021 - Publication of PyELM-MME paper in the [PROCEEDINGS OF THE 2021 IMPROVING SCIENTIFIC SOFTWARE CONFERENCE](https://opensky.ucar.edu/islandora/object/technotes:589)
+* September 2021 - [PyMME](https://github.com/kjhall01/xcast/blob/main/PYMME.md) presented at the [3rd Annual NOAA Workshop on Leveraging AI in the Environmental Sciences](https://2021noaaaiworkshop.sched.com/event/lSAN/virtual-poster-walk-part-vii) 
 
 
 <!-- CONTRIBUTING -->
