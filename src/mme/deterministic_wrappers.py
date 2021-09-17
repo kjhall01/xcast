@@ -1,4 +1,3 @@
-import hpelm
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import  RandomForestClassifier
 import numpy as np
@@ -29,15 +28,15 @@ class PoissonRegressionOne:
 	def predict(self, x):
 		return self.model.predict(x).reshape(-1,1)
 
-class ELM:
-	def __init__(self, hidden_layer_size=5, activation = 'sigm', **kwargs):
-		self.hidden_layer_size = 5
-		self.activation = activation
+#class ELM:
+#	def __init__(self, hidden_layer_size=5, activation = 'sigm', **kwargs):
+#		self.hidden_layer_size = 5
+#		self.activation = activation
 
-	def fit(self, x, y):
-		self.model = hpelm.ELM(x.shape[1], y.shape[1])
-		self.model.add_neurons(self.hidden_layer_size, self.activation)
-		self.model.train(x, y, 'r')
+#	def fit(self, x, y):
+#		self.model = hpelm.ELM(x.shape[1], y.shape[1])
+#		self.model.add_neurons(self.hidden_layer_size, self.activation)
+#		self.model.train(x, y, 'r')
 
-	def predict(self, x):
-		return self.model.predict(x)
+#	def predict(self, x):
+#		return self.model.predict(x)

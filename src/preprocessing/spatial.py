@@ -25,14 +25,14 @@ def regrid(X, lons, lats, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feat
 
 	results, seldct = [], {}
 	feature_ndx = 0
-	for i in range(len(X1.chunks[list(X.dims).index(x_feature_dim)])):
+	for i in range(len(X1.chunks[list(X1.dims).index(x_feature_dim)])):
 		sample_ndx = 0
 		results.append([])
-		for j in range(len(X1.chunks[list(X.dims).index(x_sample_dim)])):
-			x_isel = {x_feature_dim: slice(feature_ndx, feature_ndx + X1.chunks[list(X.dims).index(x_feature_dim)][i]), x_sample_dim: slice(sample_ndx, sample_ndx + X1.chunks[list(X.dims).index(x_sample_dim)][j])}
-			results[i].append(regrid_chunk(X1.isel(**x_isel), lats, lons,  x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , use_dask=use_dask, hdf=hdf))
-			sample_ndx += X1.chunks[list(X.dims).index(x_sample_dim)][j]
-		feature_ndx += X1.chunks[list(X.dims).index(x_feature_dim)][i]
+		for j in range(len(X1.chunks[list(X1.dims).index(x_sample_dim)])):
+			x_isel = {x_feature_dim: slice(feature_ndx, feature_ndx + X1.chunks[list(X1.dims).index(x_feature_dim)][i]), x_sample_dim: slice(sample_ndx, sample_ndx + X1.chunks[list(X1.dims).index(x_sample_dim)][j])}
+			results[i].append(regrid_chunk(X1.isel(**x_isel), lats, lons,  x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , use_dask=use_dask, hdf=hdf, feature_ndx=feature_ndx, sample_ndx=sample_ndx))
+			sample_ndx += X1.chunks[list(X1.dims).index(x_sample_dim)][j]
+		feature_ndx += X1.chunks[list(X1.dims).index(x_feature_dim)][i]
 		if not use_dask:
 			results[i] = np.concatenate(results[i], axis=1)
 	if not use_dask:
@@ -42,15 +42,15 @@ def regrid(X, lons, lats, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feat
 		hdf.close()
 		hdf = h5py.File(id, 'r')
 		feature_ndx = 0
-		for i in range(len(X1.chunks[list(X.dims).index(x_feature_dim)])):
+		for i in range(len(X1.chunks[list(X1.dims).index(x_feature_dim)])):
 			sample_ndx = 0
 			results.append([])
-			for j in range(len(X1.chunks[list(X.dims).index(x_sample_dim)])):
+			for j in range(len(X1.chunks[list(X1.dims).index(x_sample_dim)])):
 				results[i].append(da.from_array(hdf['data_{}_{}'.format(feature_ndx, sample_ndx)]))
-				sample_ndx += X1.chunks[list(X.dims).index(x_sample_dim)][j]
-			results[i] = da.concatenate(results[i], axis=0)
-			feature_ndx += X1.chunks[list(X.dims).index(x_feature_dim)][i]
-		results = da.concatenate(results, axis=1)
+				sample_ndx += X1.chunks[list(X1.dims).index(x_sample_dim)][j]
+			results[i] = da.concatenate(results[i], axis=1)
+			feature_ndx += X1.chunks[list(X1.dims).index(x_feature_dim)][i]
+		results = da.concatenate(results, axis=0)
 	X1 = X1.transpose(x_feature_dim, x_sample_dim, x_lat_dim, x_lon_dim)
 	coords = {
 		x_lat_dim: lats,
@@ -61,7 +61,7 @@ def regrid(X, lons, lats, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feat
 	return xr.DataArray(data=results, coords=coords, dims=X1.dims)
 
 
-def regrid_chunk(X, lats, lons, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', use_dask=False, hdf=None ):
+def regrid_chunk(X, lats, lons, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', use_dask=False, hdf=None, feature_ndx=0, sample_ndx=0 ):
 	res = []
 	data = X.values
 	for i in range(data.shape[0]):

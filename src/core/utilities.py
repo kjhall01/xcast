@@ -114,3 +114,42 @@ def open_CsvDataset(filename, delimiter=',', M='M', T='T', tlabels=False, varnam
 	coords = {M: varnames, T: tlabels, 'X':[0], 'Y': [0]}
 	data_vars = {parameter: ([T, M, 'X', 'Y'], content)}
 	return xr.Dataset(data_vars, coords=coords)
+
+### BASH Utilities
+def rmrf(dirn):
+	subfiles = [file for file in dirn.glob('*') if file.is_file()]
+	subdirs = [diro for diro in dirn.glob('*') if diro.is_dir()]
+
+	for file in subfiles:
+		file.unlink()
+	for subdir in subdirs:
+		try:
+			subdir.rmdir()
+		except:
+			rmrf(subdir)
+	dirn.rmdir()
+
+
+
+def list_hstack2d(lists):
+	d1 = len(lists[0])
+	for lst in lists:
+		assert len(lst) == d1, 'first dimension must match on all lists'
+	main = lists[0]
+	for i in range(1, len(lists)):
+		for j in range(d1):
+			main[j].extend(lists[i][j])
+	return main
+
+def list_vstack2d(lists):
+	d2 = len(lists[0][0])
+	for lst in lists:
+		assert len(lst[0]) == d2, 'second dimension must match on all lists'
+	main = lists[0]
+	for i in range(1, len(lists)):
+		main.extend(lists[i])
+	return main
+
+def block(lists):
+	hstacked = [ list_hstack2d(lists[i]) for i in range(len(lists))]
+	return list_vstack2d(hstacked)

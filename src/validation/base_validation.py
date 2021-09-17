@@ -5,7 +5,7 @@ from ..core.progressbar import *
 import numpy as np
 
 
-def cross_validate( MME, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M',  window=3, verbose=0, ND=1, bn_thresh=None, an_thresh=None, explicit=False, **kwargs ):
+def cross_validate( MME, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M',  window=3, verbose=0, ND=1, bn_thresh=None, an_thresh=None, explicit=False, lat_chunks=1, lon_chunks=1, **kwargs ):
 	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
@@ -21,19 +21,20 @@ def cross_validate( MME, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x
 	y_train, y_test = crossval_y.get_next_window()
 
 	prediction_means, prediction_stds = [], []
+	kwargs['ND'] = ND
 	while x_train is not None and y_train is not None and x_test is not None and y_test is not None:
-		preds_temp = []
-		for i in range(ND):
-			mme  = MME(**kwargs)
-			mme.fit(x_train, y_train, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, y_lat_dim=y_lat_dim, y_lon_dim=y_lon_dim, y_sample_dim=y_sample_dim, y_feature_dim=y_feature_dim, an_thresh=an_thresh, bn_thresh=bn_thresh, explicit=explicit)
-			preds = mme.predict(x_test, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
-			preds_temp.append(preds)
-			count += 1
-			if verbose:
-				prog.show(count)
-		preds = xr.concat(preds_temp, 'N')
-		prediction_means.append(preds.mean('N'))
-		prediction_stds.append(preds.std('N'))
+		mme  = MME(**kwargs)
+		mme.fit(x_train, y_train, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, y_lat_dim=y_lat_dim, y_lon_dim=y_lon_dim, y_sample_dim=y_sample_dim, y_feature_dim=y_feature_dim, an_thresh=an_thresh, bn_thresh=bn_thresh, lat_chunks=lat_chunks, lon_chunks=lon_chunks, explicit=explicit)
+		pred_means = mme.predict(x_test, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, lat_chunks=lat_chunks, lon_chunks=lon_chunks)
+		pred_stds = mme.predict(x_test, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, lat_chunks=lat_chunks, lon_chunks=lon_chunks, mode='std')
+
+		count += 1
+		if verbose:
+			prog.show(count)
+
+		#preds = xr.concat(preds_temp, 'N')
+		prediction_means.append(pred_means)
+		prediction_stds.append(pred_stds)
 
 		x_train, x_test = crossval_x.get_next_window()
 		y_train, y_test = crossval_y.get_next_window()
