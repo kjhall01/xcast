@@ -1,110 +1,52 @@
 ---
-title: 'Gala: A Python package for galactic dynamics'
+title: 'XCast: A Gridpoint-Wise Statistical Modeling Python Library for the Earth Sciences'
 tags:
   - Python
-  - astronomy
-  - dynamics
-  - galactic dynamics
-  - milky way
+  - Machine learning 
+  - Artificial Intelligence
+  - Xarray 
+  - Spatial Data
+  - Gridded Data 
+  - Forecasting 
 authors:
-  - name: Adrian M. Price-Whelan^[co-first author] # note this makes a footnote saying 'co-first author'
-    orcid: 0000-0003-0872-7098
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
-  - name: Author Without ORCID^[co-first author] # note this makes a footnote saying 'co-first author'
+  - name: Kyle Hall
+    orcid: 0000-0003-3723-0662
+    affiliation: 1
+  - name: Nachiketa Acharya
+    orcid: 0000-0003-3010-2158
     affiliation: 2
-  - name: Author with no affiliation^[corresponding author]
-    affiliation: 3
 affiliations:
- - name: Lyman Spitzer, Jr. Fellow, Princeton University
+ - name: International Research Institute for Climate & Society, Columbia University
    index: 1
- - name: Institution Name
+ - name: Center for Earth System Modeling, Analysis, & Data (ESMAD), Department of Meteorology and Atmospheric Science, The Pennsylvania State University
    index: 2
- - name: Independent Researcher
-   index: 3
-date: 13 August 2017
-bibliography: paper.bib
-
-# Optional fields if submitting to a AAS journal too, see this blog post:
-# https://blog.joss.theoj.org/2018/12/a-new-collaboration-with-aas-publishing
-aas-doi: 10.3847/xxxxx <- update this with the DOI from AAS once you know it.
-aas-journal: Astrophysical Journal <- The name of the AAS journal.
+date: 17 September 2021
+bibliography: paper.bibtex
 ---
 
 # Summary
 
-The forces on stars, galaxies, and dark matter under external gravitational
-fields lead to the dynamical evolution of structures in the universe. The orbits
-of these bodies are therefore key to understanding the formation, history, and
-future state of galaxies. The field of "galactic dynamics," which aims to model
-the gravitating components of galaxies to study their structure and evolution,
-is now well-established, commonly taught, and frequently used in astronomy.
-Aside from toy problems and demonstrations, the majority of problems require
-efficient numerical tools, many of which require the same base code (e.g., for
-performing numerical orbit integration).
+XCast is a free and open source Python package for climate data analytics, machine learning, and forecasting. It is designed to facilitate the application of two-dimensional Python statistical and machine learning models to four-dimensional Xarray gridded data on a gridpoint-wise basis for the purpose of climate forecasting, but 
+
+Standard Python statistics and machine learning implementations are incompatible with the mainstream climate data format, the Xarray DataArray, and require large amounts of data wrangling to be used for climate forecasting. XCast allows climate data scientists to use these traditional two-dimensional data science tools directly with four-dimensional Xarray-formatted climate data, which allows them in turn to use the powerful features of the Xarray Library. 
+
+XCast builds on standard Python data science tools to implement data preprocessing techniques like dimensionality reduction, filling missing data, regridding, interpolation, and one-hot encoding, as well as model training and leave-n-out cross validation. XCast currently implements twelve (12) deterministic forecasting methodologies like Ensemble Mean, Multiple Linear Regression, Artificial Neural Networks, and Extreme Learning Machine. It is designed specifically to be extended to new methods easily. 
+
 
 # Statement of need
 
-`Gala` is an Astropy-affiliated Python package for galactic dynamics. Python
-enables wrapping low-level languages (e.g., C) for speed without losing
-flexibility or ease-of-use in the user-interface. The API for `Gala` was
-designed to provide a class-based and user-friendly interface to fast (C or
-Cython-optimized) implementations of common operations such as gravitational
-potential and force evaluation, orbit integration, dynamical transformations,
-and chaos indicators for nonlinear dynamics. `Gala` also relies heavily on and
-interfaces well with the implementations of physical units and astronomical
-coordinate systems in the `Astropy` package [@astropy] (`astropy.units` and
-`astropy.coordinates`).
+In climate science and climate forecasting, some approaches use spatially-dependent statistical techniques, i.e., spatial principal components regression. These types of models save time and computational effort by fitting over a region in space all at once. Other approaches use gridpoint-wise models, where one model is fit at each point in space. 
 
-`Gala` was designed to be used by both astronomical researchers and by
-students in courses on gravitational dynamics or astronomy. It has already been
-used in a number of scientific publications [@Pearson:2017] and has also been
-used in graduate courses on Galactic dynamics to, e.g., provide interactive
-visualizations of textbook material [@Binney:2008]. The combination of speed,
-design, and support for Astropy functionality in `Gala` will enable exciting
-scientific explorations of forthcoming data releases from the *Gaia* mission
-[@gaia] by students and experts alike.
+The second type of approach is difficult to implement in Python. While there are open source implementations of numerous statistical tools and machine learning approaches available in Python, they largely work with two dimensional data of “N” samples and “M” features. They are not built to work with four-dimensional, spatial data, or to synergize with mainstream climate data formats, like the Xarray DataArray (NetCDF). Climate data, even if in the Xarray format, may also implement different coordinate and variable naming standards and conventions, or be too large for in-memory computation
 
-# Mathematics
+XCast solves all of these problems at once. It manages the creation of the numerous model instances necessary to implement gridpoint-wise statistical methods, and coordinates the extraction of the appropriate region of the dataset used by each instance. XCast allows the programmer to store their data as four-dimensional Xarray data types while building gridpoint-wise statistical and machine learning models, which facilitates parallel, distributed, and out-of-core big-data computation with Dask. XCast accommodates arbitrary coordinate and variable naming conventions by allowing the user to specify the names of the sample, feature, latitude and longitude dimensions of their datasets. By allowing programmers to stay within the Xarray ecosystem, XCast opens big-data climate science and climate forecasting to a world of synergy with tools like OPEnDAP, Intake, ClimPred, XClim, and the entire PanGEO stack.  
 
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
 
-Double dollars make self-standing equations:
+# 
 
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
-
-You can also use plain \LaTeX for equations
-\begin{equation}\label{eq:fourier}
-\hat f(\omega) = \int_{-\infty}^{\infty} f(x) e^{i\omega x} dx
-\end{equation}
-and refer to \autoref{eq:fourier} from text.
-
-# Citations
-
-Citations to entries in paper.bib should be in
-[rMarkdown](http://rmarkdown.rstudio.com/authoring_bibliographies_and_citations.html)
-format.
-
-If you want to cite a software repository URL (e.g. something on GitHub without a preferred
-citation) then you can do it with the example BibTeX entry below for @fidgit.
-
-For a quick reference, the following citation commands can be used:
-- `@author:2001`  ->  "Author et al. (2001)"
-- `[@author:2001]` -> "(Author et al., 2001)"
-- `[@author1:2001; @author2:2001]` -> "(Author1 et al., 2001; Author2 et al., 2002)"
-
-# Figures
-
-Figures can be included like this:
-![Caption for example figure.\label{fig:example}](figure.png)
-and referenced from text using \autoref{fig:example}.
-
-Figure sizes can be customized by adding an optional second parameter:
-![Caption for example figure.](figure.png){ width=20% }
 
 # Acknowledgements
 
-We acknowledge contributions from Brigitta Sipocz, Syrtis Major, and Semyeong
-Oh, and support from Kathryn Johnston during the genesis of this project.
+Thank you to the developers of SciKit-Learn, NumPy, SciPy, Xarray, Dask, and the PanGEO stack without whom this project would be impossible.
+
+# References 
