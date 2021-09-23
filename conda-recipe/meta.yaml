@@ -3,7 +3,7 @@ package:
   version: "0.1.0"
 
 source:
-  url:  https://github.com/kjhall01/xcast/archive/refs/tags/xcast-v0.1.0.tar.gz
+  path:  ..
 build:
   number: 0
   string: xcast

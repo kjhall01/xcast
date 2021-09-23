@@ -12,7 +12,7 @@ def cross_validate( MME, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x
 	crossval_x = CrossValidator(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim, window=window)
 	crossval_y = CrossValidator(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim, window=window)
 
-	prog = ProgressBar(crossval_x.windows * ND, step=1, label=" CROSSVALIDATING {}: ".format(MME.__name__))
+	prog = ProgressBar(crossval_x.windows, step=1, label=" CROSSVALIDATING {}: ".format(MME.__name__))
 	count = 0
 	if verbose:
 		prog.show(count)
