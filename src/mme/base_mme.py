@@ -12,28 +12,6 @@ import dask.array as da
 import dask
 import dask.diagnostics as dd
 
-def apply_predict_to_chunk( x_data, lat_ndx_low, lat_ndx_high, lon_ndx_low, lon_ndx_high, models,  ND=1, destination='.xcast_worker_space', verbose=False):
-	results = []
-
-	for i in range(lat_ndx_low, lat_ndx_high):
-		results.append([])
-		for j in range(lon_ndx_low, lon_ndx_high):
-			results[i - lat_ndx_low].append([])
-			x_train = x_data[i, j, :, :]
-			if len(x_train.shape) < 2:
-				x_train = x_train.reshape(-1,1)
-			for k in range(ND):
-				res = models[i-lat_ndx_low,j-lon_ndx_low,k].predict(x_train)
-				if len(res.shape) < 2:
-					res = np.expand_dims(res, 1)
-				results[i-lat_ndx_low][j-lon_ndx_low].append(res)
-	#id = str(uuid.uuid4())
-	res1 = da.from_array(results)
-	hdf5 = h5py.File(destination, 'w')
-	hdf5.create_dataset('data', data=results)
-	hdf5.close()
-	return destination
-	#da.to_zarr(res1, str(Path(destination) / '{}.zarr'.format(id)) )
 
 def apply_fit_to_block(x_data, y_data, mme=LinearRegression, ND=1, kwargs={}):
 	models = []
@@ -80,7 +58,7 @@ class BaseMME:
 		self.shape = {'LATITUDE':0, 'LONGITUDE':0, 'FIT_SAMPLES': 0, 'INPUT_FEATURES':0, 'OUTPUT_FEATURES': 0}
 		self.count, self.total = 0, 1
 
-	def fit(self, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', lat_chunks=1, lon_chunks=1,  feat_chunks=1, samp_chunks=1, verbose=False ):
+	def fit(self, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', lat_chunks=1, lon_chunks=1,  feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True ):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
@@ -90,13 +68,51 @@ class BaseMME:
 		Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		X1, Y1 = self._chunk(X1, Y1, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, lat_chunks, lon_chunks)
 
-		x_data = X1.data#self.client.scatter(X1.data, broadcast=True)
-		y_data = Y1.data #self.client.scatter(Y1.data, broadcast=True)
-		if verbose:
-			print('CLIENT: {}'.format(self.client))
-		self.models = da.map_blocks(apply_fit_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3], mme=self.model_type, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).compute()
-		#self.models = da.from_array(self.models, chunks=(x_data.chunks[0], x_data.chunks[1], (1,)) )
+		if parallel_in_memory:
+			x_data = X1.data#self.client.scatter(X1.data, broadcast=True)
+			y_data = Y1.data #self.client.scatter(Y1.data, broadcast=True)
+			if verbose:
+				with dd.ProgressBar():
+					self.models = da.map_blocks(apply_fit_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3], mme=self.model_type, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).compute()
+			else:
+				self.models = da.map_blocks(apply_fit_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3], mme=self.model_type, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).compute()
+		else:
+			self._gen_models(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+			if verbose:
+				self.prog = ProgressBar(self.total, label='Fitting {}:'.format(self.model_type.__name__), step=10)
+				self.prog.show(self.count)
 
+			lat_ndx_low = 0
+			for i in range(len(self.lat_chunks)):
+				lon_ndx_low = 0
+				for j in range(len(self.lon_chunks)):
+					x_isel = {x_lat_dim: slice(lat_ndx_low, lat_ndx_low + self.lat_chunks[i]), x_lon_dim: slice(lon_ndx_low, lon_ndx_low + self.lon_chunks[j])}
+					y_isel = {y_lat_dim: slice(lat_ndx_low, lat_ndx_low + self.lat_chunks[i]), y_lon_dim: slice(lon_ndx_low, lon_ndx_low + self.lon_chunks[j])}
+					chunk_of_x = X1.isel(**x_isel)
+					chunk_of_y = Y1.isel(**y_isel)
+					self._apply_fit_to_chunk(chunk_of_x, chunk_of_y, lat_ndx_low, lon_ndx_low, verbose=verbose )
+					lon_ndx_low += self.lon_chunks[j]
+				lat_ndx_low += self.lat_chunks[i]
+
+			if verbose:
+				self.prog.finish()
+				self.count = 0
+
+	def _apply_fit_to_chunk(self, X1, Y1, lat_ndx_low, lon_ndx_low, verbose=False):
+		x_data, y_data = X1.values, Y1.values
+		for i in range(x_data.shape[0]):
+			for j in range(x_data.shape[1]):
+				x_train = x_data[i, j, :, :]
+				y_train = y_data[i, j, :, :]
+				if len(x_train.shape) < 2:
+					x_train = x_train.reshape(-1,1)
+				if len(y_train.shape) < 2:
+					y_train = y_train.reshape(-1,1)
+				for k in range(self.ND):
+					self.models[i + lat_ndx_low][j+lon_ndx_low][k].fit(x_train, y_train)
+				self.count += 1
+				if verbose:
+					self.prog.show(self.count)
 
 	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 ,  feat_chunks=1, samp_chunks=1, mode='mean', destination='.xcast_worker_space', verbose=False):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -200,7 +216,9 @@ class BaseMME:
 		for i in range(self.shape['LATITUDE']):
 			self.models.append([])
 			for j in range(self.shape['LONGITUDE']):
-				self.models[i].append(self.model_type(**self.kwargs))
+				self.models[i].append([])
+				for k in range(self.ND):
+					self.models[i][j].append(self.model_type(**self.kwargs))
 
 	def _save_data_shape(self, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M',  y_feature_dim='M' ):
 		self.shape['LATITUDE'] =  X.shape[list(X.dims).index(x_lat_dim)]
