@@ -60,7 +60,7 @@ XCast implements numerous gridpoint-wise statistical models. Each prepackaged mo
 
 # Extending XCast 
 
-Since XCast cannot possibly implement every possible statistical and machine learning approach, it is designed to be easily extensible to new types of models. All a user needs to do is implement a new XCast BaseMME subclass, override its constructor method, and set its `model_type` attribute to the target machine learning model class. The machine learning model class must implement `.fit` and `.predict` methods that work with unlabeled, two-dimensional arrays. More detail is available in the XCast documentation. The methods currently implemented by XCast are detailed below. 
+Since XCast cannot possibly implement every possible statistical and machine learning approach, it is designed to be easily extensible to new types of models. All a user needs to do is implement a new XCast BaseMME subclass, override its constructor method, and set its `model_type` attribute to the target machine learning model class. The machine learning model class must implement `.fit` and `.predict` methods that work with unlabeled, two-dimensional arrays. More detail is available in the XCast documentation. 
 
 
 # Acknowledgements
