@@ -55,7 +55,7 @@ XCast implements numerous gridpoint-wise statistical models. Each prepackaged mo
 * **Multi-Layer Perceptron** MLP fits an Artificial Neural Network between the predictand dataset and the predictor dataset using backpropagation. 
 * **Random Forest** RF fits numerous Decision Tree models between the predictand dataset and the predictor dataset.
 * **Ridge Regression**  RR fits a Ridge Regression between the predictand dataset and the predictor dataset. 
-* **Extreme Learning Machine** ELM fits an Extreme Learning Machine model between the predictand dataset and the predictor dataset.
+* **Extreme Learning Machine** ELM fits an Extreme Learning Machine model between the predictand dataset and the predictor dataset. [@Huang:2004]
 * **Principal Components ELM** PCELM  fits an Extreme Learning Machine model between the principal components of the predictor dataset features and the predictand datset. [@Jinkwon:2007]
 
 # Extending XCast 
