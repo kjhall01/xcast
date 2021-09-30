@@ -10,6 +10,7 @@ from dask.distributed import Client, progress, as_completed
 import dask.array as da
 import dask
 import dask.diagnostics as dd
+from sklearn.linear_model import LinearRegression
 
 
 def apply_fit_to_block(x_data, y_data, mme=LinearRegression, ND=1, kwargs={}):

@@ -4,7 +4,7 @@ import numpy as np
 import dask.array as da
 import uuid
 import h5py
-from ..regression.regression_wrappers import NanRegression
+from ..flat_estimators.regressors import NanRegression
 from ..core.utilities import *
 from ..core.progressbar import *
 

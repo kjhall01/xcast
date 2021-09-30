@@ -45,7 +45,7 @@ class BaseClassifier:
 	and then sub-class's .model_type must be set to the constructor of the new method """
 
 	def __init__(self, client=None, ND=1, **kwargs):
-		self.model_type = LinearRegression
+		self.model_type = MultiClassPOELM
 		self.models = None
 		self.ND = ND
 		self.client = client
@@ -60,7 +60,7 @@ class BaseClassifier:
 		self._save_data_shape(X, Y, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim, y_feature_dim)
 		X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
-		X1, Y1 = self._chunk(X1, Y1, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, lat_chunks, lon_chunks)
+		X1, Y1 = self._chunk(X1, Y1, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_feature_dim, y_feature_dim, lat_chunks, lon_chunks)
 		if parallel_in_memory:
 			x_data = X1.data
 			y_data = Y1.data
@@ -183,7 +183,7 @@ class BaseClassifier:
 				if len(x_train.shape) < 2:
 					x_train = x_train.reshape(-1,1)
 				for k in range(self.ND):
-					res = self.models[i + lat_ndx_low][j+lon_ndx_low][k].predict(x_train)
+					res = np.asarray(self.models[i + lat_ndx_low][j+lon_ndx_low][k].predict_proba(x_train))
 					if len(res.shape) < 2:
 						res = np.expand_dims(res, 1)
 					assert res.shape[1] == self.shape['OUTPUT_FEATURES']
@@ -196,9 +196,9 @@ class BaseClassifier:
 		return 'data_{}_{}'.format(lat_ndx_low, lon_ndx_low)
 
 
-	def _chunk(self, X, Y, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, lat_chunks, lon_chunks):
-		X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks,1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1)})
-		Y1 = Y.chunk({y_lat_dim: max(self.shape['LATITUDE'] // lat_chunks, 1), y_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1)})
+	def _chunk(self, X, Y, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_feature_dim, y_feature_dim, lat_chunks, lon_chunks):
+		X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks,1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1), x_feature_dim: self.shape['INPUT_FEATURES'] })
+		Y1 = Y.chunk({y_lat_dim: max(self.shape['LATITUDE'] // lat_chunks, 1), y_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1), y_feature_dim: self.shape['OUTPUT_FEATURES']})
 		self.lat_chunks, self.lon_chunks = X1.chunks[0], X1.chunks[1]
 		return X1, Y1
 

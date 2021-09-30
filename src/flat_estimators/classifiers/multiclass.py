@@ -3,10 +3,17 @@ from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import  RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB
 from scipy.special import softmax
+import numpy as np
 
-class MultiClassPOELM(POELMClassifier):
+class MultiClassPOELM:
+	def __init__(self, **kwargs):
+		self.model = POELMClassifier(**kwargs)
+
+	def fit(self, x, y):
+		self.model.fit(x, y)
+
 	def predict_proba(self, x):
-		ret = self.predict_proba(x)
+		ret = self.model.predict_proba(x)
 		sums =  np.sum(ret, axis=1)
 		ret1 = ret / sums.reshape(-1,1)
 		ret2 = softmax(ret, axis=-1)
@@ -14,6 +21,8 @@ class MultiClassPOELM(POELMClassifier):
 		retfinal[sums >=1, :] = ret1[sums>=1, :]
 		retfinal[sums < 1, :] = ret2[sums<1, :]
 		return retfinal
+
+
 
 
 class MultiClassMLP:

@@ -8,12 +8,18 @@ class NormalTerciles:
 
 	def fit(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+		self.feature_dim, self.lat_dim, self.lon_dim = x_feature_dim, x_lat_dim, x_lon_dim
 		X1 = X.isel()
 		self.mu = X1.mean(x_sample_dim)
 		self.std = X1.std(x_sample_dim)
 
 	def transform(self,X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+		self.mu = self.mu.rename({self.feature_dim:x_feature_dim, self.lat_dim:x_lat_dim, self.lon_dim:x_lon_dim})
+		self.std = self.std.rename({self.feature_dim:x_feature_dim, self.lat_dim:x_lat_dim, self.lon_dim:x_lon_dim})
+
+		self.feature_dim, self.lat_dim, self.lon_dim = x_feature_dim, x_lat_dim, x_lon_dim
+
 		X1 = (X - self.mu ) / self.std
 
 		X_BN = X1.where(X1 < self.low_thresh, other=-999)
@@ -39,6 +45,7 @@ class RankedTerciles:
 	def fit(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		iseldict = {x_feature_dim: 0}
+		self.feature_dim, self.lat_dim, self.lon_dim = x_feature_dim, x_lat_dim, x_lon_dim
 		X1 = X.isel(**iseldict)
 		if self.low_thresh is None:
 			self.low_thresh=0.33
@@ -54,10 +61,16 @@ class RankedTerciles:
 			self.high_threshold = X1.quantile( self.high_thresh, dim=x_sample_dim)
 			self.low_threshold = X1.quantile( self.low_thresh, dim=x_sample_dim)
 
+
+
 	def transform(self,X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		iseldict = {x_feature_dim: 0}
 		X1 = X.isel(**iseldict)
+		self.high_threshold = self.high_threshold.rename({ self.lat_dim:x_lat_dim, self.lon_dim:x_lon_dim})
+		self.low_threshold = self.low_threshold.rename({self.lat_dim:x_lat_dim, self.lon_dim:x_lon_dim})
+
+		self.feature_dim, self.lat_dim, self.lon_dim = x_feature_dim, x_lat_dim, x_lon_dim
 
 		X_BN = X1.where(X1 < self.low_threshold, other=-999)
 		X_BN = X_BN.where(X_BN == -999, other=1.0)

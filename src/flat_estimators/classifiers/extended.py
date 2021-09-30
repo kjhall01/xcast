@@ -2,7 +2,7 @@ from .poelm import *
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import  RandomForestClassifier
 from sklearn.naive_bayes import MultinomialNB
-from scipy.special import softmaxss
+from scipy.special import softmax
 
 
 class ExtendedPOELM:

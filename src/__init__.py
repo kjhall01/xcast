@@ -32,7 +32,7 @@ deterministic_mmes = [
 	EnsembleMeanMME,
 	BiasCorrectedEnsembleMeanMME,
 	MultipleRegressionMME,
-	PoissonRegressionMME,
+	#PoissonRegressionMME,
 	GammaRegressionMME,
 	PrincipalComponentsRegressionMME,
 	MultiLayerPerceptronMME,
@@ -57,11 +57,11 @@ pointwise_classifiers = [
 ]
 
 probabilistic_mmes = [
-	MemberCountMME,
-	StandardMemberCountMME,
-	PoelmMME,
-	PoelmPcaMME,
-	ProbabilisticMlpMME,
+	#MemberCountMME,
+	#StandardMemberCountMME,
+	#PoelmMME,
+	#PoelmPcaMME,
+	#ProbabilisticMlpMME,
 	ProbabilisticRandomForestMME,
 	ElrMME,
 	MultivariateElrMME

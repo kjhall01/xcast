@@ -1,4 +1,4 @@
-from .elf import *
+from .elr import *
 from .extended import *
 from .multiclass import *
 from .poelm import *

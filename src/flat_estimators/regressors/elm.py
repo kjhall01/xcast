@@ -18,7 +18,7 @@ class ELMRegressor:
 		assert type(preprocessing) is str and preprocessing in ['std', 'minmax', 'none'], 'Invalid preprocessing {}'.format(preprocessing)
 		assert type(dropconnect_pr) is float, 'Invalid DropConnect Probability Threshold {}'.format(dropconnect_pr)
 		assert type(dropout_pr) is float, 'Invalid DropOut Probability Threshold {}'.format(dropout_pr)
-
+		self.activation = activation
 		self.initialization = initialization
 		self.pruning = pruning
 		self.verbose=verbose
