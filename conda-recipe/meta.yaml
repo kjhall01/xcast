@@ -1,6 +1,6 @@
 package:
   name: xcast
-  version: "0.1.0"
+  version: "0.1.1"
 
 source:
   path:  ..
@@ -11,15 +11,14 @@ build:
 
 requirements:
   host:
-    - python>=3.4,<3.9
+    - python>=3.4
     - pip
     - setuptools
   run:
-    - python>=3.4,<3.9
+    - python>=3.4
     - numpy
     - scipy
     - scikit-learn
-    - extremelearning
     - xarray
     - dask
     - cartopy
@@ -30,14 +29,17 @@ requirements:
     - opencv
     - xskillscore
 
-
-
 test:
   imports:
     - xcast
+    - xcast.classification
     - xcast.core
+    - xcast.flat_estimators
+    - xcast.flat_estimators.classifiers
+    - xcast.flat_estimators.regressors
     - xcast.mme
     - xcast.preprocessing
+    - xcast.regression
     - xcast.validation
     - xcast.verification
 about:

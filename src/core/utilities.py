@@ -19,36 +19,36 @@ def to_xss(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 
 def check_transposed(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	"""Checks that X is transposed to [Lat, Lon, Sample, Feature] order"""
-	assert list(X.dims).index(x_lat_dim) == 0, 'BaseMME.fit requires X to be transposed to LAT x LON x SAMPLE x FEATURE'
-	assert list(X.dims).index(x_lon_dim) == 1, 'BaseMME.fit requires X to be transposed to LAT x LON x SAMPLE x FEATURE'
-	assert list(X.dims).index(x_sample_dim) == 2, 'BaseMME.fit requires X to be transposed to LAT x LON x SAMPLE x FEATURE'
-	assert list(X.dims).index(x_feature_dim) == 3, 'BaseMME.fit requires X to be transposed to LAT x LON x SAMPLE x FEATURE'
+	assert list(X.dims).index(x_lat_dim) == 0, 'XCast requires a dataset to be transposed to LAT x LON x SAMPLE x FEATURE'
+	assert list(X.dims).index(x_lon_dim) == 1, 'XCast requires a dataset to be transposed to LAT x LON x SAMPLE x FEATURE'
+	assert list(X.dims).index(x_sample_dim) == 2, 'XCast requires a dataset to be transposed to LAT x LON x SAMPLE x FEATURE'
+	assert list(X.dims).index(x_feature_dim) == 3, 'XCast requires a dataset to be transposed to LAT x LON x SAMPLE x FEATURE'
 
 def check_dimensions(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	"""Checks that X is 4D, with Dimension Names as specified by x_lat_dim, x_lon_dim, x_sample_dim, and x_feature_dim"""
-	assert len(X.dims) == 4, 'BaseMME.fit requires X to be 4-Dimensional'
-	assert x_lat_dim in X.dims, 'BaseMME.fit requires x_lat_dim to be a dimension on X'
-	assert x_lon_dim in X.dims, 'BaseMME.fit requires x_lon_dim to be a dimension on X'
-	assert x_sample_dim in X.dims, 'BaseMME.fit requires x_sample_dim to be a dimension on X'
-	assert x_feature_dim in X.dims, 'BaseMME.fit requires x_feature_dim to be a dimension on X'
+	assert 4 <= len(X.dims) <= 5, 'XCast requires a dataset to be 4-Dimensional'
+	assert x_lat_dim in X.dims, 'XCast requires a dataset_lat_dim to be a dimension on X'
+	assert x_lon_dim in X.dims, 'XCast requires a dataset_lon_dim to be a dimension on X'
+	assert x_sample_dim in X.dims, 'XCast requires a dataset_sample_dim to be a dimension on X'
+	assert x_feature_dim in X.dims, 'XCast requires a dataset_feature_dim to be a dimension on X'
 
 def check_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	"""Checks that X has coordinates named as specified by x_lat_dim, x_lon_dim, x_sample_dim, and x_feature_dim"""
-	assert x_lat_dim in X.coords.keys(), 'BaseMME.fit requires x_lat_dim to be a coordinate on X'
-	assert x_lon_dim in X.coords.keys(), 'BaseMME.fit requires x_lon_dim to be a coordinate on X'
-	assert x_sample_dim in X.coords.keys(), 'BaseMME.fit requires x_sample_dim to be a coordinate on X'
-	assert x_feature_dim in X.coords.keys(), 'BaseMME.fit requires x_feature_dim to be a coordinate on X'
+	assert x_lat_dim in X.coords.keys(), 'XCast requires a dataset_lat_dim to be a coordinate on X'
+	assert x_lon_dim in X.coords.keys(), 'XCast requires a dataset_lon_dim to be a coordinate on X'
+	assert x_sample_dim in X.coords.keys(), 'XCast requires a dataset_sample_dim to be a coordinate on X'
+	assert x_feature_dim in X.coords.keys(), 'XCast requires a dataset_feature_dim to be a coordinate on X'
 
 def check_consistent(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	"""Checks that X's Coordinates are the same length as X's Dimensions"""
-	assert X.shape[list(X.dims).index(x_lat_dim)] == len(X.coords[x_lat_dim].values), "BaseMME.fit requires X's x_lat_dim coordinate to be the same length as X's x_lat_dim dimension"
-	assert X.shape[list(X.dims).index(x_lon_dim)] == len(X.coords[x_lon_dim].values), "BaseMME.fit requires X's x_lon_dim coordinate to be the same length as X's x_lon_dim dimension"
-	assert X.shape[list(X.dims).index(x_sample_dim)] == len(X.coords[x_sample_dim].values), "BaseMME.fit requires X's x_sample_dim coordinate to be the same length as X's x_sample_dim dimension"
-	assert X.shape[list(X.dims).index(x_feature_dim)] == len(X.coords[x_feature_dim].values), "BaseMME.fit requires X's x_feature_dim coordinate to be the same length as X's x_feature_dim dimension"
+	assert X.shape[list(X.dims).index(x_lat_dim)] == len(X.coords[x_lat_dim].values), "XCast requires a dataset's x_lat_dim coordinate to be the same length as its x_lat_dim dimension"
+	assert X.shape[list(X.dims).index(x_lon_dim)] == len(X.coords[x_lon_dim].values), "XCast requires a dataset's x_lon_dim coordinate to be the same length as its x_lon_dim dimension"
+	assert X.shape[list(X.dims).index(x_sample_dim)] == len(X.coords[x_sample_dim].values), "XCast requires a dataset's x_sample_dim coordinate to be the same length as its x_sample_dim dimension"
+	assert X.shape[list(X.dims).index(x_feature_dim)] == len(X.coords[x_feature_dim].values), "XCast requires a dataset's x_feature_dim coordinate to be the same length as its x_feature_dim dimension"
 
 def check_type(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	"""Checks that X is an Xarray.DataArray"""
-	assert type(X) == xr.DataArray, 'BaseMME.fit requires X to be of type "Xarray.DataArray"'
+	assert type(X) == xr.DataArray, 'XCast requires a dataset to be of type "Xarray.DataArray"'
 
 def check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	"""Checks that X satisfies all conditions for XCAST"""
@@ -128,28 +128,3 @@ def rmrf(dirn):
 		except:
 			rmrf(subdir)
 	dirn.rmdir()
-
-
-
-def list_hstack2d(lists):
-	d1 = len(lists[0])
-	for lst in lists:
-		assert len(lst) == d1, 'first dimension must match on all lists'
-	main = lists[0]
-	for i in range(1, len(lists)):
-		for j in range(d1):
-			main[j].extend(lists[i][j])
-	return main
-
-def list_vstack2d(lists):
-	d2 = len(lists[0][0])
-	for lst in lists:
-		assert len(lst[0]) == d2, 'second dimension must match on all lists'
-	main = lists[0]
-	for i in range(1, len(lists)):
-		main.extend(lists[i])
-	return main
-
-def block(lists):
-	hstacked = [ list_hstack2d(lists[i]) for i in range(len(lists))]
-	return list_vstack2d(hstacked)

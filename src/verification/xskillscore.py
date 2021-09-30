@@ -3,12 +3,19 @@ import xarray as xr
 from ..core.utilities import *
 import numpy as np
 
-def deterministic_skill(X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M'):
+def _chunk(X, Y, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_sample_dim, x_feature_dim, y_sample_dim, y_feature_dim, lat_chunks, lon_chunks):
+	X1 = X.chunk({x_lat_dim: max( len(X.coords[x_lat_dim].values)// lat_chunks,1), x_lon_dim: max(len(X.coords[x_lon_dim].values)// lon_chunks,1), x_sample_dim:len(X.coords[x_sample_dim].values) , x_feature_dim:1})
+	Y1 = Y.chunk({y_lat_dim: max(len(Y.coords[y_lat_dim].values) // lat_chunks, 1), y_lon_dim: max(len(Y.coords[y_lon_dim].values) // lon_chunks,1), y_sample_dim:len(Y.coords[y_sample_dim].values), y_feature_dim:1})
+	return X1, Y1
+
+def deterministic_skill(X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', lat_chunks=1, lon_chunks=1,  y_sample_dim='T', y_feature_dim='M'):
 	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim) # X is predictions
 	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)# Y is observatiosn
 
-	Y1 = to_xss(Y, y_lat_dim, y_lon_dim, y_sample_dim,  y_feature_dim)
-	X1 = to_xss(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	X1, Y1 = _chunk(X, Y, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_sample_dim, x_feature_dim, y_sample_dim, y_feature_dim, lat_chunks, lon_chunks)
+
+	Y1 = to_xss(Y1, y_lat_dim, y_lon_dim, y_sample_dim,  y_feature_dim)
+	X1 = to_xss(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
 	Y1.coords['time'] = X1.coords['time'].values
 	Y1.coords['lat'] = X1.coords['lat'].values
@@ -62,6 +69,5 @@ def deterministic_skill(X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_
 
 	smape = xs.smape(Y1, X1, dim='time')
 	smape.name = 'symmetric_mean_absolute_percentage_error'
-
 
 	return xr.merge([smape, rmse, med, mse, me ,mape, mae, r2, srp , sre, lsl, prp, pre, ess, sco, pco ])

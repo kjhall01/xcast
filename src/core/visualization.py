@@ -10,6 +10,77 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.colors as colors
 import matplotlib as mpl
 import copy
+import cv2, uuid, h5py
+from pathlib import Path
+import dask.array as da
+import xarray as xr
+
+
+def __gaussian_smooth(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', kernel=(9,9), use_dask=False, feature_chunks=1, sample_chunks=1, destination='.xcast_worker_space' ):
+	check_all(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
+	#X1 = fill_space_mean(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim )
+	X1 = X.chunk({x_feature_dim: max(X.shape[list(X.dims).index(x_feature_dim)] // feature_chunks, 1), x_sample_dim: max(X.shape[list(X.dims).index(x_sample_dim)] // sample_chunks, 1) }).transpose(x_feature_dim, x_sample_dim, x_lat_dim, x_lon_dim)
+
+	if use_dask:
+		id =  Path(destination) / str(uuid.uuid4())
+		hdf = h5py.File(id, 'w')
+	else:
+		hdf = None
+
+	results, seldct = [], {}
+	feature_ndx = 0
+	for i in range(len(X1.chunks[list(X1.dims).index(x_feature_dim)])):
+		sample_ndx = 0
+		results.append([])
+		for j in range(len(X1.chunks[list(X1.dims).index(x_sample_dim)])):
+			x_isel = {x_feature_dim: slice(feature_ndx, feature_ndx + X1.chunks[list(X1.dims).index(x_feature_dim)][i]), x_sample_dim: slice(sample_ndx, sample_ndx + X1.chunks[list(X1.dims).index(x_sample_dim)][j])}
+			results[i].append(__gaussian_smooth_chunk(X1.isel(**x_isel), feature_ndx, sample_ndx, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , use_dask=use_dask, kernel=kernel, hdf=hdf))
+			sample_ndx += X1.chunks[list(X1.dims).index(x_sample_dim)][j]
+		feature_ndx += X1.chunks[list(X1.dims).index(x_feature_dim)][i]
+		if not use_dask:
+			results[i] = np.concatenate(results[i], axis=1)
+	if not use_dask:
+		results = np.concatenate(results, axis=0)
+	else:
+		results = []
+		hdf.close()
+		hdf = h5py.File(id, 'r')
+		feature_ndx = 0
+		for i in range(len(X1.chunks[list(X1.dims).index(x_feature_dim)])):
+			sample_ndx = 0
+			results.append([])
+			for j in range(len(X1.chunks[list(X1.dims).index(x_sample_dim)])):
+				results[i].append(da.from_array(hdf['data_{}_{}'.format(feature_ndx, sample_ndx)]))
+				sample_ndx += X1.chunks[list(X1.dims).index(x_sample_dim)][j]
+			results[i] = da.concatenate(results[i], axis=0)
+			feature_ndx += X1.chunks[list(X1.dims).index(x_feature_dim)][i]
+		results = da.concatenate(results, axis=1)
+	#X1 = X1.transpose(x_sample_dim, x_feature_dim, x_lat_dim, x_lon_dim)
+	return xr.DataArray(data=results, coords=X1.coords, dims=X1.dims)
+
+
+def __gaussian_smooth_chunk(X, feature_ndx, sample_ndx, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', kernel=(9,9), use_dask=False, hdf=None ):
+	res = []
+	data = X.values
+	for i in range(data.shape[0]):
+		res.append([])
+		for j in range(data.shape[1]):
+			toblur = data[i, j, :, :]
+			mask = np.isnan(toblur)
+			toblur2 = toblur.copy()
+			toblur2[mask] = np.nanmean(toblur)
+			blurred = cv2.GaussianBlur(toblur2, kernel,0)
+			blurred[mask] = np.nan
+			res[i].append(blurred)
+	res = np.asarray(res)
+	if use_dask:
+		hdf.create_dataset('data_{}_{}'.format(feature_ndx, sample_ndx), data=res)
+		return 'data_{}_{}'.format(feature_ndx, sample_ndx)
+	else:
+		return res
+
+
+
 
 class MidpointNormalize(colors.Normalize):
 	"""Helper class for setting the midpoint of a pyplot colorbar"""
@@ -52,4 +123,32 @@ def view_deterministic(X, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sam
 	else:
 		cbar_fbl = fig.colorbar(CS1, ax=ax, cax=axins_f_bottom, orientation='horizontal')
 	cbar_fbl.set_label('Variable (units)') #, rotation=270)\
+	plt.show()
+	return fig
+
+def view_skill(skill, opfile=None, blur=None):
+
+	plots = [[skill.symmetric_mean_absolute_percentage_error, skill.root_mean_squared_error, skill.median_absolute_error, skill.mean_squared_error],
+			[skill.mean_error, skill.mean_absolute_percentage_error, skill.mean_absolute_error, skill.determination_coefficient],
+			[skill.spearman_p_value, skill.spearman_effective_p_value, skill.slope_linear_fit, skill.pearson_p_value],
+			[skill.pearson_effective_p_value, skill.effective_sample_size, skill.spearman_coefficient, skill.pearson_coefficient]]
+	names = [[i.name for i in plots[j]] for j in range(len(plots))]
+	if blur is not None:
+		assert blur[0] % 2 == 1 and blur[1] % 2 == 1, 'invalid gaussian_smoothing kernel {}'.format((blur[0], blur[1]))
+		kernel = (blur[0], blur[1])
+		for i in range(len(plots)):
+			for j in range(len(plots[i])):
+				plots[i][j] = __gaussian_smooth(plots[i][j].expand_dims({'T':[0]}), x_lat_dim='lat', x_lon_dim='lon', x_sample_dim='T', x_feature_dim='member', kernel=kernel, use_dask=True).isel(member=0, T=0)
+
+	fig, axes = plt.subplots(nrows=4, ncols=4, sharex=True, subplot_kw={'projection':ccrs.PlateCarree()}, figsize=(28, 24))
+	for i in range(len(plots)):
+		for j in range(len(plots[0])):
+			plots[i][j].plot(ax=axes[i][j], cmap='RdBu')
+			axes[i][j].set_title(names[i][j])
+
+			axes[i][j].coastlines()
+			gl = axes[i][j].gridlines()
+			gl.xlabels_bottom, gl.ylabels_left = True, True
+	if opfile is not None:
+		fig.savefig(opfile, dpi=300)
 	plt.show()

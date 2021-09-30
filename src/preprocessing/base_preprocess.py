@@ -4,6 +4,7 @@ import numpy as np
 import dask.array as da
 import uuid
 import h5py
+from ..regression.regression_wrappers import NanRegression
 from ..core.utilities import *
 from ..core.progressbar import *
 
@@ -19,7 +20,7 @@ class BasePreprocess:
 	def fit(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1, verbose=False ):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self._save_data_shape(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		self._gen_models()
+		self.models = []
 
 		X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks, 1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks, 1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self.lat_chunks = X1.chunks[0]
@@ -45,11 +46,16 @@ class BasePreprocess:
 	def _apply_fit_to_chunk(self, X1, lat_ndx_low, lon_ndx_low, verbose=False):
 		x_data = X1.values
 		for i in range(x_data.shape[0]):
+			self.models.append([])
 			for j in range(x_data.shape[1]):
 				x_train = x_data[i, j, :, :]
 				if len(x_train.shape) < 2:
 					x_train = x_train.reshape(-1,1)
-				self.models[i + lat_ndx_low][j+lon_ndx_low].fit(x_train)
+				if np.isnan(np.min(x_train)):
+					self.models[-1].append(NanRegression(**self.kwargs))
+				else:
+					self.models[-1].append(self.model_type(**self.kwargs))
+				self.models[-1][-1].fit(x_train)
 				self.count += 1
 				if verbose:
 					self.prog.show(self.count)
@@ -139,22 +145,12 @@ class BasePreprocess:
 				self.count += 1
 				if verbose:
 					self.prog.show(self.count)
-		#if x_data.shape[0] == 1 and self.shape['LATITUDE'] == 1:
-		#	results = np.expand_dims(results, 0)
-		#if x_data.shape[1] == 1 and self.shape['LONGITUDE'] == 1:
-		#	results = np.expand_dims(results, 1)
+
 		if self.use_dask:
 			self.hdf5.create_dataset('data_{}_{}'.format(lat_ndx_low, lon_ndx_low), data=results)
 			return 'data_{}_{}'.format(lat_ndx_low, lon_ndx_low)
 		else:
 			return results
-
-	def _gen_models(self):
-		self.models = []
-		for i in range(self.shape['LATITUDE']):
-			self.models.append([])
-			for j in range(self.shape['LONGITUDE']):
-				self.models[i].append(self.model_type(**self.kwargs))
 
 	def _save_data_shape(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
 		self.shape['LATITUDE'] =  X.shape[list(X.dims).index(x_lat_dim)]

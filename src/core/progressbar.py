@@ -14,16 +14,17 @@ class ProgressBar:
 		self.label = label
 		self.length = length
 		self.step = step
+		self.start = dt.datetime.now()
 
 	def show(self, count):
 		"""prints progressbar at count / total * length stars progress"""
 		if count % self.step == 0:
 			stars = int( (count / self.total) * self.length)
 			spaces = self.length - stars
-			print(self.label + ' {} ['.format(dt.datetime.now()) +'*'*stars + ' '*spaces + ']', end = '\r')
+			print(self.label + ' [' +'*'*stars + ' '*spaces + '] ({}/{}) {}'.format(count, self.total, dt.datetime.now()-self.start), end = '\r')
 			sys.stdout.flush()
 
 	def finish(self):
 		"""prints full progressbar and progresses to next line"""
-		print(self.label + ' {} ['.format(dt.datetime.now()) +'*'*self.length + ']')
+		print(self.label + ' [' +'*'*self.length + '] ({}/{}) {}'.format(self.total, self.total, dt.datetime.now()-self.start))
 		sys.stdout.flush()
