@@ -8,7 +8,7 @@ def _chunk(X, Y, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_sample_dim, x_fea
 	Y1 = Y.chunk({y_lat_dim: max(len(Y.coords[y_lat_dim].values) // lat_chunks, 1), y_lon_dim: max(len(Y.coords[y_lon_dim].values) // lon_chunks,1), y_sample_dim:len(Y.coords[y_sample_dim].values), y_feature_dim:1})
 	return X1, Y1
 
-def deterministic_skill(X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', lat_chunks=1, lon_chunks=1,  y_sample_dim='T', y_feature_dim='M'):
+def xskillscore_deterministic(X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', lat_chunks=1, lon_chunks=1,  y_sample_dim='T', y_feature_dim='M'):
 	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim) # X is predictions
 	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)# Y is observatiosn
 

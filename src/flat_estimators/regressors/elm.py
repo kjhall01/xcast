@@ -5,6 +5,7 @@ from scipy.special import softmax
 import datetime as dt
 import numpy as np
 import scipy.linalg.lapack as la
+from ...verification.metrics import _aic
 
 class ELMRegressor:
 	"""Probabilistic Output Extreme Learning Machine"""
@@ -149,8 +150,8 @@ class ELMRegressor:
 
 				self.beta = B # np.dot(np.linalg.pinv(hh), ht)
 				preds = self.predict(x)
-				acc = accuracy_score(np.argmax(y, axis=-1), preds)
-				aics.append(self._aic(x.shape[0], acc, i+1))
+				#acc = accuracy_score(np.argmax(y, axis=-1), preds)
+				aics.append(_aic(preds, y))
 
 			aics = np.asarray(aics)
 			best = np.argmin(aics)
@@ -176,7 +177,7 @@ class ELMRegressor:
 		if info > 0:
 			hth_plus_ic = hth_plus_ic + np.triu(hth_plus_ic, k=1).T
 			B = np.linalg.lstsq(hth_plus_ic, ht)[0]
-		self.beta = -1 * B
+		self.beta =  B
 		if self.verbose:
 			print('{} Solved POELM '.format(dt.datetime.now() ))
 
