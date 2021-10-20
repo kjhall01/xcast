@@ -38,7 +38,6 @@ class RandomForestRegression(BaseRegressor):
 		super().__init__(**kwargs)
 		self.model_type = RandomForestRegressor
 
-
 class RidgeRegression(BaseRegressor):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)

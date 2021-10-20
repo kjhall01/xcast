@@ -5,7 +5,7 @@ from scipy.special import softmax
 import datetime as dt
 import numpy as np
 import scipy.linalg.lapack as la
-from ...verification.metrics import _aic
+from ...verification.flat_metrics import akaike_information_criterion
 
 class ELMRegressor:
 	"""Probabilistic Output Extreme Learning Machine"""
@@ -151,7 +151,7 @@ class ELMRegressor:
 				self.beta = B # np.dot(np.linalg.pinv(hh), ht)
 				preds = self.predict(x)
 				#acc = accuracy_score(np.argmax(y, axis=-1), preds)
-				aics.append(_aic(preds, y))
+				aics.append(akaike_information_criterion(preds, y))
 
 			aics = np.asarray(aics)
 			best = np.argmin(aics)
@@ -219,6 +219,3 @@ class ELMRegressor:
 			return np.exp(-cdist(x, a.T, "chebyshev")**2 / b)
 		else:
 			assert False, 'Invalid activation function {}'.format(self.activation)
-
-	def _aic(self, N, accuracy, S):
-		return 2 * N * np.log(((1 - accuracy) / N)**2 / N ) + S

@@ -14,6 +14,8 @@ def dask_expand_dims(x, axis=-1):
 
 def reformat_vector(x, fmt):
 	assert fmt in ['flat', 'row', 'col'], 'invalid vector format: {} - must be in ["flat", "row", "col"]'.format(fmt)
+	if len(x.shape) == 2 and fmt == 'col':
+		return x
 	x = np.asarray(x)
 	dims, found = len(x.shape), 0
 	for i in x.shape:
@@ -50,7 +52,6 @@ def apply_func_to_block(x_data, y_data, func1=mean_squared_error, kwargs={}, n=1
 			x_train = reformat_vector(x_data[i, j, :, :], xfmt)
 			y_train = reformat_vector(y_data[i, j, :, :], yfmt)
 
-
 			if np.isnan(np.min(x_train)) or np.isnan(np.min(y_train)):
 				ret[i].append( np.asarray([[np.nan]]*n) )
 			else:
@@ -67,7 +68,7 @@ def metric(func):
 		assert X.shape[list(X.dims).index(x_lat_dim)] == Y.shape[list(Y.dims).index(y_lat_dim)], 'Xcast metrics requires X to have the same latitudinal resolution as Y'
 		assert X.shape[list(X.dims).index(x_lon_dim)] == Y.shape[list(Y.dims).index(y_lon_dim)], 'Xcast metrics requires X to have the same longitudinal resolution as Y'
 		assert X.shape[list(X.dims).index(x_sample_dim)] == Y.shape[list(Y.dims).index(y_sample_dim)], 'Xcast metrics requires X to have the same temporal resolution as Y'
-		assert X.shape[list(X.dims).index(x_feature_dim)] == Y.shape[list(Y.dims).index(y_feature_dim)] and Y.shape[list(Y.dims).index(y_feature_dim)] == 1, 'Xcast metrics requires X and Y to have a feature dimension of size 1'
+		#assert X.shape[list(X.dims).index(x_feature_dim)] == Y.shape[list(Y.dims).index(y_feature_dim)] and Y.shape[list(Y.dims).index(y_feature_dim)] == 1, 'Xcast metrics requires X and Y to have a feature dimension of size 1'
 		X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		if rechunk:
@@ -80,5 +81,5 @@ def metric(func):
 				scores = da.map_blocks(apply_func_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3], func1=func, kwargs=kwargs,n=n, xfmt=xfmt, yfmt=yfmt, meta=np.array((), dtype=np.float) ).compute()
 		else:
 			scores = da.map_blocks(apply_func_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3], func1=func,  kwargs=kwargs,n=n, xfmt=xfmt, yfmt=yfmt,  meta=np.array((), dtype=np.float)).compute()
-		return xr.DataArray(data=scores, dims=[x_lat_dim, x_lon_dim,  'SKILLDIM' , x_feature_dim], coords={x_lat_dim: X1.coords[x_lat_dim].values, x_lon_dim: X1.coords[x_lon_dim].values, x_feature_dim: X1.coords[x_feature_dim].values, 'SKILLDIM': [i for i in range(n)] } , attrs=X1.attrs, name = func.__name__)
+		return xr.DataArray(data=scores, dims=[x_lat_dim, x_lon_dim,  'SKILLDIM' , x_feature_dim], coords={x_lat_dim: X1.coords[x_lat_dim].values, x_lon_dim: X1.coords[x_lon_dim].values, x_feature_dim: [i for i in range(scores.shape[2])], 'SKILLDIM': [i for i in range(n)] } , attrs=X1.attrs, name = func.__name__)
 	return func1

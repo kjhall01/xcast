@@ -4,4 +4,4 @@ from .minmax import *
 from .missing_values import *
 from .base_preprocess import *
 from .spatial import *
-from .onehot import * 
+from .onehot import *

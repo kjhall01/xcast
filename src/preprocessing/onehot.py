@@ -12,6 +12,7 @@ class NormalTerciles:
 		X1 = X.isel()
 		self.mu = X1.mean(x_sample_dim)
 		self.std = X1.std(x_sample_dim)
+		self.nanmask = X1.mean(x_sample_dim).mean(x_feature_dim)  / X1.mean(x_sample_dim).mean(x_feature_dim)
 
 	def transform(self,X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -35,7 +36,7 @@ class NormalTerciles:
 		X_N = X_N.where(X_N <= self.high_thresh, other=0.0)
 		X_N = X_N.where(X_N == 0.0, other=1.0)
 		X1 = xr.concat([X_BN, X_N, X_AN], 'C')
-		return X1.assign_coords({'C': [0,1,2]})
+		return X1.assign_coords({'C': [0,1,2]}) * self.nanmask
 
 class RankedTerciles:
 	def __init__(self, low_thresh=None, high_thresh=None, explicit=False):
@@ -60,6 +61,8 @@ class RankedTerciles:
 		else:
 			self.high_threshold = X1.quantile( self.high_thresh, dim=x_sample_dim)
 			self.low_threshold = X1.quantile( self.low_thresh, dim=x_sample_dim)
+		self.nanmask = X1.mean(x_sample_dim)  / X1.mean(x_sample_dim)
+
 
 
 
@@ -85,4 +88,4 @@ class RankedTerciles:
 		X_N = X_N.where(X_N <= self.high_threshold, other=0.0)
 		X_N = X_N.where(X_N == 0.0, other=1.0)
 		X1 = xr.concat([X_BN, X_N, X_AN], 'C')
-		return X1.assign_coords({'C': [0,1,2]})
+		return X1.assign_coords({'C': [0,1,2]})  * self.nanmask

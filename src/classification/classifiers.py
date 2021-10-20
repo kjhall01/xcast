@@ -17,11 +17,7 @@ class ExtendedNaiveBayesClassifier(BaseClassifier):
 		self.model_type = ExtendedNaiveBayes
 
 class ExtendedRandomForestClassifier(BaseClassifier):
-	def __init__(self, hidden_layer_sizes=None, **kwargs):
-		if hidden_layer_sizes is not None:
-			kwargs['hidden_layer_sizes'] = hidden_layer_sizes
-		else:
-			kwargs['hidden_layer_sizes'] = (5,)
+	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = ExtendedRandomForest
 
