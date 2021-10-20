@@ -208,8 +208,11 @@ def view_roc(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sample_dim
 
 	X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
-	x_data = X1.data.reshape(len(X1.coords[x_lat_dim].values)*len(X1.coords[x_lon_dim].values)*len(X1.coords[x_sample_dim].values), len(X1.coords[x_feature_dim].values))
-	y_data = Y1.data.reshape(len(Y1.coords[y_lat_dim].values)*len(Y1.coords[y_lon_dim].values)*len(Y1.coords[y_sample_dim].values), len(Y1.coords[y_feature_dim].values))
+	x_data = X1.values.reshape(len(X1.coords[x_lat_dim].values)*len(X1.coords[x_lon_dim].values)*len(X1.coords[x_sample_dim].values), len(X1.coords[x_feature_dim].values))
+	y_data = Y1.values.reshape(len(Y1.coords[y_lat_dim].values)*len(Y1.coords[y_lon_dim].values)*len(Y1.coords[y_sample_dim].values), len(Y1.coords[y_feature_dim].values))
+	tst = x_data *y_data
+	x_data = x_data[~np.isnan(tst).any(axis=1)]
+	y_data = y_data[~np.isnan(tst).any(axis=1)]
 	n_classes = len(X1.coords[x_feature_dim].values)
 	fpr = dict()
 	tpr = dict()
@@ -235,11 +238,6 @@ def view_roc(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sample_dim
 
 	# Plot all ROC curves
 	plt.figure()
-	plt.plot(fpr["micro"], tpr["micro"],
-				label='micro-average ROC curve (area = {0:0.2f})'
-				''.format(roc_auc["micro"]),
-				color='deeppink', linestyle=':', linewidth=4)
-
 	plt.plot(fpr["macro"], tpr["macro"],
 				label='macro-average ROC curve (area = {0:0.2f})'
 				''.format(roc_auc["macro"]),
@@ -270,6 +268,9 @@ def view_reliability(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sa
 	Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 	x_data = X1.values.reshape(len(X1.coords[x_lat_dim].values)*len(X1.coords[x_lon_dim].values)*len(X1.coords[x_sample_dim].values), len(X1.coords[x_feature_dim].values))
 	y_data = Y1.values.reshape(len(Y1.coords[y_lat_dim].values)*len(Y1.coords[y_lon_dim].values)*len(Y1.coords[y_sample_dim].values), len(Y1.coords[y_feature_dim].values))
+	tst = x_data *y_data
+	x_data = x_data[~np.isnan(tst).any(axis=1)]
+	y_data = y_data[~np.isnan(tst).any(axis=1)]
 	n_classes = len(X1.coords[x_feature_dim].values)
 	fpr = dict()
 	tpr = dict()
