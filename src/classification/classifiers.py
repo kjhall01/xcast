@@ -1,57 +1,60 @@
 from ..flat_estimators.classifiers import *
+from sklearn.neural_network import MLPClassifier
+from sklearn.ensemble import  RandomForestClassifier
 from .base_classifier import *
 
-class ExtendedPOELMClassifier(BaseClassifier):
+class ePOELM(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
-		self.model_type = ExtendedPOELM
+		self.model_type = ExtendedPOELMClassifier
 
-class ExtendedMLPClassifier(BaseClassifier):
+class eMultiLayerPerceptron(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
-		self.model_type = ExtendedMLP
+		self.model_type = ExtendedMLPClassifier
 
-class ExtendedNaiveBayesClassifier(BaseClassifier):
+class eNaiveBayes(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
-		self.model_type = ExtendedNaiveBayes
+		self.model_type = ExtendedNaiveBayesClassifier
 
-class ExtendedRandomForestClassifier(BaseClassifier):
+class eRandomForest(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
-		self.model_type = ExtendedRandomForest
+		self.model_type = ExtendedRandomForestClassifier
 
-class MultivarELRClassifier(BaseClassifier):
+class eMultivariateLogisticRegression(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = MultivariateELRClassifier
 
 
-class ExtendedLogisticRegressionClassifier(BaseClassifier):
+class eLogisticRegression(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = ELRClassifier
 
-class MultiClassPOELMClassifier(BaseClassifier):
-	def __init__(self, **kwargs):
-		super().__init__(**kwargs)
-		self.model_type = MultiClassPOELM
 
-class MultiClassMLPClassifier(BaseClassifier):
+class cMultiLayerPerceptron(BaseClassifier):
 	def __init__(self, hidden_layer_sizes=None, **kwargs):
 		if hidden_layer_sizes is not None:
 			kwargs['hidden_layer_sizes'] = hidden_layer_sizes
 		else:
 			kwargs['hidden_layer_sizes'] = (5,)
 		super().__init__(**kwargs)
-		self.model_type = MultiClassMLP
+		self.model_type = MLPClassifier
 
-class MultiClassNaiveBayesClassifier(BaseClassifier):
+class cNaiveBayes(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
-		self.model_type = MultiClassNaiveBayes
+		self.model_type = NaiveBayesClassifier
 
-class MultiClassRandomForestClassifier(BaseClassifier):
+class cRandomForest(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
-		self.model_type = MultiClassRandomForest
+		self.model_type = RFClassifier
+
+class cPOELM(BaseClassifier):
+	def __init__(self, **kwargs):
+		super().__init__(**kwargs)
+		self.model_type = POELMClassifier

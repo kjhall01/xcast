@@ -6,8 +6,12 @@ from .base_verification import *
 from .flat_metrics import *
 
 @metric
-def BrierScore(predicted, observed):
+def BrierScoreLoss(predicted, observed):
 	return brier_score_loss(predicted, observed)
+
+@metric
+def BrierScore(predicted, observed):
+	return brier_score(predicted, observed)
 
 @metric
 def RankProbabilityScore(predicted, observed):
@@ -39,23 +43,23 @@ def KendallsTau(predicted,observed):
 
 @metric
 def BayesianInformationCriterion(predicted, observed):
-	return bayesian_information_criterion(predicted, observed)
+	return np.asarray( [ bayesian_information_criterion(predicted[:,i].reshape(-1,1), observed[:,i].reshape(-1,1) ) for i in range(predicted.shape[1]) ] )
 
 @metric
 def AkaikeInformationCriterion(predicted, observed):
-	return akaike_information_criterion(predicted, observed)
+	return np.asarray([ akaike_information_criterion(predicted[:,i].reshape(-1,1), observed[:,i].reshape(-1,1)) for i in range(predicted.shape[1]) ] )
 
 @metric
 def LogLikelihood(predicted, observed):
-	return log_likelihood(predicted, observed )
+	return np.asarray([ log_likelihood(predicted[:,i].reshape(-1,1), observed[:,i].reshape(-1,1) ) for i in range(predicted.shape[1]) ])
 
 @metric
 def RocAuc(predicted, observed):
-	try:
-		ret =  roc_auc_score(predicted, observed, average=None, multi_class='ovr', labels=[0,1,2])
-		return ret
-	except:
-		return np.asarray([0,0,0])
+	if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+		return np.asarray([np.nan])
+	ret =  roc_auc_score(predicted, observed, average=None, multi_class='ovr', labels=[0,1,2])
+	return ret
+
 
 @metric
 def GeneralizedROC(predicted, observed):
@@ -63,14 +67,16 @@ def GeneralizedROC(predicted, observed):
 
 @metric
 def F1(predicted, observed):
-	try:
-		ret =  f1_score(np.argmax(observed, axis=-1), np.argmax(predicted, axis=-1), average=None, labels=[0,1,2])
-		return ret
-	except:
-		return np.asarray([0,0,0])
+	if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+		return np.asarray([np.nan])
+	ret =  f1_score(np.argmax(observed, axis=-1), np.argmax(predicted, axis=-1), average=None, labels=[0,1,2])
+	return ret
+
 
 @metric
 def AveragePrecision(predicted, observed):
+	if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+		return np.asarray([np.nan])
 	return average_precision_score(predicted, observed, average=None)
 @metric
 def IndexOfAgreement(predicted, observed):
@@ -100,23 +106,37 @@ def KlingGuptaComponents(predicted, observed, sr=1, sa=1, sb=1, component='all' 
 @metric
 def Spearman(predicted, observed):
 	"""abstracts out coefficient from stats.spearmanr"""
+	if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+		return np.asarray([np.nan])
 	coef, p = stats.spearmanr(np.squeeze(predicted).astype(float), np.squeeze(observed).astype(float))
 	return coef
 
 @metric
 def SpearmanP(predicted, observed):
 	"""abstracts out p from stats.spearmanr"""
+	if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+		return np.asarray([np.nan])
 	coef, p = stats.spearmanr(np.squeeze(predicted).astype(float), np.squeeze(observed).astype(float))
 	return p
 
 @metric
 def Pearson(predicted, observed):
 	"""abstracts out coefficient from stats.pearsonr"""
+	if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+		return np.asarray([np.nan])
 	coef, p = stats.pearsonr(np.squeeze(predicted).astype(float), np.squeeze(observed).astype(float))
 	return coef
 
 @metric
 def PearsonP(predicted, observed):
 	"""abstracts out p from stats.pearsonr"""
+	if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+		return np.asarray([np.nan])
 	coef, p = stats.pearsonr(np.squeeze(predicted).astype(float), np.squeeze(observed).astype(float))
 	return p
+
+generalized_probabilistic_metrics = [ RankProbabilityScore, ContinuousRankProbabilityScore, Ignorance, GeneralizedROC, F1, AveragePrecision,  ]
+categorical_probabilistic_metrics = [RocAuc, BrierScore, PointBiserialCorrelation, HansenKuiper, PointBiserialCorrelation]
+
+single_output_deterministic_metrics = [PearsonP, Pearson, SpearmanP, Spearman, KlingGuptaEfficiency, NormalizedNashSutcliffeEfficiency, NashSutcliffeEfficiency, IndexOfAgreement, BayesianInformationCriterion, AkaikeInformationCriterion, LogLikelihood]
+multiple_output_deterministic_metrics = [KlingGuptaComponents, BayesianInformationCriterion, AkaikeInformationCriterion, LogLikelihood]

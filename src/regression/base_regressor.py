@@ -38,6 +38,21 @@ def apply_fit_to_block(x_data, y_data, mme=LinearRegression, ND=1, kwargs={}):
 	models = np.array(models, dtype=np.dtype('O'))
 	return models
 
+def apply_predict_to_block(x_data, models):
+	ret = []
+	for i in range(x_data.shape[0]):
+		ret.append([])
+		for j in range(x_data.shape[1]):
+			ret[i].append([])
+			x_train = x_data[i, j, :, :]
+			if len(x_train.shape) < 2:
+				x_train = x_train.reshape(-1,1)
+			for k in range(models.shape[2]):
+				preds = models[i][j][k].predict(x_train)
+				if len(preds.shape) < 2:
+					preds = np.expand_dims(preds, axis=1)
+				ret[i][j].append(preds)
+	return np.asarray(ret)
 
 class BaseRegressor:
 	""" Base MME class
@@ -55,14 +70,15 @@ class BaseRegressor:
 		self.shape = {'LATITUDE':0, 'LONGITUDE':0, 'FIT_SAMPLES': 0, 'INPUT_FEATURES':0, 'OUTPUT_FEATURES': 0}
 		self.count, self.total = 0, 1
 
-	def fit(self, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', lat_chunks=1, lon_chunks=1,  feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True ):
+	def fit(self, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', lat_chunks=1, lon_chunks=1,  feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True, rechunk=True ):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		self._check_xyt_compatibility(X, Y, x_lat_dim, x_lon_dim, x_sample_dim, y_lat_dim, y_lon_dim, y_sample_dim)
 		self._save_data_shape(X, Y, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim, y_feature_dim)
 		X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
-		X1, Y1 = self._chunk(X1, Y1, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, lat_chunks, lon_chunks)
+		if rechunk:
+			X1, Y1 = self._chunk(X1, Y1, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_feature_dim, y_feature_dim, x_sample_dim, y_sample_dim, lat_chunks, lon_chunks)
 		if parallel_in_memory:
 			x_data = X1.data
 			y_data = Y1.data
@@ -118,41 +134,52 @@ class BaseRegressor:
 				if verbose:
 					self.prog.show(self.count)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 ,  feat_chunks=1, samp_chunks=1, destination='.xcast_worker_space', verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 ,  feat_chunks=1, samp_chunks=1, destination='.xcast_worker_space', verbose=False, rechunk=True, parallel_in_memory=True):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self._check_xym_compatibility(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks,1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+		if rechunk:
+			X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks,1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-		id =  Path(destination) / str(uuid.uuid4())
-		self.hdf5 = h5py.File(id, 'w')
+		if parallel_in_memory:
+			self.models = da.from_array(self.models, chunks=(max(self.shape['LATITUDE'] // lat_chunks,1), max(self.shape['LONGITUDE'] // lon_chunks,1), self.ND))
+			x_data = X1.data
+			if verbose:
+				with dd.ProgressBar():
+					results = da.map_blocks(apply_predict_to_block, x_data, self.models, drop_axis=[2,3], new_axis=[3, 4, 5], dtype=float).compute()
+			else:
+				results = da.map_blocks(apply_predict_to_block, x_data, self.models, drop_axis=[2,3], new_axis=[3, 4, 5], dtype=float).compute()
 
-		if verbose:
-			self.prog = ProgressBar(self.total, label='Predicting {}:'.format(self.model_type.__name__), step=10)
-			self.prog.show(self.count)
+		else:
+			id =  Path(destination) / str(uuid.uuid4())
+			self.hdf5 = h5py.File(id, 'w')
 
-		lat_ndx_low = 0
-		for i in range(len(self.lat_chunks)):
-			lon_ndx_low = 0
-			for j in range(len(self.lon_chunks)):
-				x_isel = {x_lat_dim: slice(lat_ndx_low, lat_ndx_low + self.lat_chunks[i]), x_lon_dim: slice(lon_ndx_low, lon_ndx_low + self.lon_chunks[j])}
-				chunk_of_x = X1.isel(**x_isel)
-				res = self._apply_predict_to_chunk(chunk_of_x, lat_ndx_low, lon_ndx_low, verbose=verbose )
-				lon_ndx_low += self.lon_chunks[j]
-			lat_ndx_low += self.lat_chunks[i]
+			if verbose:
+				self.prog = ProgressBar(self.total, label='Predicting {}:'.format(self.model_type.__name__), step=10)
+				self.prog.show(self.count)
 
-		results = []
-		self.hdf5.close()
-		self.hdf5 = h5py.File(id, 'r')
-		lat_ndx_low = 0
-		for i in range(len(self.lat_chunks)):
-			lon_ndx_low = 0
-			results.append([])
-			for j in range(len(self.lon_chunks)):
-				results[i].append(da.from_array(self.hdf5['data_{}_{}'.format(lat_ndx_low, lon_ndx_low)]))
-				lon_ndx_low += self.lon_chunks[j]
-			results[i] = da.concatenate(results[i], axis=1)
-			lat_ndx_low += self.lat_chunks[i]
-		results = da.concatenate(results, axis=0)
+			lat_ndx_low = 0
+			for i in range(len(self.lat_chunks)):
+				lon_ndx_low = 0
+				for j in range(len(self.lon_chunks)):
+					x_isel = {x_lat_dim: slice(lat_ndx_low, lat_ndx_low + self.lat_chunks[i]), x_lon_dim: slice(lon_ndx_low, lon_ndx_low + self.lon_chunks[j])}
+					chunk_of_x = X1.isel(**x_isel)
+					res = self._apply_predict_to_chunk(chunk_of_x, lat_ndx_low, lon_ndx_low, verbose=verbose )
+					lon_ndx_low += self.lon_chunks[j]
+				lat_ndx_low += self.lat_chunks[i]
+
+			results = []
+			self.hdf5.close()
+			self.hdf5 = h5py.File(id, 'r')
+			lat_ndx_low = 0
+			for i in range(len(self.lat_chunks)):
+				lon_ndx_low = 0
+				results.append([])
+				for j in range(len(self.lon_chunks)):
+					results[i].append(da.from_array(self.hdf5['data_{}_{}'.format(lat_ndx_low, lon_ndx_low)]))
+					lon_ndx_low += self.lon_chunks[j]
+				results[i] = da.concatenate(results[i], axis=1)
+				lat_ndx_low += self.lat_chunks[i]
+			results = da.concatenate(results, axis=0)
 
 		if len(results.shape) < 4 and self.shape['LATITUDE'] == 1:
 			results = da.expand_dims(results, axis=0)
@@ -198,9 +225,9 @@ class BaseRegressor:
 		return 'data_{}_{}'.format(lat_ndx_low, lon_ndx_low)
 
 
-	def _chunk(self, X, Y, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, lat_chunks, lon_chunks):
-		X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks,1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1)})
-		Y1 = Y.chunk({y_lat_dim: max(self.shape['LATITUDE'] // lat_chunks, 1), y_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1)})
+	def _chunk(self, X, Y, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_feature_dim, y_feature_dim, x_sample_dim, y_sample_dim, lat_chunks, lon_chunks):
+		X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks,1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1), x_feature_dim:self.shape['INPUT_FEATURES'], x_sample_dim:-1})
+		Y1 = Y.chunk({y_lat_dim: max(self.shape['LATITUDE'] // lat_chunks, 1), y_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1), y_feature_dim:self.shape['OUTPUT_FEATURES'], y_sample_dim:-1})
 
 		self.lat_chunks, self.lon_chunks = X1.chunks[0], X1.chunks[1]
 		return X1, Y1

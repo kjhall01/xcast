@@ -5,10 +5,12 @@ from scipy.special import softmax
 import datetime as dt
 import numpy as np
 import scipy.linalg.lapack as la
+from scipy.special import softmax
+
 
 class POELMClassifier:
 	"""Probabilistic Output Extreme Learning Machine"""
-	def __init__(self, hidden_layer_size=5, initialization='random', pruning='none', pca=-999, c=1, preprocessing='none', dropconnect_pr=-1.0, dropout_pr=-1.0, verbose=False):
+	def __init__(self, hidden_layer_size=5, initialization='random', pruning='none', pca=-999, c=1, preprocessing='none', dropconnect_pr=-1.0, dropout_pr=-1.0, verbose=False, threshold=0.5):
 		assert type(hidden_layer_size) == int and hidden_layer_size > 0, 'Invalid hidden_layer_size {}'.format(hidden_layer_size)
 		assert type(initialization) == str and initialization in ['random', 'pca'], 'Invalid initialization {}'.format(initialization)
 		assert type(pruning) == str and pruning in ["none", "prune", "pca"], 'Invalid pruning {}'.format(pruning)
@@ -18,7 +20,7 @@ class POELMClassifier:
 		assert type(dropconnect_pr) is float, 'Invalid DropConnect Probability Threshold {}'.format(dropconnect_pr)
 		assert type(dropout_pr) is float, 'Invalid DropOut Probability Threshold {}'.format(dropout_pr)
 
-
+		self.threshold = threshold
 		self.initialization = initialization
 		self.pruning = pruning
 		self.verbose=verbose
@@ -30,6 +32,11 @@ class POELMClassifier:
 		self.preprocessing = preprocessing
 
 	def fit(self, x, y):
+		assert len(y.shape) == 2, 'POELM expects Y to be of shape (n_samples, n_classes) even if it is a binary classification - got {}'.format(y.shape)
+		assert len(x.shape) == 2, 'POELM expects X to be of shape (n_samples, n_features) - got {}'.format(x.shape)
+		assert 0.0 <= np.min(y) and np.max(y) <= 1.0, 'POELM expects that no value in Y is ever greater than 1 or less than 0'
+		self.using_multiclass= True if np.mean(np.sum(y, axis=1)) == 1 else False
+
 		y[y<0.5] = 0.0001
 		y[y>0.5] = 0.9999
 
@@ -123,10 +130,10 @@ class POELMClassifier:
 				print('{} Applied PCA pruning with n_components of  {} '.format(dt.datetime.now(),  None if self.pca_retained == -1 or self.pca_retained == -999 else self.pca_retained ))
 
 		elif self.pruning == "prune":
-			self.hidden_neurons = [ (w[:,i], b[:,i]) for i in range(self.hidden_layer_size)]
+			self.hidden_neurons = [ (w[:,i], b[:,i]) for i in range(w.shape[1])]
 			h = np.asarray([ self._activate(neuron[0], x, neuron[1]) for neuron in self.hidden_neurons]).T
 
-			scores = np.asarray([np.squeeze(chi2(h[:,i].reshape(-1,1), np.argmax(y, axis=-1)))[0] for i in range(h.shape[1]) ])
+			scores = np.asarray([np.squeeze(chi2(h[:,i].argsort().argsort().reshape(-1,1), np.argmax(y, axis=-1)))[0] for i in range(h.shape[1]) ])
 			new_h = []
 			for i in range(scores.shape[0]):
 				new_h.append(self.hidden_neurons[np.argmax(scores)])
@@ -151,7 +158,7 @@ class POELMClassifier:
 					B = np.linalg.lstsq(hth_plus_ic, ht_logs)[0]
 
 				self.beta = -1 * B # np.dot(np.linalg.pinv(hh), ht)
-				preds = self.predict(x)
+				preds = self.predict(x, preprocessing=None)
 				acc = accuracy_score(np.argmax(y, axis=-1), preds)
 				aics.append(self._aic(x.shape[0], acc, i+1))
 
@@ -184,43 +191,42 @@ class POELMClassifier:
 			print('{} Solved POELM '.format(dt.datetime.now() ))
 
 
-	def predict(self, x):
+	def predict(self, x, preprocessing='asis'):
 		# first, take care of preprocessing
-		if self.preprocessing == 'std':
+		ret = self.predict_proba(x, preprocessing=preprocessing)
+		if self.using_multiclass:
+			return np.argmax(ret,axis=-1)
+		else:
+			ret[ret < self.threshold] = 0
+			ret[ret >= self.threshold] = 1
+			return ret
+
+
+	def predict_proba(self, x, preprocessing='asis'):
+		if self.preprocessing == 'std' and preprocessing == 'asis':
 			x = (x - self.mean) / self.std # scales to std normal dist
 			if self.verbose:
 				print('{} Applied Standard Normal Scaling '.format(dt.datetime.now()))
-		if self.preprocessing == 'minmax':
+		if self.preprocessing == 'minmax' and preprocessing == 'asis':
 			x = ((x - self.min) / (self.max - self.min)  ) * 2 - 1 #scales to [-1, 1]
 			if self.verbose:
 				print('{} Applied MinMax Scaling '.format(dt.datetime.now()))
 
-		if self.pca_retained != -999:
+		if self.pca_retained != -999 and preprocessing == 'asis':
 			x = self.pca.transform(x)
 			if self.verbose:
 				print('{} Applied PCA Transformation to Forecast X  '.format(dt.datetime.now()))
 
 		h = np.asarray([ self._activate(neuron[0], x, neuron[1]) for neuron in self.hidden_neurons]).T
 		ret = 1.0 / ( 1 + np.exp(-1* np.dot(h, self.beta)))
-		return np.argmax(ret,axis=-1)
 
-	def predict_proba(self, x):
-		if self.preprocessing == 'std':
-			x = (x - self.mean) / self.std # scales to std normal dist
-			if self.verbose:
-				print('{} Applied Standard Normal Scaling '.format(dt.datetime.now()))
-		if self.preprocessing == 'minmax':
-			x = ((x - self.min) / (self.max - self.min)  ) * 2 - 1 #scales to [-1, 1]
-			if self.verbose:
-				print('{} Applied MinMax Scaling '.format(dt.datetime.now()))
-
-		if self.pca_retained != -999:
-			x = self.pca.transform(x)
-			if self.verbose:
-				print('{} Applied PCA Transformation to Forecast X  '.format(dt.datetime.now()))
-
-		h = np.asarray([ self._activate(neuron[0], x, neuron[1]) for neuron in self.hidden_neurons]).T
-		ret = 1.0 / ( 1 + np.exp(-1* np.dot(h, self.beta)))
+		if self.using_multiclass:
+			sums =  np.sum(ret, axis=1)
+			ret1 = ret / sums.reshape(-1,1)
+			ret2 = softmax(ret, axis=-1)
+			retfinal = np.ones(ret.shape)
+			retfinal[sums >=1, :] = ret1[sums>=1, :]
+			retfinal[sums < 1, :] = ret2[sums<1, :]
 		return ret
 
 	def _activate(self, a, x, b):

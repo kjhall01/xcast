@@ -3,7 +3,7 @@ from ..flat_estimators.classifiers import *
 from ..classification.base_classifier import *
 from ..preprocessing import *
 
-class MemberCountMME:
+class pMemberCount:
 	def __init__(self, **kwargs):
 		self.kwargs = kwargs
 
@@ -21,7 +21,7 @@ class MemberCountMME:
 		Y1 = self.onehot.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		y_feature_dim = 'C'
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, use_dask=True, feat_chunks=feat_chunks, samp_chunks=samp_chunks)
@@ -37,7 +37,7 @@ class MemberCountMME:
 		return X1.sum(x_feature_dim) / X1.sum(x_feature_dim).sum('C')
 
 
-class StandardMemberCountMME:
+class pStandardMemberCount:
 	def __init__(self, **kwargs):
 		self.kwargs=kwargs
 
@@ -60,7 +60,7 @@ class StandardMemberCountMME:
 		Y1 = self.onehot.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		y_feature_dim = 'C'
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, use_dask=True, feat_chunks=feat_chunks, samp_chunks=samp_chunks)
@@ -79,7 +79,7 @@ class StandardMemberCountMME:
 		return X1.sum(x_feature_dim) / X1.sum(x_feature_dim).sum('C')
 
 
-class ElrMME(BaseClassifier):
+class pExtendedLogisticRegression(BaseClassifier):
 	def __init__(self, an_thresh=0.67, bn_thresh=0.33, explicit=False, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = ELRClassifier
@@ -103,9 +103,9 @@ class ElrMME(BaseClassifier):
 		Y1 = self.onehot.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		y_feature_dim = 'C'
 
-		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose)
+		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, use_dask=True, feat_chunks=feat_chunks, samp_chunks=samp_chunks)
@@ -114,7 +114,7 @@ class ElrMME(BaseClassifier):
 		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose).rename({x_feature_dim:'C'})
 
 
-class MultivariateElrMME(BaseClassifier):
+class pMultivariateELR(BaseClassifier):
 	def __init__(self, an_thresh=0.67, bn_thresh=0.33, explicit=False, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = MultivariateELR
@@ -138,17 +138,17 @@ class MultivariateElrMME(BaseClassifier):
 		Y1 = self.onehot.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		y_feature_dim = 'C'
 
-		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose)
+		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, use_dask=True, feat_chunks=feat_chunks, samp_chunks=samp_chunks)
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose).rename({x_feature_dim:'C'})
+		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory).rename({x_feature_dim:'C'})
 
-class ProbabilisticRandomForestMME(BaseClassifier):
+class pRandomForest(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = MultiClassRandomForest
@@ -170,22 +170,22 @@ class ProbabilisticRandomForestMME(BaseClassifier):
 		Y1 = self.onehot.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		y_feature_dim = 'C'
 
-		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose)
+		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, use_dask=True, feat_chunks=feat_chunks, samp_chunks=samp_chunks)
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose).rename({x_feature_dim:'C'})
+		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory).rename({x_feature_dim:'C'})
 
 
-class ProbabilisticMlpMME(BaseClassifier):
+class pMultiLayerPerceptron(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
-		self.model_type = MultiClassMLP
+		self.model_type = MLPClassifier
 
 	def fit(self, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', lat_chunks=1, lon_chunks=1, feat_chunks=1, samp_chunks=1, verbose=False, an_thresh=0.67, bn_thresh=0.33, explicit=False, parallel_in_memory=True  ):
 		X1 = X.sel()#fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -204,22 +204,22 @@ class ProbabilisticMlpMME(BaseClassifier):
 		Y1 = self.onehot.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		y_feature_dim = 'C'
 
-		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose)
+		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, use_dask=True, feat_chunks=feat_chunks, samp_chunks=samp_chunks)
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose).rename({x_feature_dim:'C'})
+		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory).rename({x_feature_dim:'C'})
 
 
-class PoelmPcaMME(BaseClassifier):
+class pPCAPOELM(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
-		self.model_type = MultiClassPOELM
+		self.model_type = POELMClassifier
 
 	def fit(self, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', lat_chunks=1, lon_chunks=1, feat_chunks=1, samp_chunks=1, verbose=False, an_thresh=0.67, bn_thresh=0.33, explicit=False, n_components=2, parallel_in_memory=True ):
 		X1 = X.sel()#fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -242,9 +242,9 @@ class PoelmPcaMME(BaseClassifier):
 		Y1 = self.onehot.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		y_feature_dim = 'C'
 
-		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose)
+		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
@@ -252,14 +252,14 @@ class PoelmPcaMME(BaseClassifier):
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.pca.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose).rename({x_feature_dim:'C'})
+		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory).rename({x_feature_dim:'C'})
 
 
 
-class PoelmMME(BaseClassifier):
+class pPOELM(BaseClassifier):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
-		self.model_type = MultiClassPOELM
+		self.model_type = POELMClassifier
 
 	def fit(self, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', lat_chunks=1, lon_chunks=1, feat_chunks=1, samp_chunks=1, verbose=False, an_thresh=0.67, bn_thresh=0.33, explicit=False, parallel_in_memory=True ):
 		X1 = X.sel()#fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -278,13 +278,13 @@ class PoelmMME(BaseClassifier):
 		Y1 = self.onehot.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		y_feature_dim = 'C'
 
-		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose)
+		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, use_dask=True, feat_chunks=feat_chunks, samp_chunks=samp_chunks)
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose).rename({x_feature_dim:'C'})
+		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory).rename({x_feature_dim:'C'})

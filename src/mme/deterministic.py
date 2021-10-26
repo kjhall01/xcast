@@ -7,7 +7,7 @@ from ..flat_estimators.regressors import *
 from ..regression.base_regressor import *
 from ..preprocessing import *
 
-class EnsembleMeanMME:
+class mEnsembleMean:
 	def __init__(self, **kwargs):
 		pass
 
@@ -20,15 +20,15 @@ class EnsembleMeanMME:
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 		return X1.mean(x_feature_dim).expand_dims({x_feature_dim:[0], 'ND':[0]})
 
 
-class BiasCorrectedEnsembleMeanMME:
+class mBiasCorrectedEnsembleMean:
 	def __init__(self, **kwargs):
 		pass
 
@@ -47,10 +47,10 @@ class BiasCorrectedEnsembleMeanMME:
 		self.normy = Normal()
 		self.normy.fit(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
 		X1 = self.normx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -59,7 +59,7 @@ class BiasCorrectedEnsembleMeanMME:
 
 
 
-class MultipleRegressionMME(BaseRegressor):
+class mMultipleRegression(BaseRegressor):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = LinearRegression
@@ -78,17 +78,17 @@ class MultipleRegressionMME(BaseRegressor):
 		X1 = self.mm.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 		X1 = self.mm.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		return super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,  verbose=verbose)
+		return super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks,  verbose=verbose, parallel_in_memory=parallel_in_memory)
 
 
-class PoissonRegressionMME(BaseRegressor):
+class mPoissonRegression(BaseRegressor):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = PoissonRegressionOne
@@ -102,22 +102,22 @@ class PoissonRegressionMME(BaseRegressor):
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
-		self.mm = MinMax()
+		self.mm = MinMax(min=0.00000001, max=2)
 		self.mm.fit(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.mm.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
 		X1 = self.mm.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		return super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose)
+		return super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-class GammaRegressionMME(BaseRegressor):
+class mGammaRegression(BaseRegressor):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = GammaRegressionOne
@@ -141,19 +141,19 @@ class GammaRegressionMME(BaseRegressor):
 
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
 		X1 = self.mm.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = X1.where(X1 > 0, other=0.00000001)
-		return super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose)
+		return super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory)
 
 
-class PrincipalComponentsRegressionMME(BaseRegressor):
+class mPrincipalComponentsRegression(BaseRegressor):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = LinearRegression
@@ -177,20 +177,20 @@ class PrincipalComponentsRegressionMME(BaseRegressor):
 
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
 		X1 = self.mm.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.pca.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		return super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose)
+		return super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory)
 
 
 
-class MultiLayerPerceptronMME(BaseRegressor):
+class mMultiLayerPerceptron(BaseRegressor):
 	def __init__(self, hidden_layer_sizes=None, **kwargs):
 		if hidden_layer_sizes is not None:
 			kwargs['hidden_layer_sizes'] = hidden_layer_sizes
@@ -218,20 +218,20 @@ class MultiLayerPerceptronMME(BaseRegressor):
 
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		preds =  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose)
+		preds =  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory)
 		return self.normy.inverse_transform(preds, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
 
-class RandomForestMME(BaseRegressor):
+class mRandomForest(BaseRegressor):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = RandomForestRegressor
@@ -255,19 +255,19 @@ class RandomForestMME(BaseRegressor):
 
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1,  samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1,  samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		preds =  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks,  feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose)
+		preds =  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks,  feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory)
 		return self.normy.inverse_transform(preds, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
 
-class RidgeRegressorMME(BaseRegressor):
+class mRidgeRegressor(BaseRegressor):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = Ridge
@@ -287,18 +287,18 @@ class RidgeRegressorMME(BaseRegressor):
 
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose)
+		return  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory)
 
 
-class ExtremeLearningMachineMME(BaseRegressor):
+class mExtremeLearningMachine(BaseRegressor):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = ELMRegressor
@@ -320,19 +320,19 @@ class ExtremeLearningMachineMME(BaseRegressor):
 		Y1 = self.normy.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1,  verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		preds =  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose)
+		preds =  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks,  samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory)
 		return self.normy.inverse_transform(preds, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
 
-class ElmPcaMME(BaseRegressor):
+class mExtremeLearningMachinePCA(BaseRegressor):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = ELMRegressor
@@ -360,15 +360,15 @@ class ElmPcaMME(BaseRegressor):
 
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
-	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 ,  feat_chunks=1, samp_chunks=1, verbose=False):
+	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 ,  feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
 		X1 = X.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=True)
+			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim,  feat_chunks=feat_chunks, samp_chunks=samp_chunks, use_dask=not parallel_in_memory)
 
 
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.pca.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-		preds =  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks,  feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose)
+		preds =  super().predict(X1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , lat_chunks=lat_chunks, lon_chunks=lon_chunks,  feat_chunks=feat_chunks, samp_chunks=samp_chunks,verbose=verbose, parallel_in_memory=parallel_in_memory)
 		return self.normy.inverse_transform(preds, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)

@@ -5,7 +5,7 @@ from sklearn.naive_bayes import MultinomialNB
 from scipy.special import softmax
 
 
-class ExtendedPOELM:
+class ExtendedPOELMClassifier:
 	def __init__(self, **kwargs):
 		self.model = POELMClassifier(**kwargs)
 		self.an_thresh = 0.67
@@ -46,9 +46,9 @@ class ExtendedPOELM:
 
 
 
-class ExtendedMLP:
+class ExtendedMLPClassifier:
 	def __init__(self, **kwargs):
-		self.model = MultiLayerPerceptron(**kwargs)
+		self.model = MLPClassifier(**kwargs)
 		self.an_thresh = 0.67
 		self.bn_thresh = 0.33
 
@@ -86,7 +86,7 @@ class ExtendedMLP:
 			return np.argmax(np.hstack([np.ones((x.shape[0], 1)) * 0.33, np.ones((x.shape[0], 1)) * 0.34, np.ones((x.shape[0], 1)) * 0.33]), axis=-1)
 
 
-class ExtendedNaiveBayes:
+class ExtendedNaiveBayesClassifier:
 	def __init__(self, **kwargs):
 		self.model = MultinomialNB(**kwargs)
 		self.an_thresh = 0.67
@@ -126,7 +126,7 @@ class ExtendedNaiveBayes:
 			return np.argmax(np.hstack([np.ones((x.shape[0], 1)) * 0.33, np.ones((x.shape[0], 1)) * 0.34, np.ones((x.shape[0], 1)) * 0.33]), axis=-1)
 
 
-class ExtendedRandomForest:
+class ExtendedRandomForestClassifier:
 	def __init__(self, **kwargs):
 		self.model = RandomForestClassifier(**kwargs)
 		self.an_thresh = 0.67

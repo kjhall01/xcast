@@ -6,6 +6,7 @@ import datetime as dt
 import numpy as np
 import scipy.linalg.lapack as la
 from ...verification.flat_metrics import akaike_information_criterion
+from scipy.spatial.distance import cdist
 
 class ELMRegressor:
 	"""Probabilistic Output Extreme Learning Machine"""
@@ -121,10 +122,10 @@ class ELMRegressor:
 				print('{} Applied PCA pruning with n_components of  {} '.format(dt.datetime.now(),  None if self.pca_retained == -1 or self.pca_retained == -999 else self.pca_retained ))
 
 		elif self.pruning == "prune":
-			self.hidden_neurons = [ (w[:,i], b[:,i]) for i in range(self.hidden_layer_size)]
+			self.hidden_neurons = [ (w[:,i], b[:,i]) for i in range(w.shape[1])]
 			h = np.asarray([ self._activate(neuron[0], x, neuron[1]) for neuron in self.hidden_neurons]).T
 
-			scores = np.asarray([np.squeeze(chi2(h[:,i].reshape(-1,1), np.argmax(y, axis=-1)))[0] for i in range(h.shape[1]) ])
+			scores = np.asarray([np.squeeze(chi2(h[:,i].argsort().argsort().reshape(-1,1), np.argmax(y, axis=-1)))[0] for i in range(h.shape[1]) ])
 			new_h = []
 			for i in range(scores.shape[0]):
 				new_h.append(self.hidden_neurons[np.argmax(scores)])
@@ -149,7 +150,7 @@ class ELMRegressor:
 					B = np.linalg.lstsq(hth_plus_ic, ht)[0]
 
 				self.beta = B # np.dot(np.linalg.pinv(hh), ht)
-				preds = self.predict(x)
+				preds = self.predict(x, preprocessing=None)
 				#acc = accuracy_score(np.argmax(y, axis=-1), preds)
 				aics.append(akaike_information_criterion(preds, y))
 
@@ -182,18 +183,18 @@ class ELMRegressor:
 			print('{} Solved POELM '.format(dt.datetime.now() ))
 
 
-	def predict(self, x):
+	def predict(self, x, preprocessing='asis'):
 		# first, take care of preprocessing
-		if self.preprocessing == 'std':
+		if self.preprocessing == 'std' and preprocessing == 'asis':
 			x = (x - self.mean) / self.std # scales to std normal dist
 			if self.verbose:
 				print('{} Applied Standard Normal Scaling '.format(dt.datetime.now()))
-		if self.preprocessing == 'minmax':
+		if self.preprocessing == 'minmax' and preprocessing == 'asis':
 			x = ((x - self.min) / (self.max - self.min)  ) * 2 - 1 #scales to [-1, 1]
 			if self.verbose:
 				print('{} Applied MinMax Scaling '.format(dt.datetime.now()))
 
-		if self.pca_retained != -999:
+		if self.pca_retained != -999 and preprocessing == 'asis':
 			x = self.pca.transform(x)
 			if self.verbose:
 				print('{} Applied PCA Transformation to Forecast X  '.format(dt.datetime.now()))
@@ -208,14 +209,19 @@ class ELMRegressor:
 		elif self.activation == 'tanh':
 			return np.tanh(np.dot(x, a) + b)
 		elif self.activation == 'relu':
-			return np.max(0, np.dot(x, a) + b)
+			ret = np.dot(x, a) + b
+			ret[ret < 0] = 0
+			return ret
 		elif self.activation == 'lin':
 			return np.dot(x, a) + b
 		elif self.activation == 'rbf_l1':
-			return np.exp(-cdist(x, a.T, "cityblock")**2 / b)
+			print('Warning: "rbf_l1" activation is broken')
+			return np.exp(-cdist(x, a, "cityblock")**2 / b)
 		elif self.activation == 'rbf_l2':
-			return np.exp(-cdist(x, a.T, "euclidean")**2 / b)
+			print('Warning: "rbf_l2" activation is broken')
+			return np.exp(-cdist(x, a, "euclidean")**2 / b)
 		elif self.activation == 'rbf_linf':
-			return np.exp(-cdist(x, a.T, "chebyshev")**2 / b)
+			print('Warning: "rbf_linf" activation is broken')
+			return np.exp(-cdist(x, a, "chebyshev")**2 / b)
 		else:
 			assert False, 'Invalid activation function {}'.format(self.activation)

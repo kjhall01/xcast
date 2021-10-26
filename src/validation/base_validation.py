@@ -25,7 +25,7 @@ def cross_validate( MME, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x
 	while x_train is not None and y_train is not None and x_test is not None and y_test is not None:
 		mme  = MME(**kwargs)
 		mme.fit(x_train, y_train, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, y_lat_dim=y_lat_dim, y_lon_dim=y_lon_dim, y_sample_dim=y_sample_dim, y_feature_dim=y_feature_dim, lat_chunks=lat_chunks, lon_chunks=lon_chunks,  parallel_in_memory=parallel_in_memory)
-		preds = mme.predict(x_test, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, lat_chunks=lat_chunks, lon_chunks=lon_chunks)
+		preds = mme.predict(x_test, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, lat_chunks=lat_chunks, lon_chunks=lon_chunks, parallel_in_memory=parallel_in_memory)
 
 		count += 1
 		if verbose:
