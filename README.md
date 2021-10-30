@@ -77,10 +77,10 @@ XCast enables users to apply Python's various statistical tools to spatial gridd
 
 1. Install with [Anaconda](https://anaconda.org/)
    ```sh
-   conda install -c hallkjc01 xcast
+   conda install -c hallkjc01 -c conda-forge xcast
    ```
 2. Read the [Documentation](https://github.com/kjhall01/xcast/)
-3. Check out our [blog](blogwebsite.org)
+3. Check out our [blog] (coming soon)()
 
 
 <!-- ROADMAP -->
