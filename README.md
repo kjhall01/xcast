@@ -18,6 +18,8 @@
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5627478.svg)](https://doi.org/10.5281/zenodo.5627478)
+
 
 
 
@@ -127,6 +129,6 @@ Email: kjhall@iri.columbia.edu (This is a side project, so it may take a while t
 [issues-shield]: https://img.shields.io/github/issues/kjhall01/xcast.svg?style=for-the-badge
 [issues-url]: https://github.com/kjhall01/xcast/issues
 [license-shield]: https://img.shields.io/github/license/kjhall01/xcast.svg?style=for-the-badge
-[license-url]: https://github.com/kjhall01/xcast/blob/master/LICENSE
+[license-url]: https://github.com/kjhall01/xcast/blob/main/LICENSE
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/kjhall01
