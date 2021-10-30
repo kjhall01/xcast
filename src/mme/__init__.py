@@ -21,7 +21,7 @@ probabilistic_mmes = [
 	pExtendedLogisticRegression,
 	pMultivariateELR,
 	pRandomForest,
-	pMultiLayerPerceptron
+	pMultiLayerPerceptron,
 	pPCAPOELM,
 	pPOELM
 ]
