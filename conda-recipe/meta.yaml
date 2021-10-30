@@ -1,9 +1,9 @@
 package:
   name: xcast
-  version: "0.2.1"
+  version: "0.2.2"
 
 source:
-  path:  https://github.com/kjhall01/xcast/archive/refs/tags/v0.2.1.tar.gz
+  url:  https://github.com/kjhall01/xcast/archive/refs/tags/v0.2.2.tar.gz
 build:
   number: 0
   string: xcast
