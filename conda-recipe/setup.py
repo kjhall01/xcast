@@ -6,7 +6,7 @@ with open('README.md', 'r', encoding='utf-8') as fh:
 
 setup(
     name = "xcast",
-    version = "0.2.4",
+    version = "0.2.5",
     author = "Kyle Hall",
     author_email = "kjhall@iri.columbia.edu",
     description = ("High Performance Gridpoint-Wise Machine Learning for the Earth Sciences"),
