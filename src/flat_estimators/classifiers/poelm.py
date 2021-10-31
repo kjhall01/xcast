@@ -6,11 +6,12 @@ import datetime as dt
 import numpy as np
 import scipy.linalg.lapack as la
 from scipy.special import softmax
+from scipy.spatial.distance import cdist
 
 
 class POELMClassifier:
 	"""Probabilistic Output Extreme Learning Machine"""
-	def __init__(self, hidden_layer_size=5, initialization='random', pruning='none', pca=-999, c=1, preprocessing='none', dropconnect_pr=-1.0, dropout_pr=-1.0, verbose=False, threshold=0.5):
+	def __init__(self, activation='sigm', hidden_layer_size=5, initialization='random', pruning='none', pca=-999, c=1, preprocessing='none', dropconnect_pr=-1.0, dropout_pr=-1.0, verbose=False, threshold=0.5):
 		assert type(hidden_layer_size) == int and hidden_layer_size > 0, 'Invalid hidden_layer_size {}'.format(hidden_layer_size)
 		assert type(initialization) == str and initialization in ['random', 'pca'], 'Invalid initialization {}'.format(initialization)
 		assert type(pruning) == str and pruning in ["none", "prune", "pca"], 'Invalid pruning {}'.format(pruning)
@@ -19,7 +20,9 @@ class POELMClassifier:
 		assert type(preprocessing) is str and preprocessing in ['std', 'minmax', 'none'], 'Invalid preprocessing {}'.format(preprocessing)
 		assert type(dropconnect_pr) is float, 'Invalid DropConnect Probability Threshold {}'.format(dropconnect_pr)
 		assert type(dropout_pr) is float, 'Invalid DropOut Probability Threshold {}'.format(dropout_pr)
+		assert activation in ['sigm', 'relu', 'lin', 'tanh', 'rbf_l1', 'rbf_l2', 'rbf_linf'], 'invalid activation function for poelm- must be one of {}'.format(['sigm', 'relu', 'lin', 'tanh', 'rbf_l1', 'rbf_l2', 'rbf_linf'])
 
+		self.activation = activation
 		self.threshold = threshold
 		self.initialization = initialization
 		self.pruning = pruning
@@ -227,11 +230,31 @@ class POELMClassifier:
 			retfinal = np.ones(ret.shape)
 			retfinal[sums >=1, :] = ret1[sums>=1, :]
 			retfinal[sums < 1, :] = ret2[sums<1, :]
-			ret = retfinal 
+			ret = retfinal
 		return ret
 
 	def _activate(self, a, x, b):
-		return 1.0 / (1 + np.exp(-1* np.dot(a, x.T) + b) )
+		if self.activation == 'sigm':
+			return 1.0 / (1 + np.exp(-1*np.dot(x, a) + b))
+		elif self.activation == 'tanh':
+			return np.tanh(np.dot(x, a) + b)
+		elif self.activation == 'relu':
+			ret = np.dot(x, a) + b
+			ret[ret < 0] = 0
+			return ret
+		elif self.activation == 'lin':
+			return np.dot(x, a) + b
+		elif self.activation == 'rbf_l1':
+			print('Warning: "rbf_l1" activation is broken')
+			return np.exp(-cdist(x, a, "cityblock")**2 / b)
+		elif self.activation == 'rbf_l2':
+			print('Warning: "rbf_l2" activation is broken')
+			return np.exp(-cdist(x, a, "euclidean")**2 / b)
+		elif self.activation == 'rbf_linf':
+			print('Warning: "rbf_linf" activation is broken')
+			return np.exp(-cdist(x, a, "chebyshev")**2 / b)
+		else:
+			assert False, 'Invalid activation function {}'.format(self.activation)
 
 	def _aic(self, N, accuracy, S):
 		return 2 * N * np.log(((1 - accuracy) / N)**2 / N ) + S
