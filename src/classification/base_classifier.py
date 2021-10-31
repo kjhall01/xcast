@@ -189,7 +189,7 @@ class BaseClassifier:
 		if len(results.shape) < 4 and self.shape['LONGITUDE'] == 1:
 			results = da.expand_dims(results, axis=1)
 
-		if verbose:
+		if verbose and not parallel_in_memory:
 			self.prog.finish()
 			self.count = 0
 

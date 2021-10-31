@@ -281,7 +281,7 @@ class pPOELM(BaseClassifier):
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
 
 	def predict(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True):
-		X1 = fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+		X1 = X1.sel() #fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		#the following ignores the X1 part, just uses coords, but it actually will use previously saved if override=False, like the default is.
 		if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
 			X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, use_dask=True, feat_chunks=feat_chunks, samp_chunks=samp_chunks)

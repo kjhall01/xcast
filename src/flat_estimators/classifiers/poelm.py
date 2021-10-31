@@ -227,6 +227,7 @@ class POELMClassifier:
 			retfinal = np.ones(ret.shape)
 			retfinal[sums >=1, :] = ret1[sums>=1, :]
 			retfinal[sums < 1, :] = ret2[sums<1, :]
+			ret = retfinal 
 		return ret
 
 	def _activate(self, a, x, b):
