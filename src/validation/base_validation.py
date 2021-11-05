@@ -1,5 +1,5 @@
 import xarray as xr
-import xskillscore as xs
+#import xskillscore as xs
 from ..core.utilities import *
 from ..core.progressbar import *
 import numpy as np

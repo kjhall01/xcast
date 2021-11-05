@@ -1,4 +1,5 @@
 from setuptools import *
+from pathlib import Path
 
 with open('README.md', 'r', encoding='utf-8') as fh:
 	long_description= fh.read()
@@ -6,7 +7,7 @@ with open('README.md', 'r', encoding='utf-8') as fh:
 
 setup(
     name = "xcast",
-    version = "0.2.8",
+    version = "0.3.0",
     author = "Kyle Hall",
     author_email = "kjhall@iri.columbia.edu",
     description = ("High Performance Gridpoint-Wise Machine Learning for the Earth Sciences"),
