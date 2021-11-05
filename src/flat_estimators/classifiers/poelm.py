@@ -38,7 +38,7 @@ class POELMClassifier:
 		assert len(y.shape) == 2, 'POELM expects Y to be of shape (n_samples, n_classes) even if it is a binary classification - got {}'.format(y.shape)
 		assert len(x.shape) == 2, 'POELM expects X to be of shape (n_samples, n_features) - got {}'.format(x.shape)
 		assert 0.0 <= np.min(y) and np.max(y) <= 1.0, 'POELM expects that no value in Y is ever greater than 1 or less than 0'
-		self.using_multiclass= True if np.mean(np.sum(y, axis=1)) == 1 else False
+		self.using_multiclass= True #if np.mean(np.sum(y, axis=1)) == 1 else False #### Fore now hard-code to true
 
 		y[y<0.5] = 0.0001
 		y[y>0.5] = 0.9999

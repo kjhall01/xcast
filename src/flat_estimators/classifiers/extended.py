@@ -12,22 +12,20 @@ class ExtendedPOELMClassifier:
 		self.bn_thresh = 0.33
 
 	def fit(self, x, y):
-		try:
-			y = np.vstack([np.sum(y[:,1:], axis=-1).reshape(-1,1), y[:,2].reshape(-1,1)]) # exceeded 0.33, exceeded 0.66
-			x_bn = np.hstack([x, np.ones((x.shape[0], 1)) * self.bn_thresh])
-			x_an = np.hstack([x, np.ones((x.shape[0], 1)) * self.an_thresh])
-			x = np.vstack([x_bn, x_an])
-			#x = sm.add_constant(x)
-			self.model.fit(x, y)
-		except:
-			pass
+		y = np.vstack([np.sum(y[:,1:], axis=-1).reshape(-1,1), y[:,2].reshape(-1,1)]) # exceeded 0.33, exceeded 0.66
+		y = np.hstack([1-y, y])
+		x_bn = np.hstack([x, np.ones((x.shape[0], 1)) * self.bn_thresh])
+		x_an = np.hstack([x, np.ones((x.shape[0], 1)) * self.an_thresh])
+		x = np.vstack([x_bn, x_an])
+		self.model.fit(x.astype(float), y.astype(float))
+
 
 	def predict_proba(self, x):
 		try:
 			x_bn = np.hstack([x, np.ones((x.shape[0], 1)) * self.bn_thresh])
-			bn = self.model.predict_proba(x_bn)[:,0].reshape(-1,1)
+			bn = self.model.predict_proba(x_bn.astype(float))[:,0].reshape(-1,1)
 			x_an = np.hstack([x, np.ones((x.shape[0], 1)) * self.an_thresh])
-			an = self.model.predict_proba(x_an)[:,1].reshape(-1,1)
+			an = self.model.predict_proba(x_an.astype(float))[:,1].reshape(-1,1)
 			nn = 1 - (an + bn)
 			return np.hstack([bn, nn, an])
 		except:
@@ -36,9 +34,9 @@ class ExtendedPOELMClassifier:
 	def predict(self, x):
 		try:
 			x_bn = np.hstack([x, np.ones((x.shape[0], 1)) * self.bn_thresh])
-			bn = self.model.predict_proba(x_bn)[:,0].reshape(-1,1)
+			bn = self.model.predict_proba(x_bn.astype(float))[:,0].reshape(-1,1)
 			x_an = np.hstack([x, np.ones((x.shape[0], 1)) * self.an_thresh])
-			an = self.model.predict_proba(x_an)[:,1].reshape(-1,1)
+			an = self.model.predict_proba(x_an.astype(float))[:,1].reshape(-1,1)
 			nn = 1 - (an + bn)
 			return np.argmax(np.hstack([bn, nn, an]), axis=-1)
 		except:

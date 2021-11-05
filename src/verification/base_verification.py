@@ -76,7 +76,7 @@ def metric(func):
 		if rechunk:
 			X1 = X1.chunk({x_lat_dim: max(X1.shape[list(X1.dims).index(x_lat_dim)] // lat_chunks,1), x_lon_dim: max(X1.shape[list(X1.dims).index(x_lon_dim)] // lon_chunks,1), x_feature_dim: -1, x_sample_dim: -1})
 			Y1 = Y1.chunk({y_lat_dim: max(Y1.shape[list(Y1.dims).index(y_lat_dim)] // lat_chunks, 1), y_lon_dim: max(Y1.shape[list(Y1.dims).index(y_lon_dim)] // lon_chunks,1), y_feature_dim: -1, y_sample_dim: -1})
-		lat_chunks, lon_chunks = X1.chunks[list(X1.dims).index(x_lat_dim)], X1.chunks[list(X1.dims).index(x_lon_dim)] # assume x and y have the same chunks at this point
+			
 		x_data, y_data = X1.data, Y1.data
 		if verbose:
 			with dd.ProgressBar():

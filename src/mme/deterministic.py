@@ -212,7 +212,7 @@ class mMultiLayerPerceptron(BaseRegressor):
 		self.mmx.fit(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-		self.normy = Normal()
+		self.normy = MinMax()
 		self.normy.fit(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		Y1 = self.normy.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
@@ -249,7 +249,7 @@ class mRandomForest(BaseRegressor):
 		self.mmx.fit(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-		self.normy = Normal()
+		self.normy = MinMax()
 		self.normy.fit(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		Y1 = self.normy.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
@@ -315,7 +315,7 @@ class mExtremeLearningMachine(BaseRegressor):
 		self.mmx.fit(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.mmx.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-		self.normy = Normal()
+		self.normy = MinMax()
 		self.normy.fit(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		Y1 = self.normy.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		super().fit(X1, Y1, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , y_lat_dim, y_lon_dim,  y_sample_dim, y_feature_dim,  lat_chunks=lat_chunks, lon_chunks=lon_chunks, feat_chunks=feat_chunks, samp_chunks=samp_chunks, verbose=verbose, parallel_in_memory=parallel_in_memory)
@@ -354,7 +354,7 @@ class mExtremeLearningMachinePCA(BaseRegressor):
 		self.pca.fit(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = self.pca.transform(X1, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-		self.normy = Normal()
+		self.normy = MinMax()
 		self.normy.fit(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		Y1 = self.normy.transform(Y1, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
