@@ -1,4 +1,4 @@
-import xskillscore as xs
+#import xskillscore as xs
 import xarray as xr
 from ..core.utilities import *
 import numpy as np

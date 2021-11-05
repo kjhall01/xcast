@@ -11,11 +11,11 @@ build:
 
 requirements:
   host:
-    - python<=3.8
+    - python
     - pip
     - setuptools
   run:
-    - python<=3.8
+    - python
     - numpy
     - scipy
     - scikit-learn
@@ -24,10 +24,9 @@ requirements:
     - cartopy
     - matplotlib
     - pathlib
-    - h5py=3.4
+    - h5py
     - statsmodels
     - opencv
-    - xskillscore
 
 test:
   imports:
