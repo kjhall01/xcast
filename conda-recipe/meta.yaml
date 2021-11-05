@@ -24,11 +24,10 @@ requirements:
     - cartopy
     - matplotlib
     - pathlib
-    - h5py
+    - h5py=3.4
     - statsmodels
     - opencv
     - xskillscore
-    - hdf5 >=1.10.4,<1.10.5.0a0
 
 test:
   imports:
