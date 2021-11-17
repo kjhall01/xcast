@@ -27,7 +27,7 @@
   <a href="https://github.com/kjhall01/xcast/">
     <img src="images/logo.png" alt="Logo" width="200" height="200">
   </a>
-  <h3 align="center">XCast: Documentation </h3>
+  <h3 align="center">XCast: Documentation (Warning: Out of Date as of 11/17/21)</h3>
   </p>
 </p>
 
