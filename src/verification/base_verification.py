@@ -3,7 +3,6 @@ import xarray as xr
 import numpy as np
 import dask.array as da
 import uuid
-import h5py
 from ..core.utilities import *
 from ..core.progressbar import *
 
@@ -64,7 +63,10 @@ def apply_func_to_block(x_data, y_data, func1=mean_squared_error, kwargs={}, n=1
 	return ret
 
 def metric(func):
-	def func1(X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M', lat_chunks=1, lon_chunks=1,  feat_chunks=1, samp_chunks=1, verbose=False, rechunk=False, parallel_in_memory=True, n=1, xfmt='col', yfmt='col', **kwargs):
+	def func1(X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None, lat_chunks=1, lon_chunks=1,  feat_chunks=1, samp_chunks=1, verbose=False, rechunk=True, parallel_in_memory=True, n=1, xfmt='col', yfmt='col', **kwargs):
+		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+		y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+	
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		assert X.shape[list(X.dims).index(x_lat_dim)] == Y.shape[list(Y.dims).index(y_lat_dim)], 'Xcast metrics requires X to have the same latitudinal resolution as Y'

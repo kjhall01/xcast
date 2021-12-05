@@ -5,7 +5,10 @@ from ..core.progressbar import *
 import numpy as np
 
 
-def cross_validate( MME, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', y_lat_dim='Y', y_lon_dim='X', y_sample_dim='T', y_feature_dim='M',  window=3, verbose=0, ND=1,  lat_chunks=1, lon_chunks=1, parallel_in_memory=True, **kwargs ):
+def cross_validate( MME, X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None,  window=3, verbose=0, ND=1,  lat_chunks=1, lon_chunks=1, parallel_in_memory=True, **kwargs ):
+	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+	
 	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
@@ -48,7 +51,7 @@ def cross_validate( MME, X, Y, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x
 
 
 class CrossValidator:
-	def __init__(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', window=3 ):
+	def __init__(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, window=3 ):
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self.window = window + 1 if window % 2 == 0 else window
 		self.X = X.isel()

@@ -1,9 +1,7 @@
 from sklearn.decomposition import PCA
 import xarray as xr
 import numpy as np
-import dask.array as da
 import uuid
-import h5py
 from ..flat_estimators.regressors import NanRegression
 from ..core.utilities import *
 from ..core.progressbar import *
@@ -17,7 +15,8 @@ class BasePreprocess:
 		self.shape = {'LATITUDE':0, 'LONGITUDE':0, 'FIT_SAMPLES': 0, 'INPUT_FEATURES':0, 'OUTPUT_FEATURES': 0}
 		self.count, self.total = 0, 1
 
-	def fit(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1, verbose=False ):
+	def fit(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, lat_chunks=1, lon_chunks=1, verbose=False ):
+		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self._save_data_shape(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self.models = []
@@ -60,14 +59,13 @@ class BasePreprocess:
 				if verbose:
 					self.prog.show(self.count)
 
-	def transform(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', lat_chunks=1, lon_chunks=1 , verbose=False):
+	def transform(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, lat_chunks=1, lon_chunks=1 , verbose=False):
+		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self._check_xym_compatibility(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks, 1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks, 1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-		if self.use_dask:
-			id = str(uuid.uuid4())
-			self.hdf5 = h5py.File(id, 'w')
+
 		if verbose:
 			self.prog = ProgressBar(self.total, label='Predicting {}:'.format(self.model_type.__name__), step=10)
 			self.prog.show(self.count)
@@ -84,36 +82,15 @@ class BasePreprocess:
 				results[i].append(res)
 				lon_ndx_low += self.lon_chunks[j]
 			lat_ndx_low += self.lat_chunks[i]
-			if not self.use_dask:
-				results[i] = np.concatenate(results[i], axis=1)
-		if not self.use_dask:
-			results = np.concatenate(results, axis=0)
-		else:
-			results = []
-			self.hdf5.close()
-			self.hdf5 = h5py.File(id, 'r')
-			lat_ndx_low = 0
-			for i in range(len(self.lat_chunks)):
-				lon_ndx_low = 0
-				results.append([])
-				for j in range(len(self.lon_chunks)):
-					results[i].append(da.from_array(self.hdf5['data_{}_{}'.format(lat_ndx_low, lon_ndx_low)]))
-					lon_ndx_low += self.lon_chunks[j]
-				results[i] = da.concatenate(results[i], axis=1)
-				lat_ndx_low += self.lat_chunks[i]
-			results = da.concatenate(results, axis=0)
+			results[i] = np.concatenate(results[i], axis=1)
+		results = np.concatenate(results, axis=0)
+		
 
 		if len(results.shape) < 4 and self.shape['LATITUDE'] == 1:
-			if self.use_dask:
-				results = da.expand_dims(results, axis=0)
-			else:
-				results = np.expand_dims(results, axis=0)
+			results = np.expand_dims(results, axis=0)
 
 		if len(results.shape) < 4 and self.shape['LONGITUDE'] == 1:
-			if self.use_dask:
-				results = da.expand_dims(results, axis=1)
-			else:
-				results = np.expand_dims(results, axis=1)
+			results = np.expand_dims(results, axis=1)
 
 		if verbose:
 			self.prog.finish()
@@ -125,6 +102,8 @@ class BasePreprocess:
 			x_sample_dim: X1.coords[x_sample_dim].values,
 			x_feature_dim: [i for i in range(results.shape[-1])]
 		}
+		attrs = X1.attrs 
+		attrs.update({'generated_by': attrs['generated_by'] + '\n  XCAST preprocessing: {}'.format(self.model_type) if 'generated_by' in attrs.keys() else '\n  XCAST preprocessing: {}'.format(self.model_type)})
 		dims = [x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim]
 		return xr.DataArray(data=results, coords=coords, dims=dims)
 
@@ -145,14 +124,9 @@ class BasePreprocess:
 				self.count += 1
 				if verbose:
 					self.prog.show(self.count)
+		return results
 
-		if self.use_dask:
-			self.hdf5.create_dataset('data_{}_{}'.format(lat_ndx_low, lon_ndx_low), data=results)
-			return 'data_{}_{}'.format(lat_ndx_low, lon_ndx_low)
-		else:
-			return results
-
-	def _save_data_shape(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
+	def _save_data_shape(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
 		self.shape['LATITUDE'] =  X.shape[list(X.dims).index(x_lat_dim)]
 		self.shape['LONGITUDE'] =  X.shape[list(X.dims).index(x_lon_dim)]
 		self.shape['FIT_SAMPLES'] =  X.shape[list(X.dims).index(x_sample_dim)]

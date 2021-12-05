@@ -8,23 +8,19 @@ build:
   number: 0
   string: xcast
 
-
 requirements:
   host:
     - python
     - pip
     - setuptools
   run:
-    - python
     - numpy
     - scipy
     - scikit-learn
     - xarray
     - dask
-    - cartopy
     - matplotlib
     - pathlib
-    - h5py
     - statsmodels
     - opencv
 
@@ -44,6 +40,6 @@ test:
 about:
   home:
   license: MIT
-  summary: 'A Gridpoint-Wise Statistical and Machine Learning library for the Earth Sciences'
-  description: 'High-Performance Gridpoint-Wise Machine Learning for the Earth Sciences'
-  dev_url:  https://github.com/kjhall01/xcast/
+  summary: "A Gridpoint-Wise Statistical and Machine Learning library for the Earth Sciences"
+  description: "High-Performance Gridpoint-Wise Machine Learning for the Earth Sciences"
+  dev_url: https://github.com/kjhall01/xcast/

@@ -6,7 +6,8 @@ class NormalTerciles:
 	def __init__(self, normal_width=0.34):
 		self.low_thresh, self.high_thresh = ss.norm(0, 1).interval(normal_width)
 
-	def fit(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
+	def fit(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self.feature_dim, self.lat_dim, self.lon_dim = x_feature_dim, x_lat_dim, x_lon_dim
 		X1 = X.isel()
@@ -14,7 +15,8 @@ class NormalTerciles:
 		self.std = X1.std(x_sample_dim)
 		self.nanmask = X1.mean(x_sample_dim).mean(x_feature_dim)  / X1.mean(x_sample_dim).mean(x_feature_dim)
 
-	def transform(self,X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
+	def transform(self,X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self.mu = self.mu.rename({self.feature_dim:x_feature_dim, self.lat_dim:x_lat_dim, self.lon_dim:x_lon_dim})
 		self.std = self.std.rename({self.feature_dim:x_feature_dim, self.lat_dim:x_lat_dim, self.lon_dim:x_lon_dim})
@@ -36,14 +38,17 @@ class NormalTerciles:
 		X_N = X_N.where(X_N <= self.high_thresh, other=0.0)
 		X_N = X_N.where(X_N == 0.0, other=1.0)
 		X1 = xr.concat([X_BN, X_N, X_AN], 'C')
-		return X1.assign_coords({'C': [0,1,2]}) * self.nanmask
+		r = X1.assign_coords({'C': [0,1,2]}) * self.nanmask
+		r.attrs['generated_by'] =  attrs['generated_by'] + '\n  XCAST Normal Tercile One-Hot Encoded' if 'generated_by' in attrs.keys() else '\n  XCAST Normal Tercile One-Hot Encoded'
+		return r 
 
 class RankedTerciles:
 	def __init__(self, low_thresh=None, high_thresh=None, explicit=False):
 		self.low_thresh, self.high_thresh = low_thresh, high_thresh
 		self.explicit = explicit
 
-	def fit(self, X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
+	def fit(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		iseldict = {x_feature_dim: 0}
 		self.feature_dim, self.lat_dim, self.lon_dim = x_feature_dim, x_lat_dim, x_lon_dim
@@ -66,7 +71,8 @@ class RankedTerciles:
 
 
 
-	def transform(self,X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M'):
+	def transform(self,X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		iseldict = {x_feature_dim: 0}
 		X1 = X.isel(**iseldict)
@@ -88,4 +94,6 @@ class RankedTerciles:
 		X_N = X_N.where(X_N <= self.high_threshold, other=0.0)
 		X_N = X_N.where(X_N == 0.0, other=1.0)
 		X1 = xr.concat([X_BN, X_N, X_AN], 'C')
-		return X1.assign_coords({'C': [0,1,2]})  * self.nanmask
+		r = X1.assign_coords({'C': [0,1,2]})  * self.nanmask
+		r.attrs['generated_by'] =  attrs['generated_by'] + '\n  XCAST Ranked Tercile One-Hot Encoded' if 'generated_by' in attrs.keys() else '\n  XCAST Ranked Tercile One-Hot Encoded '
+		return r 
