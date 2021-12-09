@@ -64,7 +64,7 @@ def regrid(X, lons, lats, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_f
 	mask.coords[x_lon_dim] = lons
 	r = ret * mask
 	r.attrs['generated_by'] =  attrs['generated_by'] + '\n  XCAST regridded' if 'generated_by' in attrs.keys() else '\n  XCAST regridded'
-
+	return r
 
 
 def regrid_chunk(X, lats, lons, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, use_dask=False, hdf=None, feature_ndx=0, sample_ndx=0 ):

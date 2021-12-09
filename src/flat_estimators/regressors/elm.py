@@ -32,6 +32,7 @@ class ELMRegressor:
 		self.preprocessing = preprocessing
 
 	def fit(self, x, y):
+		x, y = x.astype(np.float64), y.astype(np.float64)
 		# first, take care of preprocessing
 		if self.preprocessing == 'std':
 			self.mean, self.std = x.mean(axis=0), x.std(axis=0)
@@ -184,6 +185,7 @@ class ELMRegressor:
 
 
 	def predict(self, x, preprocessing='asis'):
+		x = x.astype(np.float64)
 		# first, take care of preprocessing
 		if self.preprocessing == 'std' and preprocessing == 'asis':
 			x = (x - self.mean) / self.std # scales to std normal dist
