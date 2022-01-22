@@ -278,6 +278,8 @@ def gaussian_smooth(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feat
 		results[i] = np.concatenate(results[i], axis=1)
 	results = np.concatenate(results, axis=0)
 	#X1 = X1.transpose(x_sample_dim, x_feature_dim, x_lat_dim, x_lon_dim)
+	attrs = X1.attrs
+
 	r = xr.DataArray(data=results, coords=X1.coords, dims=X1.dims, attrs=attrs)
 	r.attrs['generated_by'] =  attrs['generated_by'] + '\n  XCAST Gaussian Smoothing {}'.format(kernel) if 'generated_by' in attrs.keys() else '\n  XCAST Gaussian Smoothing {}'.format(kernel)
 	return r
