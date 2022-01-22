@@ -38,6 +38,7 @@ class NormalTerciles:
 		X_N = X_N.where(X_N <= self.high_thresh, other=0.0)
 		X_N = X_N.where(X_N == 0.0, other=1.0)
 		X1 = xr.concat([X_BN, X_N, X_AN], 'C')
+		attrs = X1.attrs
 		r = X1.assign_coords({'C': [0,1,2]}) * self.nanmask
 		r.attrs['generated_by'] =  attrs['generated_by'] + '\n  XCAST Normal Tercile One-Hot Encoded' if 'generated_by' in attrs.keys() else '\n  XCAST Normal Tercile One-Hot Encoded'
 		return r 
@@ -94,6 +95,8 @@ class RankedTerciles:
 		X_N = X_N.where(X_N <= self.high_threshold, other=0.0)
 		X_N = X_N.where(X_N == 0.0, other=1.0)
 		X1 = xr.concat([X_BN, X_N, X_AN], 'C')
+		attrs = X1.attrs
+
 		r = X1.assign_coords({'C': [0,1,2]})  * self.nanmask
 		r.attrs['generated_by'] =  attrs['generated_by'] + '\n  XCAST Ranked Tercile One-Hot Encoded' if 'generated_by' in attrs.keys() else '\n  XCAST Ranked Tercile One-Hot Encoded '
 		return r 
