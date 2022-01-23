@@ -13,7 +13,7 @@ from pathlib import Path
 warnings.filterwarnings("ignore")
 
 Path('.xcast_worker_space').mkdir(exist_ok=True, parents=True)
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 def clear_cache():
 	if Path('.xcast_worker_space').is_dir():
