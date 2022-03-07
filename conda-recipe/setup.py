@@ -7,7 +7,7 @@ with open('README.md', 'r', encoding='utf-8') as fh:
 
 setup(
     name = "xcast",
-    version = "0.3.3",
+    version = "0.4.0",
     author = "Kyle Hall",
     author_email = "kjhall@iri.columbia.edu",
     description = ("High Performance Gridpoint-Wise Machine Learning for the Earth Sciences"),
@@ -21,11 +21,10 @@ setup(
 		'xcast.flat_estimators',
 		'xcast.flat_estimators.classifiers',
 		'xcast.flat_estimators.regressors',
-		'xcast.mme',
 		'xcast.preprocessing',
 		'xcast.regression',
 		'xcast.validation',
-		'xcast.verification'],
+		'xcast.verification',],
 	package_dir={
 		'xcast':'src',
 		'xcast.classification':'src/classification',
@@ -33,7 +32,6 @@ setup(
 		'xcast.flat_estimators':'src/flat_estimators',
 		'xcast.flat_estimators.classifiers':'src/flat_estimators/classifiers',
 		'xcast.flat_estimators.regressors':'src/flat_estimators/regressors',
-		'xcast.mme':'src/mme',
 		'xcast.preprocessing':'src/preprocessing',
 		'xcast.regression':'src/regression',
 		'xcast.validation':'src/validation',

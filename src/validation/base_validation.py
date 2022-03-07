@@ -5,85 +5,51 @@ from ..core.progressbar import *
 import numpy as np
 
 
-def cross_validate( MME, X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None,  window=3, verbose=0, ND=1,  lat_chunks=1, lon_chunks=1, parallel_in_memory=True, **kwargs ):
-	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-	y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
-	
-	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
-
-	crossval_x = CrossValidator(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim, window=window)
-	crossval_y = CrossValidator(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim, window=window)
-
-	prog = ProgressBar(crossval_x.windows, step=1, label=" CROSSVALIDATING {}: ".format(MME.__name__))
-	count = 0
-	if verbose:
-		prog.show(count)
-
-	x_train, x_test = crossval_x.get_next_window()
-	y_train, y_test = crossval_y.get_next_window()
-
-	prediction_means, prediction_stds = [], []
-	kwargs['ND'] = ND
-	while x_train is not None and y_train is not None and x_test is not None and y_test is not None:
-		mme  = MME(**kwargs)
-		mme.fit(x_train, y_train, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, y_lat_dim=y_lat_dim, y_lon_dim=y_lon_dim, y_sample_dim=y_sample_dim, y_feature_dim=y_feature_dim, lat_chunks=lat_chunks, lon_chunks=lon_chunks,  parallel_in_memory=parallel_in_memory)
-		preds = mme.predict(x_test, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, lat_chunks=lat_chunks, lon_chunks=lon_chunks, parallel_in_memory=parallel_in_memory)
-
-		count += 1
-		if verbose:
-			prog.show(count)
-
-		#preds = xr.concat(preds_temp, 'N')
-		prediction_means.append(preds.mean('ND'))
-		prediction_stds.append(preds.std('ND'))
-
-		x_train, x_test = crossval_x.get_next_window()
-		y_train, y_test = crossval_y.get_next_window()
-
-	prediction_means = xr.concat(prediction_means, x_sample_dim)
-	prediction_stds = xr.concat(prediction_stds, x_sample_dim)
-	if verbose:
-		prog.finish()
-
-	data_vars = {'hindcasts': prediction_means, 'nd_stddev': prediction_stds}
-	return xr.Dataset(data_vars, coords=prediction_stds.coords)
-
 
 class CrossValidator:
-	def __init__(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, window=3 ):
-		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		self.window = window + 1 if window % 2 == 0 else window
-		self.X = X.isel()
-		self.lat_dim, self.lon_dim = x_lat_dim, x_lon_dim
-		self.sample_dim, self.feature_dim = x_sample_dim, x_feature_dim
-		self.t_size = len(self.X.coords[x_sample_dim].values)
-		self.windows = int(self.t_size // self.window) + 1
-		self.range_top = self.window
-		self.range_bottom = 0
-		self.done = False
+    def __init__(self, X, Y, window=1, step= 1,  x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None ):
+        x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim )
+        y_lat_dim, y_lon_dim, y_sample_dim,  y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim,  y_feature_dim )
+        check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+        check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+        self.samples = X.shape[list(X.dims).index(x_sample_dim)]
+        self.x_sample_dim, self.y_sample_dim = x_sample_dim, y_sample_dim
+        assert X.shape[list(X.dims).index(x_sample_dim)] == Y.shape[list(Y.dims).index(y_sample_dim)], 'X and Y must have the same number of samples - they do not'
+        self.X, self.Y, self.window, self.index, self.step = X, Y, window, 0, step
+        assert window % 2 == 1, 'Cross Validation Window must be odd'
+        self.radius = window // 2 # count out from center to edge of window- ie 0 1 2 3 4 centered on two, this would be 2 
 
+    def get_next(self):
+        bottom_boundary, top_boundary = self.index - self.radius, self.index + self.radius + 1 # if this is 0, you get -2, 2 which includes -2, -1, 0, 1, 2 all in the sample 
+        bottom_boundary = self.samples + bottom_boundary  if bottom_boundary < 0 else bottom_boundary # bottom boundary will never be greater than self.samples - 1 - self.radius 
+        top_boundary = top_boundary - self.samples if top_boundary >= self.samples else top_boundary
+        if self.index >= self.samples: 
+            raise StopIteration
+        if bottom_boundary > top_boundary: 
+            x_bottom_of_window_high_indices = self.X.isel(**{self.x_sample_dim: slice(bottom_boundary, None)})
+            x_top_of_window_low_indices = self.X.isel(**{self.x_sample_dim: slice(None, top_boundary)})
+            x_test = xr.concat([ x_bottom_of_window_high_indices, x_top_of_window_low_indices], self.x_sample_dim)
+            x_train = self.X.isel(**{self.x_sample_dim: slice(top_boundary, bottom_boundary)})
 
-	def get_next_window(self, verbose=False):
-		if self.done:
-			return None, None
-		t_ndcs = xr.DataArray([j for j in range(self.t_size) if not j >= self.range_bottom or not j < self.range_top], dims=[self.sample_dim])
-		sel_dict = {self.sample_dim: t_ndcs}
-		train = self.X.isel(**sel_dict)
-		t_ndcs_test = xr.DataArray([j for j in range(self.t_size) if  j >= self.range_bottom and j < self.range_top], dims=[self.sample_dim])
-		test_sel_dict = {self.sample_dim: t_ndcs_test}
-		test = self.X.isel(**test_sel_dict)
+            y_bottom_of_window_high_indices = self.Y.isel(**{self.y_sample_dim: slice(bottom_boundary, None)})
+            y_top_of_window_low_indices = self.Y.isel(**{self.y_sample_dim: slice(None, top_boundary)})
+            y_test = xr.concat([ y_bottom_of_window_high_indices, y_top_of_window_low_indices], self.y_sample_dim)
+            y_train = self.Y.isel(**{self.y_sample_dim: slice(top_boundary, bottom_boundary)})
+        else: 
+            x_train_bottom = self.X.isel(**{self.x_sample_dim: slice( None, bottom_boundary )})
+            x_train_top = self.X.isel(**{self.x_sample_dim: slice(top_boundary, None )})
+            x_train = xr.concat([ x_train_bottom, x_train_top ], self.x_sample_dim)
+            x_test= self.X.isel(**{self.x_sample_dim: slice(bottom_boundary, top_boundary)})
+            
+            y_train_bottom = self.Y.isel(**{self.y_sample_dim: slice( None, bottom_boundary )})
+            y_train_top = self.Y.isel(**{self.y_sample_dim: slice(top_boundary, None )})
+            y_train = xr.concat([ y_train_bottom, y_train_top ], self.y_sample_dim)
+            y_test= self.Y.isel(**{self.y_sample_dim: slice(bottom_boundary, top_boundary)})
+        self.index += self.step
+        return x_train, y_train, x_test, y_test 
 
-		self.range_bottom += self.window
-		self.range_top += self.window
-		if self.range_top > self.t_size:
-			self.range_top = self.t_size
-		if self.range_bottom >= self.t_size:
-			self.done = True
-
-		if self.sample_dim not in train.dims:
-			train = train.expand_dims({self.sample_dim:t_ndcs})
-
-		if self.sample_dim not in test.dims:
-			test = test.expand_dims({self.sample_dim:t_ndcs_test})
-		return train, test
+    def __iter__(self):
+        return self 
+    
+    def __next__(self): 
+        return self.get_next()

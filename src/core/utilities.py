@@ -14,7 +14,7 @@ def guess_coords(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature
 	common_x = ['LONGITUDE', 'LONG', 'X', 'LON']
 	common_y = ['LATITUDE', 'LAT', 'LATI', 'Y']
 	common_t = ['T', 'S', 'TIME', 'SAMPLES', 'SAMPLE', 'INITIALIZATION', 'INIT', "TARGET"]
-	common_m = ['M', 'FEATURES', 'F', 'REALIZATION', 'MEMBER', 'Z']
+	common_m = ['M', 'FEATURES', 'F', 'REALIZATION', 'MEMBER', 'Z', 'C', 'CAT']
 	ret = {'lat': x_lat_dim, 'lon': x_lon_dim, 'samp': x_sample_dim, 'feat': x_feature_dim}
 	for dim in X.dims: 
 		for x in common_x: 

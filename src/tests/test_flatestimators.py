@@ -1,15 +1,15 @@
 import pytest
 from sklearn.datasets import make_regression, make_classification
-import src as xc
+from .. import * 
 import numpy as np
 
-@pytest.mark.parametrize("regressor,x,y", [(reg, *make_regression()) for reg in xc.flat_regressors])
+@pytest.mark.parametrize("regressor,x,y", [(reg, *make_regression()) for reg in flat_regressors])
 def test_flat_regressor(regressor, x, y):
 	reg = regressor()
 	reg.fit(x, y.reshape(-1,1))
 	preds = reg.predict(x)
 
-@pytest.mark.parametrize('classifier,x,y', [(clf, *make_classification(n_classes=3, n_informative=5)) for clf in xc.flat_classifiers])
+@pytest.mark.parametrize('classifier,x,y', [(clf, *make_classification(n_classes=3, n_informative=5)) for clf in flat_classifiers])
 def test_flat_classifier(classifier, x, y):
 	clf = classifier()
 	y1 = np.zeros((y.shape[0], np.max(y)+1))
@@ -48,7 +48,7 @@ def make_elm_params():
 @pytest.mark.parametrize('activation,hidden_layer_size,initialization,pruning,pca,c,preprocessing,dropconnect_pr,dropout_pr,verbose', make_elm_params())
 def test_elm_regressor(activation,hidden_layer_size,initialization,pruning,pca,c,preprocessing,dropconnect_pr,dropout_pr,verbose):
 	x, y = make_regression()
-	elm = xc.ELMRegressor(activation,hidden_layer_size,initialization,pruning,pca,c,preprocessing,dropconnect_pr,dropout_pr,verbose)
+	elm = ELMRegressor(activation,hidden_layer_size,initialization,pruning,pca,c,preprocessing,dropconnect_pr,dropout_pr,verbose)
 	elm.fit(x, y.reshape(-1,1))
 	preds = elm.predict(x)
 
@@ -80,7 +80,7 @@ def make_poelm_params():
 @pytest.mark.parametrize('hidden_layer_size,initialization,pruning,pca,c,preprocessing,dropconnect_pr,dropout_pr,verbose', make_poelm_params())
 def test_elm_classifier(hidden_layer_size,initialization,pruning,pca,c,preprocessing,dropconnect_pr,dropout_pr,verbose):
 	x, y =  make_classification(n_classes=3, n_informative=5)
-	elm = xc.POELMClassifier(hidden_layer_size,initialization,pruning,pca,c,preprocessing,dropconnect_pr,dropout_pr,verbose)
+	elm = POELMClassifier(hidden_layer_size,initialization,pruning,pca,c,preprocessing,dropconnect_pr,dropout_pr,verbose)
 	y1 = np.zeros((y.shape[0], np.max(y)+1))
 	for i in range(y1.shape[0]):
 		y1[i, y[i]] = 1
