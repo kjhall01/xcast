@@ -72,19 +72,26 @@ class MidpointNormalize(colors.Normalize):
 		return np.ma.masked_array(np.interp(value, x, y))
 
 
-def view_roc(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sample_dim='T', y_lat_dim='Y', y_lon_dim='X', y_feature_dim='M', y_sample_dim='T' ):
+def view_roc(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x_sample_dim=None, y_lat_dim=None, y_lon_dim=None, y_feature_dim=None, y_sample_dim=None ):
 	"""where X is predicted, and Y is observed"""
+	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+
 	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
-	X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-	Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
-	x_data = X1.values.reshape(len(X1.coords[x_lat_dim].values)*len(X1.coords[x_lon_dim].values)*len(X1.coords[x_sample_dim].values), len(X1.coords[x_feature_dim].values))
-	y_data = Y1.values.reshape(len(Y1.coords[y_lat_dim].values)*len(Y1.coords[y_lon_dim].values)*len(Y1.coords[y_sample_dim].values), len(Y1.coords[y_feature_dim].values))
+	#X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	#Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+	#x_data = X1.values.reshape(len(X1.coords[x_lat_dim].values)*len(X1.coords[x_lon_dim].values)*len(X1.coords[x_sample_dim].values), len(X1.coords[x_feature_dim].values))
+	#y_data = Y1.values.reshape(len(Y1.coords[y_lat_dim].values)*len(Y1.coords[y_lon_dim].values)*len(Y1.coords[y_sample_dim].values), len(Y1.coords[y_feature_dim].values))
+	x_data = X.stack(point=(x_lat_dim, x_lon_dim, x_sample_dim)).transpose('point', x_feature_dim).values 
+	y_data = Y.stack(point=(y_lat_dim, y_lon_dim, y_sample_dim)).transpose('point', y_feature_dim).values 
+
+	
 	tst = x_data *y_data
 	x_data = x_data[~np.isnan(tst).any(axis=1)]
 	y_data = y_data[~np.isnan(tst).any(axis=1)]
-	n_classes = len(X1.coords[x_feature_dim].values)
+	n_classes = len(X.coords[x_feature_dim].values)
 	fpr = dict()
 	tpr = dict()
 	roc_auc = dict()
@@ -118,7 +125,7 @@ def view_roc(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sample_dim
 	for i, color in zip(range(n_classes), colors):
 		plt.plot(fpr[i], tpr[i], color=color, lw=2,
 				label='ROC curve of class {0} (area = {1:0.2f})'
-				''.format(X1.coords[x_feature_dim].values[i], roc_auc[i]))
+				''.format(X.coords[x_feature_dim].values[i], roc_auc[i]))
 
 	plt.plot([0, 1], [0, 1], 'k--', lw=2)
 	plt.xlim([0.0, 1.0])
@@ -130,23 +137,30 @@ def view_roc(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sample_dim
 	plt.show()
 
 
-def view_reliability(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sample_dim='T', y_lat_dim='Y', y_lon_dim='X', y_feature_dim='M', y_sample_dim='T' ):
+def view_reliability(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x_sample_dim=None, y_lat_dim=None, y_lon_dim=None, y_feature_dim=None, y_sample_dim=None ):
 	"""where X is predicted, and Y is observed"""
+	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+
 	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
-	X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-	Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
-	x_data = X1.values.reshape(len(X1.coords[x_lat_dim].values)*len(X1.coords[x_lon_dim].values)*len(X1.coords[x_sample_dim].values), len(X1.coords[x_feature_dim].values))
-	y_data = Y1.values.reshape(len(Y1.coords[y_lat_dim].values)*len(Y1.coords[y_lon_dim].values)*len(Y1.coords[y_sample_dim].values), len(Y1.coords[y_feature_dim].values))
-	tst = x_data *y_data
+	#X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	#Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+	#x_data = X1.values.reshape(len(X1.coords[x_lat_dim].values)*len(X1.coords[x_lon_dim].values)*len(X1.coords[x_sample_dim].values), len(X1.coords[x_feature_dim].values))
+	#y_data = Y1.values.reshape(len(Y1.coords[y_lat_dim].values)*len(Y1.coords[y_lon_dim].values)*len(Y1.coords[y_sample_dim].values), len(Y1.coords[y_feature_dim].values))
+	
+	x_data = X.stack(point=(x_lat_dim, x_lon_dim, x_sample_dim)).transpose('point', x_feature_dim).values 
+	y_data = Y.stack(point=(y_lat_dim, y_lon_dim, y_sample_dim)).transpose('point', y_feature_dim).values 
+	tst = x_data * y_data
 	x_data = x_data[~np.isnan(tst).any(axis=1)]
 	y_data = y_data[~np.isnan(tst).any(axis=1)]
-	n_classes = len(X1.coords[x_feature_dim].values)
+
+	n_classes = len(X.coords[x_feature_dim].values)
 	fpr = dict()
 	tpr = dict()
 	for i in range(n_classes):
-		fpr[i], tpr[i] = calibration_curve(y_data[:, i], x_data[:, i])
+		fpr[i], tpr[i] = calibration_curve(y_data[:, i], x_data[:, i], strategy='quantile')
 
 	# Plot all ROC curves
 	plt.figure()
@@ -154,7 +168,7 @@ def view_reliability(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sa
 	for i, color in zip(range(n_classes), colors):
 		plt.plot(fpr[i], tpr[i], color=color, lw=2,
 				label='Reliability of Class {0}'
-				''.format(X1.coords[x_feature_dim].values[i]))
+				''.format(X.coords[x_feature_dim].values[i]))
 
 	plt.xlim([0.0, 1.0])
 	plt.ylim([0.0, 1.05])
@@ -165,19 +179,26 @@ def view_reliability(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sa
 	plt.show()
 
 
-def view_taylor(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sample_dim='T', y_lat_dim='Y', y_lon_dim='X', y_feature_dim='M', y_sample_dim='T' ):
+def view_taylor(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x_sample_dim=None, y_lat_dim=None, y_lon_dim=None, y_feature_dim=None, y_sample_dim=None ):
 	"""where X is predicted, and Y is observed"""
+	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+
 	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 
 	X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
-	x_data = X1.values.reshape(len(X1.coords[x_lat_dim].values)*len(X1.coords[x_lon_dim].values)*len(X1.coords[x_sample_dim].values), len(X1.coords[x_feature_dim].values))
-	y_data = Y1.values.reshape(len(Y1.coords[y_lat_dim].values)*len(Y1.coords[y_lon_dim].values)*len(Y1.coords[y_sample_dim].values), len(Y1.coords[y_feature_dim].values))
+	#x_data = X1.values.reshape(len(X1.coords[x_lat_dim].values)*len(X1.coords[x_lon_dim].values)*len(X1.coords[x_sample_dim].values), len(X1.coords[x_feature_dim].values))
+	#y_data = Y1.values.reshape(len(Y1.coords[y_lat_dim].values)*len(Y1.coords[y_lon_dim].values)*len(Y1.coords[y_sample_dim].values), len(Y1.coords[y_feature_dim].values))
+	x_data = X.stack(point=(x_lat_dim, x_lon_dim, x_sample_dim)).transpose('point', x_feature_dim).values 
+	y_data = Y.stack(point=(y_lat_dim, y_lon_dim, y_sample_dim)).transpose('point', y_feature_dim).values 
+
+	
 	tst = x_data *y_data
 	x_data = x_data[~np.isnan(tst).any(axis=1)]
 	y_data = y_data[~np.isnan(tst).any(axis=1)]
-	n_classes = len(X1.coords[x_feature_dim].values)
+	n_classes = len(X.coords[x_feature_dim].values)
 
 	obs_stddev = y_data.std()
 	stddevs = x_data.std(axis=0)
@@ -203,7 +224,7 @@ def view_taylor(X, Y, x_lat_dim='Y', x_lon_dim='X', x_feature_dim='M', x_sample_
 	fig = plt.figure(frameon=False, figsize=(5,5))
 	colors = cycle(['aqua', 'darkorange', 'cornflowerblue', 'purple', 'green'])
 	for i, color in zip(range(len(xs)), colors):
-		plt.scatter(xs[i], ys[i], color=color, lw=2, label='Model {}'.format(X1.coords[x_feature_dim].values[i]))
+		plt.scatter(xs[i], ys[i], color=color, lw=2, label='Model {}'.format(X.coords[x_feature_dim].values[i]))
 	plt.scatter(obs_stddev, 0, color='red', label='Observations')
 
 	for i in range(4):

@@ -224,6 +224,7 @@ class POELMClassifier:
 
 		h = np.asarray([ self._activate(neuron[0], x, neuron[1]) for neuron in self.hidden_neurons]).T
 		ret = 1.0 / ( 1 + np.exp(-1* np.dot(h, self.beta)))
+		#return ret 
 
 		if self.using_multiclass:
 			sums =  np.sum(ret, axis=1)

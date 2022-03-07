@@ -2,5 +2,5 @@ from .base_classifier import *
 from .classifiers import *
 
 
-tercile_classifiers = [eLogisticRegression, eMultivariateLogisticRegression, eRandomForest, eNaiveBayes, eMultiLayerPerceptron, ePOELM]
+tercile_classifiers = [cMemberCount, cExtendedLogisticRegression, cMultivariateLogisticRegression]
 arbitrary_classifiers = [cMultiLayerPerceptron, cNaiveBayes, cRandomForest, cPOELM]

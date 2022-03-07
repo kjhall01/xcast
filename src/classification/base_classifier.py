@@ -60,16 +60,15 @@ class BaseClassifier:
 	new methods must implement .fit(x, y) and .predict(x)
 	and then sub-class's .model_type must be set to the constructor of the new method """
 
-	def __init__(self, client=None, ND=1, **kwargs):
+	def __init__(self, client=None, ND=1, lat_chunks=1, lon_chunks=1, verbose=False, **kwargs):
 		self.model_type = POELMClassifier
-		self.models = None
-		self.ND = ND
-		self.client = client
-		self.kwargs = kwargs
+		self.models, self.ND = None, ND
+		self.client, self.kwargs = client, kwargs
+		self.verbose=verbose
+		self.lat_chunks, self.lon_chunks = lat_chunks, lon_chunks
 		self.shape = {'LATITUDE':0, 'LONGITUDE':0, 'FIT_SAMPLES': 0, 'INPUT_FEATURES':0, 'OUTPUT_FEATURES': 0}
-		self.count, self.total = 0, 1
 
-	def fit(self, X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None, lat_chunks=1, lon_chunks=1,  feat_chunks=1, samp_chunks=1, verbose=False, parallel_in_memory=True, rechunk=True ):
+	def fit(self, X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None, rechunk=True ):
 		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -78,40 +77,35 @@ class BaseClassifier:
 		self._save_data_shape(X, Y, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim, y_feature_dim)
 		X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+
 		if rechunk:
-			X1, Y1 = self._chunk(X1, Y1, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_feature_dim, y_feature_dim, x_sample_dim, y_sample_dim, lat_chunks, lon_chunks)
-		if self.model_type == RFClassifier:
-			parallel_in_memory = False
+			X1, Y1 = self._chunk(X1, Y1, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_feature_dim, y_feature_dim, x_sample_dim, y_sample_dim, self.lat_chunks, self.lon_chunks)
+
 		x_data = X1.data
 		y_data = Y1.data
-		if verbose:
+		if self.verbose:
 			with dd.ProgressBar():
 				self.models = da.map_blocks(apply_fit_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3], mme=self.model_type, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).compute()
 		else:
 			self.models = da.map_blocks(apply_fit_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3], mme=self.model_type, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).compute()
-		
+		if type(self.models) == np.ndarray:
+			self.models = da.from_array(self.models, chunks=(max(self.shape['LATITUDE'] // self.lat_chunks,1), max(self.shape['LONGITUDE'] // self.lon_chunks,1), self.ND))
 
 
-	def predict(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, lat_chunks=1, lon_chunks=1 ,  feat_chunks=1, samp_chunks=1, destination='.xcast_worker_space', verbose=False, rechunk=True, parallel_in_memory=True):
+	def predict(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True ):
 		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self._check_xym_compatibility(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		if rechunk:
-			X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks,1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+			X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // self.lat_chunks,1), x_lon_dim: max(self.shape['LONGITUDE'] // self.lon_chunks,1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-		self.models = da.from_array(self.models, chunks=(max(self.shape['LATITUDE'] // lat_chunks,1), max(self.shape['LONGITUDE'] // lon_chunks,1), self.ND))
+		
 		x_data = X1.data
-		if verbose:
+		if self.verbose:
 			with dd.ProgressBar():
-				results = da.map_blocks(apply_predict_to_block, x_data, self.models, drop_axis=[2,3], new_axis=[3, 4, 5], dtype=float).compute()
+				results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={'n': self.ND}, dtype=float, concatenate=True).compute()
 		else:
-			results = da.map_blocks(apply_predict_to_block, x_data, self.models, drop_axis=[2,3], new_axis=[3, 4, 5], dtype=float).compute()
-
-		if len(results.shape) < 4 and self.shape['LATITUDE'] == 1:
-			results = da.expand_dims(results, axis=0)
-
-		if len(results.shape) < 4 and self.shape['LONGITUDE'] == 1:
-			results = da.expand_dims(results, axis=1)
+			results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={'n': self.ND}, dtype=float, concatenate=True).compute()
 
 		coords = {
 			x_lat_dim: X1.coords[x_lat_dim].values,
@@ -120,6 +114,7 @@ class BaseClassifier:
 			x_feature_dim: [i for i in range(results.shape[-1])],
 			'ND': [i for i in range(self.ND)]
 		}
+		
 		dims = [x_lat_dim, x_lon_dim, 'ND', x_sample_dim, x_feature_dim]
 		attrs = X1.attrs 
 		attrs.update({'generated_by': 'XCast Classifier: {}'.format(self.model_type)})
@@ -128,7 +123,6 @@ class BaseClassifier:
 	def _chunk(self, X, Y, x_lat_dim, x_lon_dim, y_lat_dim, y_lon_dim, x_feature_dim, y_feature_dim, x_sample_dim, y_sample_dim, lat_chunks, lon_chunks):
 		X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks,1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1), x_feature_dim: self.shape['INPUT_FEATURES'], x_sample_dim: -1 })
 		Y1 = Y.chunk({y_lat_dim: max(self.shape['LATITUDE'] // lat_chunks, 1), y_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks,1), y_feature_dim: self.shape['OUTPUT_FEATURES'], y_sample_dim:-1})
-		self.lat_chunks, self.lon_chunks = X1.chunks[0], X1.chunks[1]
 		return X1, Y1
 
 	def _save_data_shape(self, X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None,  y_feature_dim=None ):
