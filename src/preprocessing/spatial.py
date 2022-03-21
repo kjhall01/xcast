@@ -11,7 +11,7 @@ from ..core.progressbar import *
 from .missing_values import *
 
 
-def regrid(X, lons, lats, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, use_dask=True, feat_chunks=1, samp_chunks=1, destination='.xcast_worker_space' ):
+def regrid(X, lons, lats, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, use_dask=True, feat_chunks=1, samp_chunks=1, destination='.xcast_worker_space' , kind='linear'):
 	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	check_all(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
 	same = True
@@ -42,7 +42,7 @@ def regrid(X, lons, lats, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_f
 		results.append([])
 		for j in range(len(X1.chunks[list(X1.dims).index(x_sample_dim)])):
 			x_isel = {x_feature_dim: slice(feature_ndx, feature_ndx + X1.chunks[list(X1.dims).index(x_feature_dim)][i]), x_sample_dim: slice(sample_ndx, sample_ndx + X1.chunks[list(X1.dims).index(x_sample_dim)][j])}
-			results[i].append(regrid_chunk(X1.isel(**x_isel), lats, lons,  x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , use_dask=use_dask, hdf=hdf, feature_ndx=feature_ndx, sample_ndx=sample_ndx))
+			results[i].append(regrid_chunk(X1.isel(**x_isel), lats, lons,  x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim , use_dask=use_dask, hdf=hdf, feature_ndx=feature_ndx, sample_ndx=sample_ndx, kind=kind))
 			sample_ndx += X1.chunks[list(X1.dims).index(x_sample_dim)][j]
 		feature_ndx += X1.chunks[list(X1.dims).index(x_feature_dim)][i]
 		results[i] = np.concatenate(results[i], axis=1)
@@ -62,19 +62,19 @@ def regrid(X, lons, lats, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_f
 	mask = X.sel(**selection, method='nearest') / X.sel(**selection, method='nearest')
 	mask.coords[x_lat_dim] = lats
 	mask.coords[x_lon_dim] = lons
-	r = ret * mask
+	r = ret 
 	r.attrs['generated_by'] =  attrs['generated_by'] + '\n  XCAST regridded' if 'generated_by' in attrs.keys() else '\n  XCAST regridded'
 	return r
 
 
-def regrid_chunk(X, lats, lons, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, use_dask=False, hdf=None, feature_ndx=0, sample_ndx=0 ):
+def regrid_chunk(X, lats, lons, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, use_dask=False, hdf=None, feature_ndx=0, sample_ndx=0, kind='linear' ):
 	res = []
 	#X1 = fill_space_mean(X, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
 	data = X.values
 	for i in range(data.shape[0]):
 		res.append([])
 		for j in range(data.shape[1]):
-			interp_func = interp2d(X.coords[x_lon_dim].values, X.coords[x_lat_dim].values, data[i,j, :,:], kind='linear')
+			interp_func = interp2d(X.coords[x_lon_dim].values, X.coords[x_lat_dim].values, data[i,j, :,:], kind=kind)
 			interped = interp_func(lons, lats)
 			res[i].append(interped)
 	res = np.asarray(res)
