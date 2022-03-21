@@ -7,8 +7,7 @@ from ..core.utilities import *
 from ..core.progressbar import *
 
 class BasePreprocess:
-	def __init__(self, use_dask=False, **kwargs):
-		self.use_dask=use_dask
+	def __init__(self,  **kwargs):
 		self.model_type = PCA
 		self.models = None
 		self.kwargs = kwargs

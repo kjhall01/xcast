@@ -11,7 +11,7 @@ from ..core.progressbar import *
 from .missing_values import *
 
 
-def regrid(X, lons, lats, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, use_dask=True, feat_chunks=1, samp_chunks=1, destination='.xcast_worker_space' , kind='linear'):
+def regrid(X, lons, lats, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, use_dask=True, feat_chunks=1, samp_chunks=1 , kind='linear'):
 	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	check_all(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
 	same = True
@@ -136,7 +136,7 @@ class SpatialPCA:
 			if verbose:
 				self.prog.show(self.count)
 
-	def transform(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, feat_chunks=1, samp_chunks=1 , verbose=False, override=False, destination='.xcast_worker_space'):
+	def transform(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, feat_chunks=1, samp_chunks=1 , verbose=False, override=False):
 		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		self._check_m_compatibility(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -256,7 +256,7 @@ class SpatialPCA:
 
 
 
-def gaussian_smooth(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, kernel=(9,9), use_dask=False, feature_chunks=1, sample_chunks=1, destination='.xcast_worker_space' ):
+def gaussian_smooth(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, kernel=(9,9), use_dask=False, feature_chunks=1, sample_chunks=1 ):
 	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	check_all(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
 	#X1 = fill_space_mean(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim )
