@@ -7,7 +7,6 @@ from ..core.utilities import *
 from ..core.progressbar import *
 from ..flat_estimators.classifiers import *
 from dask.distributed import Client, progress, as_completed
-import dask.array as da
 import dask
 import dask.diagnostics as dd
 from ..flat_estimators.classifiers import NanClassifier, RFClassifier
