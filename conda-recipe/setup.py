@@ -1,13 +1,12 @@
 from setuptools import *
-from pathlib import Path
+import os 
 
-with open('README.md', 'r', encoding='utf-8') as fh:
+with open('{}/../README.md'.format(os.getenv('RECIPE_DIR')), 'r', encoding='utf-8') as fh:
 	long_description= fh.read()
-
 
 setup(
     name = "xcast",
-    version = "0.4.1",
+    version = "0.5.0",
     author = "Kyle Hall",
     author_email = "kjhall@iri.columbia.edu",
     description = ("High Performance Gridpoint-Wise Machine Learning for the Earth Sciences"),
@@ -16,26 +15,29 @@ setup(
     url = "https://github.com/kjhall01/xcast/",
     packages=[
 		'xcast',
-		'xcast.classification',
 		'xcast.core',
 		'xcast.flat_estimators',
 		'xcast.flat_estimators.classifiers',
 		'xcast.flat_estimators.regressors',
+		'xcast.estimators',
 		'xcast.preprocessing',
-		'xcast.regression',
 		'xcast.validation',
-		'xcast.verification',],
+		'xcast.verification',
+		'xcast.tests'],
+	package_data={
+		'xcast.tests': ['{}/../src/tests/test_data/*'.format(os.getenv('RECIPE_DIR'))],
+	},
 	package_dir={
-		'xcast':'src',
-		'xcast.classification':'src/classification',
-		'xcast.core':'src/core',
-		'xcast.flat_estimators':'src/flat_estimators',
-		'xcast.flat_estimators.classifiers':'src/flat_estimators/classifiers',
-		'xcast.flat_estimators.regressors':'src/flat_estimators/regressors',
-		'xcast.preprocessing':'src/preprocessing',
-		'xcast.regression':'src/regression',
-		'xcast.validation':'src/validation',
-		'xcast.verification':'src/verification'},
+		'xcast':'{}/../src'.format(os.getenv('RECIPE_DIR')),
+		'xcast.core':'{}/../src/core'.format(os.getenv('RECIPE_DIR')),
+		'xcast.flat_estimators':'{}/../src/flat_estimators'.format(os.getenv('RECIPE_DIR')),
+		'xcast.flat_estimators.classifiers':'{}/../src/flat_estimators/classifiers'.format(os.getenv('RECIPE_DIR')),
+		'xcast.flat_estimators.regressors':'{}/../src/flat_estimators/regressors'.format(os.getenv('RECIPE_DIR')),
+		'xcast.estimators':'{}/../src/estimators'.format(os.getenv('RECIPE_DIR')),
+		'xcast.preprocessing':'{}/../src/preprocessing'.format(os.getenv('RECIPE_DIR')),
+		'xcast.validation':'{}/../src/validation'.format(os.getenv('RECIPE_DIR')),
+		'xcast.verification':'{}/../src/verification'.format(os.getenv('RECIPE_DIR')),
+		'xcast.tests': '{}/../src/tests/'.format(os.getenv('RECIPE_DIR'))},
 	python_requires=">=3.4",
     long_description=long_description,
 	long_description_content_type='text/markdown',

@@ -11,13 +11,12 @@ class BasePreprocess:
 		self.model_type = PCA
 		self.models = None
 		self.kwargs = kwargs
-		self.shape = {'LATITUDE':0, 'LONGITUDE':0, 'FIT_SAMPLES': 0, 'INPUT_FEATURES':0, 'OUTPUT_FEATURES': 0}
 		self.count, self.total = 0, 1
 
 	def fit(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, lat_chunks=1, lon_chunks=1, verbose=False ):
 		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-		self._save_data_shape(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+
 		self.models = []
 
 		X1 = X.chunk({x_lat_dim: max(self.shape['LATITUDE'] // lat_chunks, 1), x_lon_dim: max(self.shape['LONGITUDE'] // lon_chunks, 1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -125,14 +124,3 @@ class BasePreprocess:
 					self.prog.show(self.count)
 		return results
 
-	def _save_data_shape(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
-		self.shape['LATITUDE'] =  X.shape[list(X.dims).index(x_lat_dim)]
-		self.shape['LONGITUDE'] =  X.shape[list(X.dims).index(x_lon_dim)]
-		self.shape['FIT_SAMPLES'] =  X.shape[list(X.dims).index(x_sample_dim)]
-		self.shape['INPUT_FEATURES'] =  X.shape[list(X.dims).index(x_feature_dim)]
-		self.total = self.shape['LATITUDE'] * self.shape['LONGITUDE']
-
-	def _check_xym_compatibility(self, X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
-		assert X.shape[list(X.dims).index(x_lat_dim)] == self.shape['LATITUDE'], 'BaseMME.predict requires X-Predict to have the same Latitude size as X-Train'
-		assert X.shape[list(X.dims).index(x_lon_dim)] == self.shape['LONGITUDE'], 'BaseMME.predict requires X-Predict to have the same Longitude size as X-Train'
-		assert X.shape[list(X.dims).index(x_feature_dim)] == self.shape['INPUT_FEATURES'], 'BaseMME.predict requires X-Predict to have the same Feature size as X-Train'
