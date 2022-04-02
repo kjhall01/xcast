@@ -24,19 +24,20 @@ requirements:
     - pathlib
     - statsmodels
     - opencv
+    - pytest
 
 test:
   imports:
     - xcast
-    - xcast.classification
     - xcast.core
     - xcast.flat_estimators
     - xcast.flat_estimators.classifiers
     - xcast.flat_estimators.regressors
+    - xcast.estimators
     - xcast.preprocessing
-    - xcast.regression
     - xcast.validation
     - xcast.verification
+    - xcast.tests
 about:
   home:
   license: MIT

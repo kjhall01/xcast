@@ -4,7 +4,7 @@ from .preprocessing import *
 from .validation import *
 from .verification import *
 from .estimators import * 
-from .tests import make_test_data 
+from .tests import NMME_IMD_ISMR
 
 import warnings
 from pathlib import Path

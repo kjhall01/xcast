@@ -2,14 +2,9 @@ import pytest
 from .. import * 
 import xarray as xr
 from pathlib import Path 
+from .data import NMME_IMD_ISMR
 
-def make_test_data():
-	X = xr.open_dataset(Path(__file__).absolute().parents[0] /'test_data/NMME-INDIA-JJAS-PR.nc', chunks='auto').prec
-	Y = xr.open_dataset(Path(__file__).absolute().parents[0] /'test_data/IMD-PR-JJAS-1982-2018.nc',  chunks='auto').rf
-	oh = RankedTerciles()
-	oh.fit(Y)
-	T = oh.transform(Y)
-	return X, Y, T
+make_test_data = NMME_IMD_ISMR
 
 @pytest.mark.parametrize("reg,x,y,t", [(reg, *make_test_data()) for reg in regressors])
 def test_regressors(reg,x,y,t):
@@ -19,7 +14,6 @@ def test_regressors(reg,x,y,t):
 		y = y.where(y > 0, other=0.00000001)
 	else:
 		reg = reg()
-	print(x, y)
 	reg.fit(x, y)
 	preds = reg.predict(x)
 
