@@ -2,11 +2,10 @@ import xarray as xr
 from pathlib import Path
 import numpy as np
 
-# To keep it simple, ALL data objects in XCAST must satisfy the following
-#  1) 4 Dimensional, with Latitude, Longitude, Sample, and Feature dimensions.
-#  2) Transposed to the order (Lat, Lon, Sample, Feature)
-#  3) Coordinates match dimensions - same names, same sizes.
-#  4) Of type "Xarray.DataArray"
+def shape(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+    x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+    check_all(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
+    return X.shape[list(X.dims).index(x_lat_dim)], X.shape[list(X.dims).index(x_lon_dim)], X.shape[list(X.dims).index(x_sample_dim)], X.shape[list(X.dims).index(x_feature_dim)]
 
 
 def guess_coords(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
@@ -87,6 +86,18 @@ def check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	check_type(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 	#check_transposed(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
+def check_xyt_compatibility(X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None):
+	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+	check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+
+	xlat, xlon, xsamp, xfeat = shape(X, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
+	ylat, ylon, ysamp, yfeat = shape(Y, x_lat_dim=y_lat_dim, x_lon_dim=y_lon_dim, x_sample_dim=y_sample_dim, x_feature_dim=y_feature_dim)
+
+	assert xlat == ylat, "XCAST model training requires X and Y to have the same dimensions across XYT - latitude mismatch"
+	assert xlon == ylon, "XCAST model training requires X and Y to have the same dimensions across XYT - longitude mismatch"
+	assert xsamp == ysamp, "XCAST model training requires X and Y to have the same dimensions across XYT - sample mismatch"
 
 def open_CsvDataset(filename, delimiter=',', M='M', T='T', tlabels=False, varnames=False, parameter='climate_var'):
 	"""opens a .csv file formatted like n_samples x m_features. returns Xarray DataArray with X=0, Y=0, Samples=N, features=M.
@@ -157,3 +168,5 @@ def rmrf(dirn):
 		except:
 			rmrf(subdir)
 	dirn.rmdir()
+
+

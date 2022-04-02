@@ -53,20 +53,24 @@ class RFClassifier:
 class NanClassifier:
 	def __init__(self, **kwargs):
 		self.model=None
+		for key in kwargs.keys():
+			setattr(self, key, kwargs[key])
 
-	def fit(self, x, y ):
+	def fit(self, x, *args ):
 		self.x_features = x.shape[1]
-		self.y_features = y.shape[1]
+		if len(args) > 0: 
+			y = args[0]
+			self.y_features = y.shape[1]
 
 	def transform(self, x):
 		assert self.x_features == x.shape[1]
-		ret = np.empty((x.shape[0], 1))
+		ret = np.empty((x.shape[0], self.n_components))
 		ret[:] = np.nan
 		return ret
 
 	def predict(self, x):
 		assert self.x_features == x.shape[1]
-		ret = np.empty((x.shape[0], self.y_features))
+		ret = np.empty((x.shape[0], 1))
 		ret[:] = np.nan
 		return ret
 
