@@ -16,7 +16,7 @@
   <a href="https://github.com/kjhall01/xcast/">
     <h1 align="center"><img src="XCastLogo.png" align="center" alt="Logo" width="60" height="60">  XCAST</h1>
   </a>
-  <p align="center" fontsize=6> Kyle Hall (hallkjc01@gmail.com) & Nachiketa Acharya </p>
+  <p align="center" fontsize=6> Kyle Hall & Nachiketa Acharya </p>
 
 </p>
 
@@ -38,6 +38,7 @@ XCast also lets you scale your gridpoint-wise earth science machine learning app
     <li><a href="#getting-started">Getting Started</a></li>
     <li><a href="#preprocessing">Preprocessing</a></li>
     <li><a href="#model-training">Model Training</a></li>
+    <li><a href="#validation-and-skill">Cross Validation & Skill Metrics</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
   </ul>
@@ -96,6 +97,7 @@ preds = mlr.predict(X)
 Oftentimes, before training a model, it is good/desirable to preprocess data. In fact, sometimes it's required. XCast has a number of utilities for preprocessing, including: 
 
 ###### Regridding: 
+Use linear, quadratic, cubic, etc interpolation to regrid your data onto some other dataarray's coordinates. Powered by SciPy.interpolate.interp2d and accepts all the same keyword args. 
 ```
 # regrid coarser: 
 X, Y, T = xc.NMME_IMD_ISMR()
@@ -110,12 +112,14 @@ regridded0p25x0p25 = xc.regrid(Y, lons0p25x0p25, lats0p25x0p25)
 ```
 
 ###### Gaussian Kernel Smoothing:
+Smooth by averaging over a NxN pixel kernel. Powered by OpenCV
 ```
 X, Y, T = xc.NMME_IMD_ISMR()
 blurred = xc.gaussian_smooth(Y, kernel=(3,3))
 ```
 
 ###### Rescaling: 
+Apply standard anomaly scaling by removing the mean and dividing by std. dev, or MinMax scale to the interval [-1, 1]. 
 ```
 X, Y, T = xc.NMME_IMD_ISMR()
 
@@ -131,6 +135,7 @@ nscaled = normal.transform(Y)
 ```
 
 ###### Decomposition: 
+Apply Principal Components Analysis across the feature dimension, or extract spatial loadings across both spatial dimensions.
 ```
 # Principal Components (feature dimension): 
 X, Y, T = xc.NMME_IMD_ISMR()
@@ -145,6 +150,7 @@ eofs = SPCA.eofs()
 ```
 
 ###### One-Hot Encoding: 
+Encode tercile categories for each sample at each point. A new dimension is created in place of the feature dimension, whose new coordinates will be 0,1,2 where 0 = below normal, 1 = near normal, and 2 = above normal. Needed for all classifiers. 
 ```
 X, Y, T = xc.NMME_IMD_ISMR()
 
@@ -158,6 +164,115 @@ ohc = xc.NormalTerciles():
 ohc.fit(Y)
 T= ohc.transform(Y) 
 ``` 
+
+### Model Training
+Model training and prediction mostly follow the same API as SciKit-learn- there are `.fit`, `.predict`, and `.predict_proba` methods on each estimator. Be careful which you try to use- some don't have predict, and some don't have predict_proba. Here are examples of each prepackaged estimator: 
+
+They also accept all the same keyword args as their SciKit-Learn counterparts (except for POELM, ELM and ELR - those are XCast implementations) 
+
+```
+X, Y, T = xc.NMME_IMD_ISMR()
+
+# Classifiers - T is just Y but one-hot encoded
+mvlr = xc.cMultivariateLogisticRegression()
+mvlr.fit(X, T) 
+preds = mvlr.predict(X) 
+probs = mvlr.predict_proba(X) 
+
+elr = xc.cExtendedLogisticRegression()
+elr.fit(X, T) 
+preds = elr.predict(X) 
+probs = elr.predict_proba(X) 
+
+mlpc = xc.cMultiLayerPerceptron()
+mlpc.fit(X, T) 
+preds = mlpc.predict(X) 
+probs = mlpc.predict_proba(X) 
+
+nbc = xc.cNaiveBayes()
+nbc.fit(X, T) 
+preds = nbc.predict(X) 
+probs = nbc.predict_proba(X) 
+
+rfc = xc.cRandomForest()
+rfc.fit(X, T) 
+preds = rfc.predict(X) 
+probs = rfc.predict_proba(X) 
+
+poelm = xc.cPOELM()
+poelm.fit(X, T) 
+preds = poelm.predict(X) 
+probs = poelm.predict_proba(X) 
+
+# Regressors: 
+model = xc.EnsembleMean()
+model.fit(X, Y)
+preds= model.predict(X) 
+
+model = xc.BiasCorrectedEnsembleMean()
+model.fit(X, Y)
+preds= model.predict(X) 
+
+model = xc.rMultipleLinearRegression()
+model.fit(X, Y)
+preds= model.predict(X) 
+
+model = xc.rPoissonRegression()
+model.fit(X, Y)
+preds= model.predict(X) 
+
+model = xc.rGammaRegression()
+model.fit(X, Y)
+preds= model.predict(X) 
+
+model = xc.rMultiLayerPerceptron()
+model.fit(X, Y)
+preds= model.predict(X) 
+
+model = xc.rRandomForest()
+model.fit(X, Y)
+preds= model.predict(X) 
+
+model = xc.rRidgeRegression()
+model.fit(X, Y)
+preds= model.predict(X) 
+
+model = xc.rExtremeLearningMachine()
+model.fit(X, Y)
+preds= model.predict(X) 
+```
+
+### Validation And Skill 
+
+If you want to meaningfully interpret the skill of a statistical model or neural network at predicting out-of-sample data, it is highly recommended to use Leave-N-Out Cross Validation to reconstruct a 'cross-validated' hindcast dataset. During cross-validation, the training data is split into N windows- each of which includes all of the training data, except one (or more) years reserved for testing. Models are fit, and used to make predictions on the data they left out, and then those predictions are reassembled into one dataset, which can then be meaningfully compared with the target data in a skill function. 
+
+
+Here is an example using Leave-One-Out Cross-Validation to construct a hindcast dataset, and then using XCast (powered by scikit-learn and scipy) to compute skill maps: 
+```
+X, Y, T = xc.NMME_IMD_ISMR()
+crossvalidation_window=1 # number of samples to be left out - must be odd
+ND=10  # ND represents the number of random initializations to use, to counteract non-determinism in the method
+
+poelm_xval = []
+for x_train, y_train, x_test, y_test in xc.CrossValidator(X, Y, window=crossvalidation_window):
+    ohc = xc.RankedTerciles()
+    ohc.fit(y_train)
+    ohc_y_train = ohc.transform(y_train)
+    
+    poelm = xc.cPOELM(ND=ND, hidden_layer_size=hidden_layer_size, activation=activation)
+    poelm.fit(x_train, ohc_y_train)
+    poelm_preds = poelm.predict_proba(x_test)
+    poelm_xval.append(poelm_preds.isel(S=crossvalidation_window // 2))
+
+poelm = xr.concat(poelm_xval, 'S').mean('ND')
+
+groc = xc.GeneralizedROC(poelm, india_ohc)
+poelm_rps = xc.RankProbabilityScore(poelm, india_ohc)
+climatological_odds = xr.ones_like(poelm) * 0.33 
+climo_rps = xc.RankProbabilityScore(climatological_odds, india_ohc)
+rpss = 1 - ( poelm_rps / climo_rps)
+```
+
 
 
 
