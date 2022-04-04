@@ -39,6 +39,7 @@ XCast also lets you scale your gridpoint-wise earth science machine learning app
     <li><a href="#preprocessing">Preprocessing</a></li>
     <li><a href="#model-training">Model Training</a></li>
     <li><a href="#validation-and-skill">Cross Validation & Skill Metrics</a></li>
+    <li><a href="#parallelism-in-xcast">Parallelism In XCast</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
   </ul>
@@ -273,10 +274,37 @@ climo_rps = xc.RankProbabilityScore(climatological_odds, india_ohc)
 rpss = 1 - ( poelm_rps / climo_rps)
 ```
 
+XCast implements a lot of metrics - view the rest of them [here](https://github.com/kjhall01/xcast/blob/main/src/verification/metrics.py) 
 
 
+### Parallelism In XCast
+
+Under the hood, XCast implements gridpoint operations using Dask, a powerful python multiprocessing / lazy execution library. Dask makes it extremely easy to scale XCast solutions to institutional computing resources and supercomputer clusters - see [Dask's Distributed Library](https://distributed.dask.org/en/stable/client.html) for details on how to hook XCast into a cluster scheduler. 
+
+Parallelism in XCast can be a huge performance win, even just on your laptop- most come with multiple cores. XCast is capable, through dask, of using multiple processes to run gridpoint-wise operations in parallel by distributing 'chunks' of the data and computation to each process. That is done like this: 
+
+```
+from dask.distributed import Client 
+client = Client(n_workers=4) # this sets up a local cluster with dask 
+X, Y, T = xc.NMME_IMD_ISMR()
+X, Y = xc.align_chunks(X, Y, 5, 5) # this will split the data into 5 chunks along latitude, and 5 chunks along longitude for a total of 25 (+/- some) 
+mlr = xc.rMultipleLinearRegression()
+mlr.fit(X, Y, rechunk=False) # the rechunk=False tells Xcast not to rechunk this data again - it does it by default so you don't have to care
+mlr.predict(X, rechunk=False) 
+```
+
+This has been shown to dramatically improve computation speed / decrease time. 
 
 
+### Contact: 
+corresponding author: Kyle Hall (hallkjc01@gmail.com) - apologies if I take a long time to get back to you - this is a side project of mine
+
+### Acknowledgements: 
+Many thanks to all of the following: 
+- Nachiketa Acharya for vital advice & guidance, as well as design help, feedback, and being a true friend
+- PanGEO, SciKit-Learn, Xarray, Scipy, and the entire Python Open Source community for building all of XCast's dependencies
+- the North American Multimodel Ensemble (NMME) and India Meteorological Department, because I used NMME & IMD data as a test cast while developing XCast 
+- NCAR UCAR S.E.A for giving us a concrete goal to work toward! 
 
 
 [contributors-shield]: https://img.shields.io/github/contributors/kjhall01/xcast.svg?style=for-the-badge
