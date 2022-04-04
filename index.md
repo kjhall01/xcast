@@ -16,6 +16,8 @@
   <a href="https://github.com/kjhall01/xcast/">
     <h1 align="center"><img src="XCastLogo.png" align="center" alt="Logo" width="60" height="60">  XCAST</h1>
   </a>
+  <p align="center" fontsize=6> Kyle Hall (hallkjc01@gmail.com) & Nachiketa Acharya </p>
+
 </p>
 
 
@@ -34,6 +36,8 @@ XCast also lets you scale your gridpoint-wise earth science machine learning app
   <ul>
     <li><a href="#installing-xcast">Installation</a></li>
     <li><a href="#getting-started">Getting Started</a></li>
+    <li><a href="#preprocessing">Preprocessing</a></li>
+    <li><a href="#model-training">Model Training</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
   </ul>
@@ -86,6 +90,78 @@ mlr = xc.rMultipleLinearRegression()
 mlr.fit(X, Y) # no need to specify the names since detection succeeds
 preds = mlr.predict(X) 
 ```
+
+### Preprocessing 
+
+Oftentimes, before training a model, it is good/desirable to preprocess data. In fact, sometimes it's required. XCast has a number of utilities for preprocessing, including: 
+
+###### Regridding: 
+```
+# regrid coarser: 
+X, Y, T = xc.NMME_IMD_ISMR()
+lats2x2 = Y.coords['Y'].values[::2]
+lons2x2 = Y.coords['X'].values[::2]
+regridded2x2 = xc.regrid(Y, lons2x2, lats2x2)
+
+# regrid finer: 
+lats0p25x0p25 = np.linspace(np.min(Y.coords['Y'].values), np.max(Y.coords['Y'].values), int((np.max(Y.coords['Y'].values)- np.min(Y.coords['Y'].values) ) // 0.25 + 1) )
+lons0p25x0p25 = np.linspace(np.min(Y.coords['X'].values), np.max(Y.coords['X'].values), int((np.max(Y.coords['X'].values)- np.min(Y.coords['X'].values) ) // 0.25 + 1) )
+regridded0p25x0p25 = xc.regrid(Y, lons0p25x0p25, lats0p25x0p25)
+```
+
+###### Gaussian Kernel Smoothing:
+```
+X, Y, T = xc.NMME_IMD_ISMR()
+blurred = xc.gaussian_smooth(Y, kernel=(3,3))
+```
+
+###### Rescaling: 
+```
+X, Y, T = xc.NMME_IMD_ISMR()
+
+# MinMax Scaling: 
+minmax = xc.MinMax()
+minmax.fit(Y)
+mmscaled = minmax.transform(Y)
+
+# Standard Anomaly Scaling: 
+normal = xc.Normal()
+normal.fit(Y)
+nscaled = normal.transform(Y)
+```
+
+###### Decomposition: 
+```
+# Principal Components (feature dimension): 
+X, Y, T = xc.NMME_IMD_ISMR()
+PCA = xc.PrincipalComponentsAnalysis(n_components=3)
+PCA.fit(X)
+transformed = PCA.transform(X)
+
+# Principal Components (Spatial): 
+SPCA = SpatialPCA()
+SPCA.fit(Y)
+eofs = SPCA.eofs()
+```
+
+###### One-Hot Encoding: 
+```
+X, Y, T = xc.NMME_IMD_ISMR()
+
+# Tercile OHC by ranking: 
+ohc = xc.RankedTerciles()
+ohc.fit(Y) 
+T = ohc.transform(Y) 
+
+# Tercile OHC by gaussian assumption: 
+ohc = xc.NormalTerciles():
+ohc.fit(Y)
+T= ohc.transform(Y) 
+``` 
+
+
+
+
 
 
 [contributors-shield]: https://img.shields.io/github/contributors/kjhall01/xcast.svg?style=for-the-badge
