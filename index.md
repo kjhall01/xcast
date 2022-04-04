@@ -1,3 +1,50 @@
+<!-- PROJECT SHIELDS -->
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+[![LinkedIn][linkedin-shield]][linkedin-url]
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5627478.svg)](https://doi.org/10.5281/zenodo.5627478)
+
+
+
+
+<!-- PROJECT LOGO -->
+<br />
+<p align="center">
+  <a href="https://github.com/kjhall01/xcast/">
+    <h3 align="center"><img src="XCastLogo.png" align="center" alt="Logo" width="40" height="40">  XCast</h3>
+  </a>
+  <h3 align='center'>A Gridpoint-Wise Statistical Modeling Library for the Earth Sciences </h3>
+    <a href="https://github.com/kjhall01/xcast/blob/main/XCastDeterministic.ipynb">View Demo</a>
+    ·
+    <a href="https://github.com/kjhall01/xcast/issues">Report Bug</a>
+    ·
+    <a href="https://github.com/kjhall01/xcast/issues">Request Feature</a>
+  </p>
+</p>
+
+
+
+<!-- TABLE OF CONTENTS -->
+<details open="open">
+  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
+  <ol>
+    <li><a href="#why-xcast">Why XCast?</a></li>
+    <li>
+      <a href="#getting-started">Getting Started</a>
+    </li>
+    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#contributing">Contributing</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgements">Acknowledgements</a></li>
+  </ol>
+</details>
+
+
+
 ## Welcome to XCast
 
 XCast is a High-Performance Data Science toolkit for the Earth Sciences. It allows one to perform gridpoint-wise statistical and machine learning analyses in an efficient way using [Dask Parallelism](https://dask.org/), through an API that closely mirrors that of [SciKit-Learn](https://scikit-learn.org/stable/), with the exception that XCast produces and consumes Xarray DataArrays, rather than two-dimensional NumPy arrays. 
