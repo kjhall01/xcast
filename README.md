@@ -27,7 +27,7 @@
 <br />
 <p align="center">
   <a href="https://github.com/kjhall01/xcast/">
-    <img src="images/logo.png" alt="Logo" width="200" height="200">
+    <img src="images/XCastLogo.png" alt="Logo" width="200" height="200">
   </a>
 
   <h3 align="center">XCast: A Gridpoint-Wise Statistical Modeling Library for the Earth Sciences </h3>
