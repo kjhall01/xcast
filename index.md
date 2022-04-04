@@ -14,15 +14,9 @@
 <br />
 <p align="center">
   <a href="https://github.com/kjhall01/xcast/">
-    <h2 align="center"><img src="XCastLogo.png" align="center" alt="Logo" width="50" height="50">  XCast</h2>
+    <h1 align="center"><img src="XCastLogo.png" align="center" alt="Logo" width="60" height="60">  XCAST</h1>
   </a>
-    <a href="https://github.com/kjhall01/xcast/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/kjhall01/xcast/issues">Request Feature</a>
-  </p>
 </p>
-
-
 
 
 ## Welcome to XCast
@@ -37,12 +31,12 @@ XCast also lets you scale your gridpoint-wise earth science machine learning app
 <!-- TABLE OF CONTENTS -->
 <details open="open">
   <summary><h3 style="display: inline-block">Table of Contents</h3></summary>
-  <ol>
+  <ul>
     <li><a href="#installing-xcast">Installation</a></li>
-    <li><a href="#license">License</a></li>
+    <li><a href="#getting-started">Getting Started</a></li>
     <li><a href="#contact">Contact</a></li>
     <li><a href="#acknowledgements">Acknowledgements</a></li>
-  </ol>
+  </ul>
 </details>
 
 
@@ -72,6 +66,26 @@ Then you'll be able to select ```xcast_env``` as a kernel in Jupyter Notebook, a
 
 XCast is currently unavailable on windows because my windows machine is too old to build the package - anyone got one I can borrow? (kidding- I'm working on CI) 
 
+### Getting Started 
+
+The first thing to know about XCast is its required input format. We try to give some flexibility, but have to draw the line somewhere- and so all XCast functions and object methods are designed to produce and consume 4-dimensional [Xarray DataArrays](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.html). The four dimensions correspond to X (ie, longitude), Y (ie, latitude), Samples (ie, time), and Features (ie, ensemble members, or different physical variables used as predictors). They must all be present, if only of size one. The coordinates must also be one-to-one with the dimensions (no unlabeled dimensions, no extraneous coordinates - it might work, but you'd be getting lucky). 
+
+Once it has verified the format of your input, XCast will then attempt to detect the name of each dimension. There are usually only so many standard names of these things, and XCast usually does a decent job, but in the off chance you get a 'detection failed' error, you can also just specify the names of each dimension by passing keyword arguments called x_lat_dim, x_lon_dim, x_feature_dim, x_sample_dim (or y_lat_dim, y_lon_dim, y_sample_dim, and y_feature_dim, depending which argument - predictors or predictands). 
+
+You can view some sample data using: 
+
+```
+X, Y, T = xc.NMME_IMD_ISMR() # loads XCast sample Data from North American Multi-model Ensemble and India Meteorological Department
+```
+
+Next, you can train a model and make predictions! 
+
+```
+X, Y, T = xc.NMME_IMD_ISMR()
+mlr = xc.rMultipleLinearRegression()
+mlr.fit(X, Y) # no need to specify the names since detection succeeds
+preds = mlr.predict(X) 
+```
 
 
 [contributors-shield]: https://img.shields.io/github/contributors/kjhall01/xcast.svg?style=for-the-badge
