@@ -14,34 +14,14 @@
 <br />
 <p align="center">
   <a href="https://github.com/kjhall01/xcast/">
-    <h3 align="center"><img src="XCastLogo.png" align="center" alt="Logo" width="40" height="40">  XCast</h3>
+    <h2 align="center"><img src="XCastLogo.png" align="center" alt="Logo" width="50" height="50">  XCast</h2>
   </a>
-  <h3 align='center'>A Gridpoint-Wise Statistical Modeling Library for the Earth Sciences </h3>
-    <a href="https://github.com/kjhall01/xcast/blob/main/XCastDeterministic.ipynb">View Demo</a>
-    ·
     <a href="https://github.com/kjhall01/xcast/issues">Report Bug</a>
     ·
     <a href="https://github.com/kjhall01/xcast/issues">Request Feature</a>
   </p>
 </p>
 
-
-
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary><h2 style="display: inline-block">Table of Contents</h2></summary>
-  <ol>
-    <li><a href="#why-xcast">Why XCast?</a></li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-    </li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
-  </ol>
-</details>
 
 
 
@@ -52,6 +32,19 @@ XCast is a High-Performance Data Science toolkit for the Earth Sciences. It allo
 Our goal is to lower the barriers to entry to Earth Science (and, specifically, climate forecasting) by bridging the gap between Python's Gridded Data utilities (Xarray, NetCDF4, etc) and its Data Science utilities (Scikit-Learn, Scipy, OpenCV), which are normally incompatible. Through XCast, you can use all your favorite estimators, skill metrics, etc with NetCDF, Grib2, Zarr, and other types of gridded data. 
 
 XCast also lets you scale your gridpoint-wise earth science machine learning approaches to institutional supercomputers and computer clusters with ease. Its compatibility with Dask-Distributed's client schedulers make scalability a non-issue. 
+
+
+<!-- TABLE OF CONTENTS -->
+<details open="open">
+  <summary><h3 style="display: inline-block">Table of Contents</h3></summary>
+  <ol>
+    <li><a href="#installing-xcast">Installation</a></li>
+    <li><a href="#license">License</a></li>
+    <li><a href="#contact">Contact</a></li>
+    <li><a href="#acknowledgements">Acknowledgements</a></li>
+  </ol>
+</details>
+
 
 ### Installing XCast
 
