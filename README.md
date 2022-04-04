@@ -38,8 +38,6 @@
     <a href="https://kjhall01.github.io/xcast/"><strong>Explore the docs (Our Website) »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/kjhall01/xcast/blob/main/XCastDeterministic.ipynb">View Demo</a>
-    ·
     <a href="https://github.com/kjhall01/xcast/issues">Report Bug</a>
     ·
     <a href="https://github.com/kjhall01/xcast/issues">Request Feature</a>
