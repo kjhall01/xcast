@@ -1,6 +1,6 @@
 package:
   name: xcast
-  version: "0.5.0"
+  version: "0.5.1"
 
 source:
   #url: https://github.com/kjhall01/xcast/archive/refs/tags/v0.4.1.tar.gz
