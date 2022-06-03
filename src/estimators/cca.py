@@ -18,15 +18,15 @@ class rCCA:
 
         X = (X - self.xmean) / self.xstd
 
-        flat_x = X.transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).dropna(
-            x_sample_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
+        flat_x = X.transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(
+            point=(x_lat_dim, x_lon_dim,  x_feature_dim)).dropna('point')
         x_data = flat_x.values
         xscores = self.xeof_.transform(x_data) / self.xeof_.singular_values_
         prj = np.dot(xscores, self.U.T) * self.canonical_correlations
         pred_yscores = np.dot(prj, self.V.T) * self.yeof_.singular_values_
         preds = self.yeof_.inverse_transform(pred_yscores)
-        ret = xr.DataArray(name='predicted_values', data=preds, dims=[x_sample_dim, 'point'], coords={
-                           'point': self.ypoint_flat, x_sample_dim: X.coords[x_sample_dim]}, attrs={'generated_by': 'Pure-Python CPT CCA Regressor Predicted Valuse'}).unstack('point')
+        ret = xr.DataArray(name='predicted_values', data=preds, dims=[x_sample_dim, 'point'], coords={'point': self.ypoint_flat, x_sample_dim: X.coords[x_sample_dim]}, attrs={
+                           'generated_by': 'Pure-Python CPT CCA Regressor Predicted Valuse'}).unstack('point').sortby(x_lat_dim).sortby(x_lon_dim)
         ret.attrs.update(X.attrs)
         return (ret * self.ystd + self.ymean)
 
@@ -52,8 +52,8 @@ class rCCA:
         xweights = np.abs(xweights)
         xweights = np.sqrt(xweights)
         X = X * xweights
-        xweights_flat = ((X/X).transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).dropna(
-            x_sample_dim) * xweights).mean(x_sample_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
+        xweights_flat = ((X/X).transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim) * xweights).mean(
+            x_sample_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim)).dropna('point')
 
         # integrated cosine weighting for Y (predictands)
         average_latitude_width = np.sqrt(Y.Y.diff(y_lat_dim).mean() ** 2) * 0.5
@@ -65,15 +65,19 @@ class rCCA:
         yweights = np.sqrt(yweights)
 
         Y = Y * yweights
-        yweights_flat = ((Y/Y).transpose(y_sample_dim, y_lat_dim, y_lon_dim,  y_feature_dim).dropna(
-            y_sample_dim) * yweights).mean(y_sample_dim).stack(point=(y_lat_dim, y_lon_dim,  y_feature_dim))
+        yweights_flat = ((Y/Y).transpose(y_sample_dim, y_lat_dim, y_lon_dim,  y_feature_dim) * yweights).mean(
+            y_sample_dim).stack(point=(y_lat_dim, y_lon_dim,  y_feature_dim)).dropna('point')
         self.ylatweights = yweights
 
         # extract 2D [ T x Stacked(X, Y, M)] datasets from 4D [T X Y M] DataArrays, removing points in space with missing values
-        flat_x = X.transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).dropna(
-            x_sample_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
-        flat_y = Y.transpose(y_sample_dim, y_lat_dim, y_lon_dim,  y_feature_dim).dropna(
-            y_sample_dim).stack(point=(y_lat_dim, y_lon_dim,  y_feature_dim))
+        flat_x = X.transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(
+            point=(x_lat_dim, x_lon_dim,  x_feature_dim)).dropna('point')
+        xweights_flat = xweights_flat.sel(point=flat_x.point)
+
+        flat_y = Y.transpose(y_sample_dim, y_lat_dim, y_lon_dim,  y_feature_dim).stack(
+            point=(y_lat_dim, y_lon_dim,  y_feature_dim)).dropna('point')
+        yweights_flat = yweights_flat.sel(point=flat_y.point)
+
         x_data, y_data = flat_x.values, flat_y.values
         self.ypoint_flat = flat_y.point
 
@@ -125,7 +129,7 @@ class rCCA:
         self.ccax_scores = xr.DataArray(name='ccax_scores', data=xccascores.T, dims=[x_sample_dim, 'mode'], coords={'mode': [
                                         i+1 for i in range(self.ccamodes)], x_sample_dim: X.coords[x_sample_dim]}, attrs={'generated_by': 'Pure-Python CPT CCA Regressor X CCA Scores'})
         self.ccay_scores = xr.DataArray(name='ccay_scores', data=yccascores.T, dims=[y_sample_dim, 'mode'], coords={'mode': [
-                                        i+1 for i in range(self.ccamodes)], y_sample_dim: Y.coords[x_sample_dim]}, attrs={'generated_by': 'Pure-Python CPT CCA Regressor Y CCA Scores'})
+                                        i+1 for i in range(self.ccamodes)], y_sample_dim: Y.coords[y_sample_dim]}, attrs={'generated_by': 'Pure-Python CPT CCA Regressor Y CCA Scores'})
 
         self.eofx_loadings = xr.DataArray(name='eofx_loadings', data=Vt[:self.xmodes], dims=['mode', 'point'], coords={'mode': [i+1 for i in range(
             self.xeof_.components_.shape[0])], 'point': flat_x.point}, attrs={'generated_by': 'Pure-Python CPT CCA Regressor X EOF modes'}).unstack('point')
