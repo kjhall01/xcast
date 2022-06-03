@@ -62,7 +62,6 @@ def quantile(X, threshold, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_
     x_data = X1.data
 
     def _nanquantile(x):
-        print(x.shape)
         return np.asarray(np.nanquantile(x, threshold, axis=-2))
     results = da.blockwise(_nanquantile, 'ijl', x_data,
                            'ijkl', dtype=float, concatenate=True).compute()
