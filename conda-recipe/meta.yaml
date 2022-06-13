@@ -8,6 +8,7 @@ source:
 build:
   number: 0
   string: xcast
+  noarch: python
 
 requirements:
   host:
