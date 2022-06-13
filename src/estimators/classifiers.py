@@ -61,13 +61,21 @@ class cMultivariateLogisticRegression(BaseEstimator):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = MultivariateELRClassifier
+	
+	def fit(self, X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None, an_thresh=0.67, bn_thresh=0.33,  explicit=False ):
+		x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+		check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+		
+
+		y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+		check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)		
 
 
 class cExtendedLogisticRegression(BaseEstimator):
 	def __init__(self, **kwargs):
 		super().__init__(**kwargs)
 		self.model_type = ELRClassifier
-
+		
 
 class cMultiLayerPerceptron(BaseEstimator):
 	def __init__(self, hidden_layer_sizes=None, **kwargs):
