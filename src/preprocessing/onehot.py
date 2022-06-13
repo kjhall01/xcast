@@ -106,9 +106,9 @@ class RankedTerciles:
                 self.low_threshold) * self.low_thresh
         else:
             self.high_threshold = quantile(
-                X1, self.high_thresh, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
+                X1, self.high_thresh, method=quantile_method,  x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
             self.low_threshold = quantile(
-                X1, self.low_thresh, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
+                X1, self.low_thresh, method=quantile_method,  x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
         self.nanmask = X1.mean(x_sample_dim) / X1.mean(x_sample_dim)
 
     def transform(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
