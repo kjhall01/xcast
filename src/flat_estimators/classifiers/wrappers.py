@@ -76,7 +76,7 @@ class NanClassifier:
 
 	def predict_proba(self, x):
 		assert self.x_features == x.shape[1]
-		ret = np.empty((x.shape[0], self.y_features))
+		ret = np.empty((x.shape[0], 3))
 		ret[:] = np.nan
 		return ret
 
