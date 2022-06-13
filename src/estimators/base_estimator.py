@@ -132,8 +132,15 @@ class BaseEstimator:
 			check_xyt_compatibility(X, Y, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
 			self.latitude, self.longitude, _, self.features = shape(X, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
 
-			X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-			Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+			if X.dims[0] != x_lat_dim or X.dims[1] != x_lon_dim or X.dims[2] != x_sample_dim or X.dims[3] != x_feature_dim:
+				X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+			else: 
+				X1 = X
+			
+			if Y.dims[0] != y_lat_dim or Y.dims[1] != y_lon_dim or Y.dims[2] != y_sample_dim or Y.dims[3] != y_feature_dim:
+				Y1 = Y.transpose(y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+			else: 
+				Y1 = Y
 
 			if rechunk:
 				X1, Y1 = align_chunks(X1, Y1,  self.lat_chunks, self.lon_chunks, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, y_lat_dim=y_lat_dim, y_lon_dim=y_lon_dim, y_sample_dim=y_sample_dim, y_feature_dim=y_feature_dim)
@@ -184,7 +191,10 @@ class BaseEstimator:
 		if rechunk:
 			X1 = X.chunk({x_lat_dim: max(xlat // self.lat_chunks,1), x_lon_dim: max(xlon // self.lon_chunks,1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		else:
-			X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+			if X.dims[0] != x_lat_dim or X.dims[1] != x_lon_dim or X.dims[2] != x_sample_dim or X.dims[3] != x_feature_dim:
+				X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+			else:
+				X1 = X
 
 		x_data = X1.data
 		if self.verbose:
@@ -218,7 +228,10 @@ class BaseEstimator:
 		if rechunk:
 			X1 = X.chunk({x_lat_dim: max(xlat // self.lat_chunks,1), x_lon_dim: max(xlon // self.lon_chunks,1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		else:
-			X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+			if X.dims[0] != x_lat_dim or X.dims[1] != x_lon_dim or X.dims[2] != x_sample_dim or X.dims[3] != x_feature_dim:
+				X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+			else:
+				X1 = X
 
 		x_data = X1.data
 		if self.verbose:
@@ -252,7 +265,10 @@ class BaseEstimator:
 		if rechunk:
 			X1 = X.chunk({x_lat_dim: max(xlat // self.lat_chunks,1), x_lon_dim: max(xlon // self.lon_chunks,1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 		else:
-			X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+			if X.dims[0] != x_lat_dim or X.dims[1] != x_lon_dim or X.dims[2] != x_sample_dim or X.dims[3] != x_feature_dim:
+				X1 = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+			else:
+				X1 = X
 
 		x_data = X1.data
 		if self.verbose:
