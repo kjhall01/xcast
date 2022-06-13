@@ -53,7 +53,7 @@ class NormalTerciles:
         return r
 
 
-def quantile(X, threshold, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+def quantile(X, threshold, method='midpoint', x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
     x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
         X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
     check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -62,7 +62,7 @@ def quantile(X, threshold, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_
     x_data = X1.data
 
     def _nanquantile(x):
-        return np.asarray(np.nanquantile(x, threshold, axis=-2))
+        return np.asarray(np.nanquantile(x, threshold, axis=-2, method=method))
     results = da.blockwise(_nanquantile, 'ijl', x_data,
                            'ijkl', dtype=float, concatenate=True).compute()
     coords = {
@@ -83,7 +83,7 @@ class RankedTerciles:
         self.low_thresh, self.high_thresh = low_thresh, high_thresh
         self.explicit = explicit
 
-    def fit(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+    def fit(self, X, quantile_method='midpoint', x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
             X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -97,9 +97,9 @@ class RankedTerciles:
 
         if self.explicit:
             self.high_threshold = quantile(
-                X1, 0.33, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
+                X1, 0.33, method=quantile_method, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
             self.low_threshold = quantile(
-                X1, 0.66, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
+                X1, 0.66, method=quantile_method, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
             self.high_threshold = xr.ones_like(
                 self.high_threshold)*self.high_thresh
             self.low_threshold = xr.ones_like(
