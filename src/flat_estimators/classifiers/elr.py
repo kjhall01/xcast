@@ -58,7 +58,7 @@ class MultivariateELRClassifier:
                   (self.max - self.min)) * 2 - 1  # scales to [-1, 1]
         try:
             self.y = y2
-            bs = [np.quantile(y, thresh) for thresh in self.thresholds]
+            bs = [np.quantile(y, thresh, method='midpoint') for thresh in self.thresholds]
             y = np.vstack([np.where(y < b, np.ones((y.shape[0], 1)).astype(
                 np.float64)*0.999, np.ones((y.shape[0], 1)).astype(np.float64)*0.001) for b in bs])
             v = []
@@ -70,7 +70,6 @@ class MultivariateELRClassifier:
             model = sm.GLM(y, sm.add_constant(
                 x3, has_constant='add'), family=sm.families.Binomial())
             self.model = model.fit()
-
         except:
             pass
 
@@ -83,8 +82,9 @@ class MultivariateELRClassifier:
             x2 = ((copy.deepcopy(x) - self.min) /
                   (self.max - self.min)) * 2 - 1  # scales to [-1, 1]
         try:
-            thresh = np.quantile(self.y, threshold)
+            thresh = np.quantile(self.y, threshold, method='midpoint')
             x_an = np.hstack([x2, np.ones((x.shape[0], 1)) * thresh])
+            #self.x_an.append(x_an)
             x_an = sm.add_constant(x_an, has_constant='add')
             return self.model.predict(x_an).reshape(-1, 1)
         except:
@@ -94,8 +94,8 @@ class MultivariateELRClassifier:
         return 1 - self.nonexceedance(x, threshold=threshold)
 
     def predict_proba(self, x):
-        bn = self.nonexceedance(x, threshold=0.33)
-        an = self.exceedance(x, threshold=0.67)
+        bn = self.nonexceedance(x, threshold=(1/3))
+        an = self.exceedance(x, threshold=(2/3))
         nn = 1 - (bn + an)
         return np.hstack([bn, nn, an])
 
