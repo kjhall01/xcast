@@ -31,22 +31,6 @@ XCast also lets you scale your gridpoint-wise earth science machine learning app
 
 **THIS PAGE HAS BEEN MOVED TO XCAST'S NEW HOME, [XCAST-LIB.GITHUB.IO!](https://xcast-lib.github.io)**
 
-
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary><h3 style="display: inline-block">Table of Contents</h3></summary>
-  <ul>
-    <li><a href="#installing-xcast">Installation</a></li>
-    <li><a href="#getting-started">Getting Started</a></li>
-    <li><a href="#preprocessing">Preprocessing</a></li>
-    <li><a href="#model-training">Model Training</a></li>
-    <li><a href="#validation-and-skill">Cross Validation & Skill Metrics</a></li>
-    <li><a href="#parallelism-in-xcast">Parallelism In XCast</a></li>
-    <li><a href="#contact">Contact</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
-  </ul>
-</details>
-
 [contributors-shield]: https://img.shields.io/github/contributors/kjhall01/xcast.svg?style=for-the-badge
 [contributors-url]: https://github.com/kjhall01/xcast/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/kjhall01/xcast.svg?style=for-the-badge
