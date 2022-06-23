@@ -21,17 +21,19 @@ class ELRClassifier:
             self.models[i].an_thresh = self.an_thresh
             self.models[i].fit(x[:, i].reshape(-1, 1), y)
 
-    def predict_proba(self, x):
+    def predict_proba(self, x, quantile=None):
         res = []
         for i in range(x.shape[1]):
-            res.append(self.models[i].predict_proba(x[:, i].reshape(-1, 1)))
+            res.append(self.models[i].predict_proba(
+                x[:, i].reshape(-1, 1), quantile=quantile))
         res = np.stack(res, axis=0)
         return np.nanmean(res, axis=0)
 
-    def predict(self, x):
+    def predict(self, x, quantile=None):
         res = []
         for i in range(x.shape[1]):
-            res.append(self.models[i].predict_proba(x[:, i].reshape(-1, 1)))
+            res.append(self.models[i].predict_proba(
+                x[:, i].reshape(-1, 1), quantile=quantile))
         res = np.stack(res, axis=0)
         return np.argmax(np.nanmean(res, axis=0), axis=-1)
 
@@ -58,7 +60,8 @@ class MultivariateELRClassifier:
                   (self.max - self.min)) * 2 - 1  # scales to [-1, 1]
         try:
             self.y = y2
-            bs = [np.quantile(y, thresh, method='midpoint') for thresh in self.thresholds]
+            bs = [np.quantile(y, thresh, method='midpoint')
+                  for thresh in self.thresholds]
             y = np.vstack([np.where(y < b, np.ones((y.shape[0], 1)).astype(
                 np.float64)*0.999, np.ones((y.shape[0], 1)).astype(np.float64)*0.001) for b in bs])
             v = []
@@ -84,7 +87,7 @@ class MultivariateELRClassifier:
         try:
             thresh = np.quantile(self.y, threshold, method='midpoint')
             x_an = np.hstack([x2, np.ones((x.shape[0], 1)) * thresh])
-            #self.x_an.append(x_an)
+            # self.x_an.append(x_an)
             x_an = sm.add_constant(x_an, has_constant='add')
             return self.model.predict(x_an).reshape(-1, 1)
         except:
@@ -93,11 +96,18 @@ class MultivariateELRClassifier:
     def exceedance(self, x, threshold=0.5):
         return 1 - self.nonexceedance(x, threshold=threshold)
 
-    def predict_proba(self, x):
-        bn = self.nonexceedance(x, threshold=(1/3))
-        an = self.exceedance(x, threshold=(2/3))
-        nn = 1 - (bn + an)
-        return np.hstack([bn, nn, an])
+    def predict_proba(self, x, quantile=None):
+        if quantile is None:
+            bn = self.nonexceedance(x, threshold=(1/3))
+            an = self.exceedance(x, threshold=(2/3))
+            nn = 1 - (bn + an)
+            return np.hstack([bn, nn, an])
+        else:
+            if isinstance(quantile, float):
+                quantile = [quantile]
+
+            quantile = np.array(quantile)
+            return np.hstack([self.nonexceedance(x, threshold=q) for q in quantile])
 
     def predict(self, x):
         return np.argmax(self.predict_proba(x), axis=-1)

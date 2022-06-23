@@ -7,7 +7,7 @@ from ..core.utilities import guess_coords, check_all
 from .prep import svd_flip_v
 
 
-class sCCA:
+class CCA:
     def __init__(self, xmodes=5, ymodes=5, ccamodes=5):
         self.xmodes, self.ymodes, self.ccamodes = xmodes, ymodes, ccamodes
 

@@ -1,7 +1,7 @@
 from sklearn.decomposition import PCA
 from sklearn.feature_selection import chi2
 from sklearn.metrics import accuracy_score
-from scipy.special import softmax
+from scipy.special import softmax, expit
 import datetime as dt
 import numpy as np
 import scipy.linalg.lapack as la
@@ -261,7 +261,7 @@ class POELMClassifier:
 
         h = np.asarray([self._activate(neuron[0], x, neuron[1])
                        for neuron in self.hidden_neurons]).T
-        ret = 1.0 / (1 + np.exp(-1 * np.dot(h, self.beta)))
+        ret = expit(np.dot(h, self.beta))
         # return ret
 
         if self.using_multiclass:
@@ -272,7 +272,7 @@ class POELMClassifier:
 
     def _activate(self, a, x, b):
         if self.activation == 'sigm':
-            return 1.0 / (1 + np.exp(-1*np.dot(x, a) + b))
+            return expit(np.dot(x, a) + b)
         elif self.activation == 'tanh':
             return np.tanh(np.dot(x, a) + b)
         elif self.activation == 'relu':
