@@ -8,7 +8,7 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.colors as colors
 import matplotlib as mpl
 import copy
-import cv2, uuid
+import uuid
 from pathlib import Path
 from scipy import interp
 from itertools import cycle
@@ -18,6 +18,7 @@ import xarray as xr
 from sklearn.metrics import roc_curve, auc
 from sklearn.calibration import calibration_curve
 from scipy import stats
+from scipy.ndimage import gaussian_filter
 
 def __gaussian_smooth(X, x_lat_dim='Y', x_lon_dim='X', x_sample_dim='T', x_feature_dim='M', kernel=(9,9), use_dask=False, feature_chunks=1, sample_chunks=1, destination='.xcast_worker_space' ):
 	check_all(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
@@ -51,7 +52,7 @@ def __gaussian_smooth_chunk(X, feature_ndx, sample_ndx, x_lat_dim='Y', x_lon_dim
 			mask = np.isnan(toblur)
 			toblur2 = toblur.copy()
 			toblur2[mask] = np.nanmean(toblur)
-			blurred = cv2.GaussianBlur(toblur2, kernel,0)
+			blurred = gaussian_filter(toblur2, sigma=kernel)
 			blurred[mask] = np.nan
 			res[i].append(blurred)
 	res = np.asarray(res)

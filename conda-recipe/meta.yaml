@@ -16,15 +16,12 @@ requirements:
     - pip
     - setuptools
   run:
-    - numpy
     - scipy
     - scikit-learn
     - xarray
     - dask
     - matplotlib
-    - pathlib
     - statsmodels
-    - opencv
     - pytest
 
 test:

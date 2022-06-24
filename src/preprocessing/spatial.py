@@ -1,6 +1,6 @@
-import cv2
 import numpy as np
 from scipy.interpolate import interp2d
+from scipy.ndimage import gaussian_filter
 from sklearn.decomposition import PCA, IncrementalPCA
 import xarray as xr
 import numpy as np
@@ -148,7 +148,7 @@ class SpatialPCA:
         return xr.ones_like(X) * xr.DataArray(name='spatial_loadings', data=scores, coords=coords, dims=[x_feature_dim, x_sample_dim, 'MODE'], attrs=attrs)
 
 
-def gaussian_smooth(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, kernel=(9, 9), use_dask=False, feature_chunks=1, sample_chunks=1):
+def gaussian_smooth(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, kernel=3, use_dask=False, feature_chunks=1, sample_chunks=1):
     x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
         X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
     check_all(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
@@ -180,8 +180,11 @@ def gaussian_smooth(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feat
         kernel) if 'generated_by' in attrs.keys() else '\n  XCAST Gaussian Smoothing {}'.format(kernel)
     return r
 
-
-def gaussian_smooth_chunk(X, feature_ndx, sample_ndx, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, kernel=(9, 9), use_dask=False, hdf=None):
+import copy
+def gaussian_smooth_chunk(X, feature_ndx, sample_ndx, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, kernel=3, use_dask=False, hdf=None):
+    s = 2
+    w = kernel
+    t = (((w - 1)/2)-0.5)/s
     res = []
     data = X.values
     for i in range(data.shape[0]):
@@ -189,9 +192,9 @@ def gaussian_smooth_chunk(X, feature_ndx, sample_ndx, x_lat_dim=None, x_lon_dim=
         for j in range(data.shape[1]):
             toblur = data[i, j, :, :]
             mask = np.isnan(toblur)
-            toblur2 = toblur.copy()
+            toblur2 = copy.deepcopy(toblur)
             toblur2[mask] = np.nanmean(toblur)
-            blurred = cv2.GaussianBlur(toblur2, kernel, 0)
+            blurred = gaussian_filter(toblur2, sigma=s, truncate=t)
             blurred[mask] = np.nan
             res[i].append(blurred)
     res = np.asarray(res)
