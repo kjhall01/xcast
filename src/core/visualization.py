@@ -256,3 +256,64 @@ def view_taylor(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x_samp
 	plt.title('Taylor Diagram')
 	plt.legend(loc="lower left")
 	plt.show()
+
+import cartopy.crs as ccrs
+import matplotlib.pyplot as plt 
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes
+import matplotlib.colors as colors
+
+
+def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+	x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords_view_prob(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	assert x_sample_dim is None, 'View probabilistic requires you to select across sample dim to eliminate that dimension first'
+	#check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+	assert x_lat_dim in X.coords.keys(), 'XCast requires a dataset_lat_dim to be a coordinate on X'
+	assert x_lon_dim in X.coords.keys(), 'XCast requires a dataset_lon_dim to be a coordinate on X'
+	assert x_feature_dim in X.coords.keys(), 'XCast requires a dataset_feature_dim to be a coordinate on X'
+	check_type(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+
+	fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 9), subplot_kw={'projection': ccrs.PlateCarree()})
+	bounds = [40,45,50,55,60,65,70,75,80]
+	nbounds = [40,45,50]
+	mask = X.mean(x_feature_dim)
+	mask = mask.where(np.isnan(mask), other=1)
+	argmax = X.fillna(-999).argmax('M') * mask
+
+	flat = mask.where(argmax != 2, other=X.isel(M=2))
+	flat = flat.where(argmax != 1, other=X.isel(M=1))
+	flat = flat.where(argmax != 0, other=X.isel(M=0)) * mask 
+
+	def truncate_colormap(cmap, minval=0.0, maxval=1.0, n=100):
+		new_cmap = colors.LinearSegmentedColormap.from_list(
+			'trunc({n},{a:.2f},{b:.2f})'.format(n=cmap.name, a=minval, b=maxval),
+			cmap(np.linspace(minval, maxval, n)))
+		return new_cmap
+
+	graycmap = truncate_colormap(plt.get_cmap('Greys'),0.0, 0.6 )
+	graycmap = plt.get_cmap(graycmap, 4)
+
+	CS3 = flat.where(argmax == 2, other=np.nan).plot(ax=ax, add_colorbar=False, vmin=0.35, vmax=0.85, cmap=plt.get_cmap('Blues', 9))
+	CS1 = flat.where(argmax == 0, other=np.nan).plot(ax=ax, add_colorbar=False, vmin=0.35, vmax=0.85, cmap=plt.get_cmap('YlOrRd', 9))
+	CS2 = flat.where(argmax == 1, other=np.nan).plot(ax=ax, add_colorbar=False, vmin=0.35, vmax=0.55, cmap=plt.get_cmap(graycmap, 4))
+
+	ax.coastlines()
+	axins_f_bottom = inset_axes(ax, width="35%", height="5%", loc='lower left', bbox_to_anchor=(-0, -0.15, 1, 1), bbox_transform=ax.transAxes,borderpad=0.1 )
+	axins2_bottom = inset_axes(ax, width="20%",  height="5%", loc='lower center', bbox_to_anchor=(-0.0, -0.15, 1, 1), bbox_transform=ax.transAxes, borderpad=0.1 )
+	axins3_bottom = inset_axes(ax, width="35%",  height="5%", loc='lower right', bbox_to_anchor=(0, -0.15, 1, 1), bbox_transform=ax.transAxes, borderpad=0.1 )
+
+
+	cbar_fbl = fig.colorbar(CS1, ax=ax, cax=axins_f_bottom, orientation='horizontal')
+	cbar_fbl.set_label('BN (%)') 
+	cbar_fbl.set_ticks([i /100.0 for i in bounds])
+	cbar_fbl.set_ticklabels(bounds)
+
+
+	cbar_fbc = fig.colorbar(CS2, ax=ax,  cax=axins2_bottom, orientation='horizontal')
+	cbar_fbc.set_label('NN (%)') 
+	cbar_fbc.set_ticks([i /100.0 for i in nbounds])
+	cbar_fbc.set_ticklabels(nbounds)
+
+	cbar_fbr = fig.colorbar(CS3, ax=ax,  cax=axins3_bottom, orientation='horizontal')
+	cbar_fbr.set_label('AN (%)') 
+	cbar_fbr.set_ticks([i /100.0 for i in bounds])
+	cbar_fbr.set_ticklabels(bounds)

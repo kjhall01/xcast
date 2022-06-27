@@ -36,6 +36,34 @@ def guess_coords(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature
 	assert len(vals) == 4, 'Detection Faild - Duplicated Coordinate: \n  LATITUDE: {lat}\n  LONGITUDE: {lon}\n  SAMPLE: {samp}\n  FEATURE: {feat}\n'.format(**ret)
 	return ret['lat'], ret['lon'], ret['samp'], ret['feat']
 
+def guess_coords_view_prob(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+	assert type(X) == xr.DataArray, 'X must be a data array'
+	common_x = ['LONGITUDE', 'LONG', 'X', 'LON']
+	common_y = ['LATITUDE', 'LAT', 'LATI', 'Y']
+	common_t = ['T', 'S', 'TIME', 'SAMPLES', 'SAMPLE', 'INITIALIZATION', 'INIT', "TARGET"]
+	common_m = ['M', 'FEATURES', 'F', 'REALIZATION', 'MEMBER', 'Z', 'C', 'CAT']
+	ret = {'lat': x_lat_dim, 'lon': x_lon_dim, 'samp': x_sample_dim, 'feat': x_feature_dim}
+	for dim in X.dims: 
+		for x in common_x: 
+			if x in dim.upper() and ret['lon'] is None:
+				ret['lon'] = dim 
+		for y in common_y: 
+			if y in dim.upper() and ret['lat'] is None: 
+				ret['lat'] = dim 
+		for t in common_t:
+			if t in dim.upper() and ret['samp'] is None: 
+				ret['samp'] = dim 
+		for m in common_m:
+			if m in dim.upper() and ret['feat'] is None:
+				ret['feat'] = dim 
+	#assert None not in ret.values(), 'Could not detect one or more dimensions: \n  LATITUDE: {lat}\n  LONGITUDE: {lon}\n  SAMPLE: {samp}\n  FEATURE: {feat}\n'.format(**ret)
+	vals = []
+	for val in ret.values():
+		if val not in vals: 
+			vals.append(val)
+	#assert len(vals) == 4, 'Detection Faild - Duplicated Coordinate: \n  LATITUDE: {lat}\n  LONGITUDE: {lon}\n  SAMPLE: {samp}\n  FEATURE: {feat}\n'.format(**ret)
+	return ret['lat'], ret['lon'], ret['samp'], ret['feat']
+
 def to_xss(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	"""rename dims to labels required for xskillscore"""
 	return X.rename({
