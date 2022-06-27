@@ -2,7 +2,7 @@ from ..flat_estimators.classifiers import *
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
 from .base_estimator import BaseEstimator
-from ..preprocessing.onehot import RankedTerciles
+from ..preprocessing.onehot import RankedTerciles, quantile
 from ..preprocessing.spatial import regrid
 from ..core.utilities import guess_coords, check_all
 import xarray as xr
@@ -12,7 +12,7 @@ class cMemberCount:
     def __init__(self, **kwargs):
         self.kwargs = kwargs
 
-    def fit(self, X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None, an_thresh=0.67, bn_thresh=0.33,  explicit=False):
+    def fit(self, X, Y, method='midpoint', x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None, an_thresh=0.67, bn_thresh=0.33,  explicit=False):
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
             X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -20,49 +20,21 @@ class cMemberCount:
         y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(
             Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
         check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
-        X1 = X.sel()  # fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-        Y1 = Y.sel()  # fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-        self.regrid_coords_lat = Y1.coords[y_lat_dim].values
-        self.regrid_coords_lon = Y1.coords[y_lon_dim].values
-        if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-            X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim,
-                        x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
-
-        self.onehots = []
-        transformed = []
-        for i in range(X1.shape[list(X1.dims).index(x_feature_dim)]):
-            dc = {x_feature_dim: i}
-            to_transform = X1.isel(**dc)
-            to_transform = to_transform.expand_dims(x_feature_dim)
-            to_transform.coords[x_feature_dim] = [i]
-            self.onehots.append(RankedTerciles(
-                low_thresh=bn_thresh, high_thresh=an_thresh, explicit=explicit))
-            self.onehots[i].fit(to_transform, x_lat_dim,
-                                x_lon_dim, x_sample_dim, x_feature_dim)
+        X1  = X.stack(member=(x_feature_dim, x_sample_dim)).expand_dims({'MTemp': [0]})
+        self.high_threshold = quantile(X1, (2/3.0), method=method,  x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim='member', x_feature_dim='MTemp').mean('MTemp')
+        self.low_threshold = quantile(X1, (1/3.0), method=method,  x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim='member', x_feature_dim='MTemp').mean('MTemp')
+ 
 
     def predict(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
             X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-        X1 = X.sel()  # fill_space_mean(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-        if len(self.regrid_coords_lat)*len(self.regrid_coords_lon) > 1:
-            X1 = regrid(X1, self.regrid_coords_lon, self.regrid_coords_lat, x_lat_dim=x_lat_dim,
-                        x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
-
-        transformed = []
-        for i in range(X1.shape[list(X1.dims).index(x_feature_dim)]):
-            dc = {x_feature_dim: i}
-            to_transform = X1.isel(**dc)
-            to_transform = to_transform.expand_dims(x_feature_dim)
-            to_transform.coords[x_feature_dim] = [i]
-            transformed_da = self.onehots[i].transform(
-                to_transform, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-            transformed.append(transformed_da)
-
-        X1 = xr.concat(transformed, x_feature_dim)
-        return X1.sum(x_feature_dim) / X1.sum(x_feature_dim).sum('C')
+        bn = xr.ones_like(X).where(X <= self.low_threshold, other=0).sum(x_feature_dim) / X.shape[list(X.dims).index(x_feature_dim)]
+        an = xr.ones_like(X).where(X > self.high_threshold, other=0).sum(x_feature_dim) / X.shape[list(X.dims).index(x_feature_dim)]
+        nn = 1 - an - bn 
+        return xr.concat([bn, nn, an], x_feature_dim).assign_coords({x_feature_dim: ['BN', 'NN', 'AN']})
 
 
 class cMultivariateLogisticRegression(BaseEstimator):
