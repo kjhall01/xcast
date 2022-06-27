@@ -6,7 +6,7 @@ with open('{}/../README.md'.format(os.getenv('RECIPE_DIR')), 'r', encoding='utf-
 
 setup(
     name="xcast",
-    version="0.5.2",
+    version="0.5.3",
     author="Kyle Hall",
     author_email="kjhall@iri.columbia.edu",
     description=(

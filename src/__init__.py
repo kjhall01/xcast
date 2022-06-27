@@ -9,7 +9,7 @@ from .tests import NMME_IMD_ISMR
 import warnings
 
 
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 __licence__ = "MIT"
 __author__ = "KYLE HALL (hallkjc01@gmail.com)"
 
