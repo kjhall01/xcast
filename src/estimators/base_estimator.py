@@ -173,10 +173,10 @@ class BaseEstimator:
             if self.verbose:
                 with dd.ProgressBar():
                     self.models = da.blockwise(apply_fit_to_block, 'ijn', x_data, 'ijkl', y_data, 'ijkm', new_axes={
-                        'n': self.ND}, mme=self.model_type, ND=self.ND, concatenate=True, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).compute()
+                        'n': self.ND}, mme=self.model_type, ND=self.ND, concatenate=True, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).persist()
             else:
                 self.models = da.blockwise(apply_fit_to_block, 'ijn', x_data, 'ijkl', y_data, 'ijkm', new_axes={
-                    'n': self.ND}, mme=self.model_type, ND=self.ND, concatenate=True, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).compute()
+                    'n': self.ND}, mme=self.model_type, ND=self.ND, concatenate=True, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).persist()
             if type(self.models) == np.ndarray:
                 self.models = da.from_array(self.models, chunks=(max(
                     self.latitude // self.lat_chunks, 1), max(self.longitude // self.lon_chunks, 1), self.ND))
@@ -196,10 +196,10 @@ class BaseEstimator:
             if self.verbose:
                 with dd.ProgressBar():
                     self.models = da.blockwise(apply_fit_x_to_block, 'ijn', x_data, 'ijkl', new_axes={
-                        'n': self.ND}, mme=self.model_type, concatenate=True, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).compute()
+                        'n': self.ND}, mme=self.model_type, concatenate=True, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).persist()
             else:
                 self.models = da.blockwise(apply_fit_x_to_block, 'ijn', x_data, 'ijkl',  new_axes={
-                    'n': self.ND}, mme=self.model_type, concatenate=True, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).compute()
+                    'n': self.ND}, mme=self.model_type, concatenate=True, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).persist()
 
             if type(self.models) == np.ndarray:
                 self.models = da.from_array(self.models, chunks=(max(
@@ -230,10 +230,10 @@ class BaseEstimator:
         if self.verbose:
             with dd.ProgressBar():
                 results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                       'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).compute()
+                                       'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
         else:
             results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                   'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).compute()
+                                   'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
 
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,
@@ -275,10 +275,10 @@ class BaseEstimator:
         if self.verbose:
             with dd.ProgressBar():
                 results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                       'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).compute()
+                                       'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
         else:
             results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                   'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).compute()
+                                   'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
 
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,
@@ -318,10 +318,10 @@ class BaseEstimator:
         if self.verbose:
             with dd.ProgressBar():
                 results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                       'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).compute()
+                                       'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
         else:
             results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                   'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).compute()
+                                   'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
 
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,
