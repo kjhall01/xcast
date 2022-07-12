@@ -20,6 +20,7 @@ requirements:
     - scikit-learn
     - xarray
     - dask
+    - cartopy
     - matplotlib
     - statsmodels
 

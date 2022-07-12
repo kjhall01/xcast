@@ -64,7 +64,7 @@ def quantile(X, threshold, method='midpoint', x_lat_dim=None, x_lon_dim=None, x_
     def _nanquantile(x):
         return np.asarray(np.nanquantile(x, threshold, axis=-2, method=method))
     results = da.blockwise(_nanquantile, 'ijl', x_data,
-                           'ijkl', dtype=float, concatenate=True).compute()
+                           'ijkl', dtype=float, concatenate=True).persist()
     coords = {
         x_lat_dim: X1.coords[x_lat_dim].values,
         x_lon_dim: X1.coords[x_lon_dim].values,
