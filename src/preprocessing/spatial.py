@@ -182,6 +182,7 @@ def gaussian_smooth(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feat
 
 import copy
 def gaussian_smooth_chunk(X, feature_ndx, sample_ndx, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, kernel=3, use_dask=False, hdf=None):
+    assert isinstance(kernel, int), "Kernel must be an odd integer - tuples not accepted as of xcast 0.5.7"
     s = 2
     w = kernel
     t = (((w - 1)/2)-0.5)/s

@@ -206,6 +206,8 @@ class BaseEstimator:
                     self.latitude // self.lat_chunks, 1), max(self.longitude // self.lon_chunks, 1), self.ND))
 
     def predict_proba(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True, **kwargs):
+        if 'n_out' not in kwargs.keys():
+            kwargs['n_out'] = 3
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
             X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -229,17 +231,17 @@ class BaseEstimator:
         x_data = X1.data
         if self.verbose:
             with dd.ProgressBar():
-                results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                       'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
+                results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+                    'm': kwargs['n_out']},  dtype=float, concatenate=True, kwargs=kwargs).persist()
         else:
-            results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                   'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
+            results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+                    'm': kwargs['n_out']},  dtype=float, concatenate=True, kwargs=kwargs).persist()
 
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,
             x_lon_dim: X1.coords[x_lon_dim].values,
             x_sample_dim: X1.coords[x_sample_dim].values,
-            x_feature_dim: [i for i in range(results.shape[-1])],
+            x_feature_dim: [i for i in range(kwargs['n_out'])],
             'ND': [i for i in range(self.ND)]
         }
 
@@ -250,6 +252,9 @@ class BaseEstimator:
         return xr.DataArray(name='predicted_probability', data=results, coords=coords, dims=dims, attrs=attrs)
 
     def transform(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True, **kwargs):
+        if 'n_out' not in kwargs.keys():
+            assert 'n_components' in kwargs.keys(), 'if you dont pass n_components, you must pass n_out'
+            kwargs['n_out'] = kwargs['n_components']
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
             X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -274,17 +279,17 @@ class BaseEstimator:
         x_data = X1.data
         if self.verbose:
             with dd.ProgressBar():
-                results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                       'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
+                results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+                                       'm': kwargs['n_out']}, dtype=float, concatenate=True, kwargs=kwargs).persist()
         else:
-            results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                   'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
+            results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+                                   'm': kwargs['n_out']}, dtype=float, concatenate=True, kwargs=kwargs).persist()
 
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,
             x_lon_dim: X1.coords[x_lon_dim].values,
             x_sample_dim: X1.coords[x_sample_dim].values,
-            x_feature_dim: [i for i in range(results.shape[-1])],
+            x_feature_dim: [i for i in range(kwargs['n_out'])],
             'ND': [i for i in range(self.ND)]
         }
 
@@ -295,6 +300,8 @@ class BaseEstimator:
         return xr.DataArray(name='transformed', data=results, coords=coords, dims=dims, attrs=attrs)
 
     def predict(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True, **kwargs):
+        if 'n_out' not in kwargs.keys():
+            kwargs['n_out'] = 1
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
             X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -317,17 +324,17 @@ class BaseEstimator:
         x_data = X1.data
         if self.verbose:
             with dd.ProgressBar():
-                results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                       'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
+                results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+                                       'm': kwargs['n_out']}, dtype=float, concatenate=True, kwargs=kwargs).persist()
         else:
-            results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijm', new_axes={
-                                   'n': self.ND}, dtype=float, concatenate=True, kwargs=kwargs).persist()
+            results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+                                   'm': kwargs['n_out']}, dtype=float, concatenate=True, kwargs=kwargs).persist()
 
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,
             x_lon_dim: X1.coords[x_lon_dim].values,
             x_sample_dim: X1.coords[x_sample_dim].values,
-            x_feature_dim: [i for i in range(results.shape[-1])],
+            x_feature_dim: [i for i in range(kwargs['n_out'])],
             'ND': [i for i in range(self.ND)]
         }
 

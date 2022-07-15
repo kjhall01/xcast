@@ -1,1 +1,1 @@
-from .data import NMME_IMD_ISMR
+from .data import load_sample_data

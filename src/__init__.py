@@ -4,12 +4,12 @@ from .preprocessing import *
 from .validation import *
 from .verification import *
 from .estimators import *
-from .tests import NMME_IMD_ISMR
+from .tests import load_sample_data
 
 import warnings
 
 
-__version__ = "0.5.5"
+__version__ = "0.5.7"
 __licence__ = "MIT"
 __author__ = "KYLE HALL (hallkjc01@gmail.com)"
 
