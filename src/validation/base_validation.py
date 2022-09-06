@@ -26,25 +26,24 @@ class CrossValidator:
         if self.index >= self.samples: 
             raise StopIteration
         if bottom_boundary > top_boundary: 
-            x_bottom_of_window_high_indices = self.X.isel(**{self.x_sample_dim: slice(bottom_boundary, None)})
-            x_top_of_window_low_indices = self.X.isel(**{self.x_sample_dim: slice(None, top_boundary)})
-            x_test = xr.concat([ x_bottom_of_window_high_indices, x_top_of_window_low_indices], self.x_sample_dim)
-            x_train = self.X.isel(**{self.x_sample_dim: slice(top_boundary, bottom_boundary)})
-
-            y_bottom_of_window_high_indices = self.Y.isel(**{self.y_sample_dim: slice(bottom_boundary, None)})
-            y_top_of_window_low_indices = self.Y.isel(**{self.y_sample_dim: slice(None, top_boundary)})
-            y_test = xr.concat([ y_bottom_of_window_high_indices, y_top_of_window_low_indices], self.y_sample_dim)
-            y_train = self.Y.isel(**{self.y_sample_dim: slice(top_boundary, bottom_boundary)})
-        else: 
-            x_train_bottom = self.X.isel(**{self.x_sample_dim: slice( None, bottom_boundary )})
-            x_train_top = self.X.isel(**{self.x_sample_dim: slice(top_boundary, None )})
-            x_train = xr.concat([ x_train_bottom, x_train_top ], self.x_sample_dim)
-            x_test= self.X.isel(**{self.x_sample_dim: slice(bottom_boundary, top_boundary)})
+            test_high_indices = [i for i in range(bottom_boundary, self.samples)]
+            test_low_indices = [ i for i in range(top_boundary)]
+            test_high_indices.extend(test_low_indices)
             
-            y_train_bottom = self.Y.isel(**{self.y_sample_dim: slice( None, bottom_boundary )})
-            y_train_top = self.Y.isel(**{self.y_sample_dim: slice(top_boundary, None )})
-            y_train = xr.concat([ y_train_bottom, y_train_top ], self.y_sample_dim)
-            y_test= self.Y.isel(**{self.y_sample_dim: slice(bottom_boundary, top_boundary)})
+            train_indices = [i for i in range(top_boundary, bottom_boundary)]
+
+            x_test, y_test = self.X.isel(**{self.x_sample_dim: test_high_indices}), self.Y.isel(**{self.y_sample_dim: test_high_indices})
+            x_train, y_train = self.X.isel(**{self.x_sample_dim: train_indices}), self.Y.isel(**{self.y_sample_dim: train_indices})
+
+        else: 
+            train_low_indices = [i for i in range(bottom_boundary)]
+            train_high_indices = [ i for i in range(top_boundary, self.samples)]
+            train_low_indices.extend(train_high_indices)
+            test_indices = [i for i in range(bottom_boundary, top_boundary)]
+
+            x_test, y_test = self.X.isel(**{self.x_sample_dim: test_indices}), self.Y.isel(**{self.y_sample_dim: test_indices})
+            x_train, y_train = self.X.isel(**{self.x_sample_dim: train_low_indices}), self.Y.isel(**{self.y_sample_dim: train_low_indices})
+
         self.index += self.step
         return x_train, y_train, x_test, y_test 
 
