@@ -9,7 +9,7 @@ from .tests import load_sample_data
 import warnings
 
 
-__version__ = "0.5.7"
+__version__ = "0.5.8"
 __licence__ = "MIT"
 __author__ = "KYLE HALL (hallkjc01@gmail.com)"
 
