@@ -144,6 +144,7 @@ from matplotlib.patches import Patch, Polygon
 from operator import sub
 
 def reliability_diagram(ypred, t, title=None):
+    countnonnan = np.ones_like(ypred.squeeze())[~np.isnan(ypred.squeeze())].sum()
     #assert len(ypred.shape) == 2 and ypred.shape[1] == 1, 'ypred must be of shape n_samples x 1'
     assert ypred.shape == t.shape, 'inconsistent shapes between ypred and t - {} vs {}'.format(ypred.shape, t.shape)
     epoelm_rel = []
@@ -157,7 +158,7 @@ def reliability_diagram(ypred, t, title=None):
         else:
             reliability = m / n#n * ( m / n + (i/10+0.5) ) ** 2
         epoelm_rel.append(reliability) # / epoelm_xval.shape[0])
-    epoelm_hist = np.asarray(epoelm_hist) / ypred.shape[0]
+    epoelm_hist = np.asarray(epoelm_hist) / countnonnan
 
     #plt.hist(epoelm_xval[:, 0], bins=11)
     ur = Polygon([[0.33, 0.33 ], [0.33, 1], [1,1], [1, 1.33/2.0]], facecolor='gray', alpha=0.25)
