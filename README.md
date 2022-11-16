@@ -80,7 +80,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- CONTACT -->
 ## Contact
-Email: kjhall@iri.columbia.edu (This is a side project, so it may take a while to get back to you)
+Email: kyle.hall@noaa.gov (This is a side project, so it may take a while to get back to you)
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
