@@ -11,7 +11,7 @@ def drymask(X, dry_threshold=0.001, quantile_threshold=0.33, method='midpoint', 
 
     if X.dims[0] != x_lat_dim or X.dims[1] != x_lon_dim or X.dims[2] != x_sample_dim or X.dims[3] != x_feature_dim:
         X = X.transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-    
+
     bn = quantile(X, quantile_threshold, method=method, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
     mask = bn.where(bn >= dry_threshold, other=np.nan)
     return mask.where(np.isnan(mask), other=1)
@@ -25,7 +25,13 @@ def quantile(X, threshold, method='midpoint', x_lat_dim=None, x_lon_dim=None, x_
     x_data = X1.data
 
     def _nanquantile(x):
-        return np.asarray(np.nanquantile(x, threshold, axis=-2, method=method))
+        pct_nans = np.isnan(x).sum(axis=-2) / x.shape[-2]
+        nans = np.where(pct_nans == 1.0)
+        x[nans[0], nans[1], :, nans[2]] = -999999
+        ret = np.asarray(np.nanquantile(x, threshold, axis=-2, method=method))
+        ret[nans] = np.nan
+        return ret
+
     results = da.blockwise(_nanquantile, 'ijl', x_data,
                            'ijkl', dtype=float, concatenate=True).persist()
     coords = {
@@ -74,7 +80,7 @@ class RankedTerciles:
                 X1, self.low_thresh, method=quantile_method,  x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim).isel(**{x_feature_dim: 0})
 
         self.nanmask = X1.mean(x_sample_dim).mean(x_feature_dim)
-        self.nanmask = self.nanmask.where(np.isnan(self.nanmask), other=1) 
+        self.nanmask = self.nanmask.where(np.isnan(self.nanmask), other=1)
 
     def transform(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
@@ -82,10 +88,8 @@ class RankedTerciles:
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
         #iseldict = {x_feature_dim: 0}
         #X1 = X.isel(**iseldict)
-        self.high_threshold = self.high_threshold.rename(
-            {self.lat_dim: x_lat_dim, self.lon_dim: x_lon_dim})
-        self.low_threshold = self.low_threshold.rename(
-            {self.lat_dim: x_lat_dim, self.lon_dim: x_lon_dim})
+        self.high_threshold = self.high_threshold.swap_dims(**{ self.lat_dim: x_lat_dim, self.lon_dim: x_lon_dim})
+        self.low_threshold = self.low_threshold.swap_dims(**{ self.lat_dim: x_lat_dim, self.lon_dim: x_lon_dim})
 
         self.feature_dim, self.lat_dim, self.lon_dim = x_feature_dim, x_lat_dim, x_lon_dim
         X_BN = X.where(X < self.low_threshold, other=-999)

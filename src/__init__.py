@@ -4,7 +4,7 @@ from .preprocessing import *
 from .validation import *
 from .verification import *
 from .estimators import *
-from .tests import load_sample_data
+from .visualization import *
 
 import warnings
 

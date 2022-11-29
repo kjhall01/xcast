@@ -11,6 +11,7 @@ import dask.diagnostics as dd
 from ..flat_estimators.classifiers import NanClassifier, RFClassifier, POELMClassifier
 from ..flat_estimators.regressors import NanRegression
 from sklearn.decomposition import PCA
+from collections.abc import Iterable
 
 
 def apply_fit_to_block(x_data, y_data, mme=POELMClassifier, ND=1, kwargs={}):
@@ -217,6 +218,14 @@ class BaseEstimator:
         assert xlat == self.latitude, 'XCast Estimators require new predictors to have the same dimensions as the training data- lat mismatch'
         assert xlon == self.longitude, 'XCast Estimators require new predictors to have the same dimensions as the training data- lon mismatch'
         assert xfeat == self.features, 'XCast Estimators require new predictors to have the same dimensions as the training data- feat mismatch'
+
+        if 'n_out' not in kwargs.keys():
+            if 'quantile' in kwargs.keys() and kwargs['quantile'] is not None:
+                if not isinstance(kwargs['quantile'], Iterable):
+                    kwargs['quantile'] = [kwargs['quantile']]
+                kwargs['n_out'] = len(kwargs['quantile'])
+            else:
+                kwargs['n_out'] = 3
 
         if rechunk:
             X1 = X.chunk({x_lat_dim: max(xlat // self.lat_chunks, 1), x_lon_dim: max(xlon //

@@ -4,6 +4,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
 from ..flat_estimators.regressors import PoissonRegressionOne, GammaRegressionOne, ELMRegressor, RandomForestRegressorOne
+from ..flat_estimators import EinsteinLearningMachine
 from .base_estimator import BaseEstimator
 from ..preprocessing.spatial import regrid
 from ..preprocessing.normal import Normal
@@ -99,6 +100,12 @@ class rGammaRegression(BaseEstimator):
         super().__init__(**kwargs)
         self.model_type = GammaRegressionOne
 
+
+
+class rEinsteinLearningMachine(BaseEstimator):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_type = EinsteinLearningMachine
 
 class rMultiLayerPerceptron(BaseEstimator):
     def __init__(self, hidden_layer_sizes=None, **kwargs):

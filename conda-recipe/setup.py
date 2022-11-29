@@ -6,7 +6,7 @@ with open('{}/../README.md'.format(os.getenv('RECIPE_DIR')), 'r', encoding='utf-
 
 setup(
     name="xcast",
-    version="0.5.8",
+    version="0.6.0",
     author="Kyle Hall",
     author_email="kjhall@iri.columbia.edu",
     description=(
@@ -25,9 +25,7 @@ setup(
         'xcast.validation',
         'xcast.verification',
         'xcast.tests'],
-    package_data={
-        'xcast.tests': ['{}/../src/tests/test_data/*'.format(os.getenv('RECIPE_DIR'))],
-    },
+    package_data={},
     package_dir={
         'xcast': '{}/../src'.format(os.getenv('RECIPE_DIR')),
         'xcast.core': '{}/../src/core'.format(os.getenv('RECIPE_DIR')),
