@@ -51,7 +51,7 @@ def lighten_color(color,amount):
     return colorsys.hls_to_rgb(c[0], 1 - amount * (1 - c[1]), c[2])
 
 
-def view(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None, **plt_kwargs):
+def view(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None, drymask=None, **plt_kwargs):
     x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords_view_prob(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
     assert x_sample_dim is None, 'View probabilistic requires you to select across sample dim to eliminate that dimension first'
     assert x_feature_dim is None, 'View  requires you to select across featyre dim to eliminate that dimension first'
@@ -61,9 +61,15 @@ def view(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=Non
     assert x_lon_dim in X.coords.keys(), 'XCast requires a dataset_lon_dim to be a coordinate on X'
     check_type(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-
+    mask = X.where(np.isnan(X), other=1)
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 9), subplot_kw={'projection': ccrs.PlateCarree()})
     CS3 = X.plot(ax=ax, add_colorbar=False, **plt_kwargs)
+
+    if drymask is not None:
+        dmcmap = plt.get_cmap('RdBu').copy()
+        dmcmap.set_under('lavenderblush')
+        drymask = xr.ones_like(drymask).where(np.isnan(drymask), other=np.nan)
+        drymask.plot(ax=ax, add_colorbar=False, vmin=22, vmax=23, cmap=dmcmap)
 
     axins2_bottom = inset_axes(ax, width="100%",  height="5%", loc='lower center', bbox_to_anchor=(-0.0, -0.15, 1, 1), bbox_transform=ax.transAxes, borderpad=0.1 )
 

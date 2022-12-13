@@ -20,7 +20,7 @@ def view_taylor(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x_samp
     y_data = Y.stack(point=(y_lat_dim, y_lon_dim, y_sample_dim)).transpose('point', y_feature_dim).values
 
 
-    tst = x_data *y_data
+    tst = x_data * y_data
     x_data = x_data[~np.isnan(tst).any(axis=1)]
     y_data = y_data[~np.isnan(tst).any(axis=1)]
     n_classes = len(X.coords[x_feature_dim].values)

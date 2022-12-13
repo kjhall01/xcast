@@ -511,6 +511,131 @@ class CCA:
             d['Title'] = 'XCast Principal Components Regression Report'
             d['Author'] = u'Kyle Hall'
 
+    def show_report(self):
+        for feat in self.x_eof_loadings.coords[self.x_feature_dim].values:
+            # save loadings maps
+            if self.ccareg.xmodes1 > 1:
+                el = self.x_eof_loadings.sel(**{self.x_feature_dim: feat}).plot(col='mode', col_wrap=self.ccareg.xmodes1, subplot_kws={'projection': ccrs.PlateCarree()})
+                plt.suptitle(str(feat).upper())
+                for i, ax in enumerate(el.axs.flat):
+                    ax.set_ylim(self.x_eof_loadings.coords[self.x_lat_dim].values.min(), self.x_eof_loadings.coords[self.x_lat_dim].values.max())
+                    ax.set_xlim(self.x_eof_loadings.coords[self.x_lon_dim].values.min(), self.x_eof_loadings.coords[self.x_lon_dim].values.max())
+                    ax.coastlines()
+                    sd = {'mode': i+1}
+                    ax.set_title('EOF {} ({}%)'.format(i+1, round(self.x_variance_explained.sel(**sd ).values*100, 1)))
+            else:
+                ax = self.x_eof_loadings.sel(**{self.x_feature_dim: feat}).plot(subplot_kws={'projection': ccrs.PlateCarree()}).axes
+                ax.set_ylim(self.x_eof_loadings.coords[self.x_lat_dim].values.min(), self.x_eof_loadings.coords[self.x_lat_dim].values.max())
+                ax.set_xlim(self.x_eof_loadings.coords[self.x_lon_dim].values.min(), self.x_eof_loadings.coords[self.x_lon_dim].values.max())
+                ax.coastlines()
+                sd = {'mode': 1}
+                ax.set_title('EOF {} ({}%)'.format(1, round(self.x_variance_explained.sel(**sd ).values*100, 1)))
+            plt.show()
+
+        # save time series scores
+        ts = self.x_eof_scores.plot.line(hue='mode')
+        plt.show()
+
+        for feat in self.y_eof_loadings.coords[self.y_feature_dim].values:
+            # save loadings maps
+            if self.ccareg.ymodes1 > 1:
+                el = self.y_eof_loadings.sel(**{self.y_feature_dim: feat}).plot(col='mode', col_wrap=self.ccareg.ymodes1, subplot_kws={'projection': ccrs.PlateCarree()})
+                plt.suptitle(str(feat).upper())
+                for i, ax in enumerate(el.axs.flat):
+                    ax.set_ylim(self.y_eof_loadings.coords[self.y_lat_dim].values.min(), self.y_eof_loadings.coords[self.y_lat_dim].values.max())
+                    ax.set_xlim(self.y_eof_loadings.coords[self.y_lon_dim].values.min(), self.y_eof_loadings.coords[self.y_lon_dim].values.max())
+                    ax.coastlines()
+                    sd = {'mode': i+1}
+                    ax.set_title('EOF {} ({}%)'.format(i+1, round(self.y_variance_explained.sel(**sd ).values*100, 1)))
+            else:
+                ax = self.y_eof_loadings.sel(**{self.y_feature_dim: feat}).plot(subplot_kws={'projection': ccrs.PlateCarree()}).axes
+                ax.set_ylim(self.y_eof_loadings.coords[self.y_lat_dim].values.min(), self.y_eof_loadings.coords[self.y_lat_dim].values.max())
+                ax.set_xlim(self.y_eof_loadings.coords[self.y_lon_dim].values.min(), self.y_eof_loadings.coords[self.y_lon_dim].values.max())
+                ax.coastlines()
+                sd = {'mode': 1}
+                ax.set_title('EOF {} ({}%)'.format(1, round(self.y_variance_explained.sel(**sd ).values*100, 1)))
+            plt.show()
+
+        # save time series scores
+        ts = self.y_eof_scores.plot.line(hue='mode')
+        plt.show()
+
+
+        for feat in self.x_cca_loadings.coords[self.x_feature_dim].values:
+            # save loadings maps
+            if self.ccareg.ccamodes1 > 1:
+                el = self.x_cca_loadings.sel(**{self.x_feature_dim: feat}).plot(col='mode', col_wrap=self.ccareg.ccamodes1, subplot_kws={'projection': ccrs.PlateCarree()})
+                plt.suptitle(str(feat).upper())
+                for i, ax in enumerate(el.axs.flat):
+                    ax.set_ylim(self.x_cca_loadings.coords[self.x_lat_dim].values.min(), self.x_cca_loadings.coords[self.x_lat_dim].values.max())
+                    ax.set_xlim(self.x_cca_loadings.coords[self.x_lon_dim].values.min(), self.x_cca_loadings.coords[self.x_lon_dim].values.max())
+                    ax.coastlines()
+                    sd = {'mode': i+1}
+                    ax.set_title('CCA MODE {} ({} R2)'.format(i+1, round(float(self.canonical_correlations.sel(**sd ).values), 3)))
+            else:
+                ax = self.x_cca_loadings.sel(**{self.x_feature_dim: feat}).plot( subplot_kws={'projection': ccrs.PlateCarree()}).axes
+                ax.set_ylim(self.x_cca_loadings.coords[self.x_lat_dim].values.min(), self.x_cca_loadings.coords[self.x_lat_dim].values.max())
+                ax.set_xlim(self.x_cca_loadings.coords[self.x_lon_dim].values.min(), self.x_cca_loadings.coords[self.x_lon_dim].values.max())
+                ax.coastlines()
+                sd = {'mode': 1}
+                ax.set_title('CCA MODE {} ({} R2)'.format(1, round(float(self.canonical_correlations.sel(**sd ).values), 3)))
+        plt.show()
+
+        # save time series scores
+        ts = self.x_cca_scores.plot.line(hue='mode')
+        plt.show()
+
+        for feat in self.y_cca_loadings.coords[self.y_feature_dim].values:
+            # save loadings maps
+            if self.ccareg.ccamodes1 > 1:
+                el = self.y_cca_loadings.sel(**{self.y_feature_dim: feat}).plot(col='mode', col_wrap=self.ccareg.ccamodes1, subplot_kws={'projection': ccrs.PlateCarree()})
+                plt.suptitle(str(feat).upper())
+                for i, ax in enumerate(el.axs.flat):
+                    ax.set_ylim(self.y_cca_loadings.coords[self.y_lat_dim].values.min(), self.y_cca_loadings.coords[self.y_lat_dim].values.max())
+                    ax.set_xlim(self.y_cca_loadings.coords[self.y_lon_dim].values.min(), self.y_cca_loadings.coords[self.y_lon_dim].values.max())
+                    ax.coastlines()
+                    sd = {'mode': i+1}
+                    ax.set_title('CCA MODE {} ({} R2)'.format(i+1, round(float(self.canonical_correlations.sel(**sd ).values), 3)))
+            else:
+                ax = self.y_cca_loadings.sel(**{self.y_feature_dim: feat}).plot(subplot_kws={'projection': ccrs.PlateCarree()}).axes
+                ax.set_ylim(self.y_cca_loadings.coords[self.y_lat_dim].values.min(), self.y_cca_loadings.coords[self.y_lat_dim].values.max())
+                ax.set_xlim(self.y_cca_loadings.coords[self.y_lon_dim].values.min(), self.y_cca_loadings.coords[self.y_lon_dim].values.max())
+                ax.coastlines()
+                sd = {'mode': 1}
+                ax.set_title('CCA MODE {} ({} R2)'.format(1, round(float(self.canonical_correlations.sel(**sd ).values), 3)))
+
+            plt.show()
+
+        # save time series scores
+        ts = self.y_cca_scores.plot.line(hue='mode')
+        plt.show()
+
+
+secret = """
+    pl = cca.x_eof_loadings.plot(subplot_kws={'projection': ccrs.PlateCarree()}, col='mode', col_wrap=cca.x_eof_loadings.shape[list(cca.x_eof_loadings.dims).index('mode')])
+    for ax in pl.axs.flat:
+        coasts = ax.coastlines()
+    plt.suptitle('Model EOFs - {}'.format(gcms[i].upper()))
+
+    pl = cca.y_eof_loadings.plot(subplot_kws={'projection': ccrs.PlateCarree()}, col='mode', col_wrap=cca.y_eof_loadings.shape[list(cca.y_eof_loadings.dims).index('mode')])
+    for ax in pl.axs.flat:
+        coasts = ax.coastlines()
+    plt.suptitle('Observed EOFs - {}'.format(observations))
+
+    scores = xr.concat([cca.x_eof_scores, cca.y_eof_scores], 'FIELD').assign_coords({'FIELD': ['X', 'Y']})
+    for j in range(max(cca.xmodes1, cca.ymodes1)):
+        scores.isel(mode=j).plot.line(hue='FIELD')
+
+    pl = cca.x_cca_loadings.plot(subplot_kws={'projection': ccrs.PlateCarree()}, col='mode', col_wrap=cca.x_cca_loadings.shape[list(cca.x_cca_loadings.dims).index('mode')])
+    for ax in pl.axs.flat:
+        coasts = ax.coastlines()
+    plt.suptitle('Model CCA Loadings - {}'.format(gcms[i].upper()))
+
+    pl = cca.y_cca_loadings.plot(subplot_kws={'projection': ccrs.PlateCarree()}, col='mode', col_wrap=cca.y_cca_loadings.shape[list(cca.y_cca_loadings.dims).index('mode')])
+    for ax in pl.axs.flat:
+        coasts = ax.coastlines()
+    plt.suptitle('Observation CCA Loadings - {}'.format(observations)) """
+
 
 if __name__ == "__main__":
     import cptcore as cc

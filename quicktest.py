@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import cptcore as cc
 import cartopy.crs as ccrs
 import numpy as np
+import einstein_epoelm as ee
+
+
 
 X, Y = cc.load_southasia_nmme()
 Y = Y.expand_dims({'M':[0]})
@@ -13,35 +16,36 @@ ohc = xc.RankedTerciles()
 ohc.fit(Y)
 T = ohc.transform(Y)
 
-xc.view_taylor(X, Y)
-plt.show()
+#xc.view_taylor(X, Y)
+#plt.show()
 
-print(Y)
-print()
-gamm = xc.EmpiricalTransformer()
-gamm.fit(Y)
+#print(Y)
+#print()
+#gamm = xc.EmpiricalTransformer()
+#gamm.fit(Y)
 
-print(Y)
-print()
-gam_y = gamm.transform(Y)
+#print(Y)
+#print()
+#gam_y = gamm.transform(Y)
 
-gam2 = xc.EmpiricalTransformer()
-gam2.fit(X)
-gam_x = gam2.transform(X)
+#gam2 = xc.EmpiricalTransformer()
+#gam2.fit(X)
+#gam_x = gam2.transform(X)
 
+#xc.view_taylor(gam_x, gam_y)
+#plt.show()
 
-
-xc.view_taylor(gam_x, gam_y)
-plt.show()
-
-pe = xc.Pearson(gam_x, gam_y)
-pe.plot()
-plt.show()
+#pe = xc.Pearson(gam_x, gam_y)
+#pe.plot()
+#plt.show()
 
 
 probs, preds = [], []
+i=0
 for x_train, y_train, x_test, y_test in xc.CrossValidator(X, Y):
-    elm = xc.rEinsteinLearningMachine(hidden_layer_size=10, activation='relu', preprocessing='std', n_estimators=15)
+    print(i)
+    i += 1
+    elm = ee.rEPOELM()
     elm.fit(x_train, y_train)
     pd = elm.predict(x_test)
     pr = elm.predict_proba(x_test)
@@ -66,6 +70,9 @@ plt.show()
 
 groc = xc.GeneralizedROC(probs, T).mean('SKILLDIM').mean('M')
 
+grel = xc.GREL(probs, T).mean('SKILLDIM').mean('M')
+
+
 rps = xc.RankProbabilityScore(probs, T).mean('SKILLDIM').mean('M')
 clim_rps = xc.RankProbabilityScore(xr.ones_like(probs) / 3.0, T).mean('SKILLDIM').mean('M')
 
@@ -76,11 +83,13 @@ import numpy as np
 cmap = plt.get_cmap('autumn_r').copy()
 cmap.set_under('lightgray')
 
-gr = xc.view(groc, vmin=0.5, cmap=cmap, ocean=False, label='test')
+gr = xc.view(groc, vmin=0.5, cmap=cmap, ocean=False, label='GROC')
 plt.show()
 
+gr = xc.view(grel, cmap=cmap, vmin=0.784, ocean=False, label='GREL')
+plt.show()
 
-rp = xc.view(rpss, vmin=0, cmap=cmap, label='ugh', ocean=False)
+rp = xc.view(rpss, vmin=0, cmap=cmap, label='RPSS', ocean=False)
 plt.show()
 
 

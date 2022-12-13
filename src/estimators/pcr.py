@@ -1,4 +1,3 @@
-import xcast as xc
 import xarray as xr
 import numpy as np
 from scipy.linalg import svd
@@ -14,6 +13,8 @@ import dask.array as da
 
 from . import BaseEstimator
 from ..core.utilities import guess_coords, check_all
+from ..core.chunking import align_chunks
+
 
 def std(X, method='midpoint', x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
     x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
@@ -122,8 +123,9 @@ class CrossValidatedLinearRegression:
             for q in quantile:
                 assert q > 0 and q < 1, 'quantile must be float between 0 and 1'
                 threshold = np.nanquantile(self.y, q, axis=0)
-                ret.append( 1 - t.sf(threshold, self.y.shape[0] - x.shape[1] - 1 ,  loc=mu, scale=np.sqrt( pred_err_var)))
-            return np.stack(ret, axis=0)
+                xx = 1 - t.sf(threshold, self.y.shape[0] - x.shape[1] - 1 ,  loc=mu, scale=np.sqrt( pred_err_var))
+                ret.append(xx)
+            return np.hstack(ret)
         else:
             bn = np.nanquantile(self.y, (1.0/3.0), axis=0)
             an = np.nanquantile(self.y, (2.0/3.0), axis=0, )
@@ -136,16 +138,6 @@ class rXValMLR(BaseEstimator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.model_type = CrossValidatedLinearRegression
-
-    def predict_proba(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True, **kwargs):
-        if 'n_out' not in kwargs.keys():
-            if 'quantile' in kwargs.keys() and kwargs['quantile'] is not None:
-                if not isinstance(kwargs['quantile'], Iterable):
-                    kwargs['quantile'] = [kwargs['quantile']]
-                kwargs['n_out'] = len(kwargs['quantile'])
-            else:
-                kwargs['n_out'] = 3
-        return super().predict_proba(X, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim, rechunk=rechunk, **kwargs)
 
 
 class eof_:
@@ -335,6 +327,7 @@ class PCR:
         self.eof_modes = eof_modes
         self.latitude_weighting = latitude_weighting
         self.mlr_kwargs = kwargs
+        self.model_type = rXValMLR # this must be a class which has predict and predict_proba, and also probability of non-exceedance
         self.separate_members=separate_members
         self.chunks=chunks
         self.mlr_kwargs['crossvalsplits'] = crossvalidation_splits
@@ -436,7 +429,7 @@ class PCR:
 
 
         new_x, Y = align_chunks(new_x, Y, *self.chunks)
-        self.mlr = rXValMLR(**self.mlr_kwargs)
+        self.mlr = self.model_type(**self.mlr_kwargs)
         self.mlr.fit(new_x, Y, x_lat_dim=y_lat_dim, x_lon_dim=y_lon_dim, x_sample_dim=y_sample_dim, x_feature_dim=new_x_feature, y_lat_dim=y_lat_dim, y_lon_dim=y_lon_dim, y_sample_dim=y_sample_dim, y_feature_dim=y_feature_dim, )
 
     def predict(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
@@ -473,7 +466,7 @@ class PCR:
         else:
             new_x_feature='mode'
         preds = self.mlr.predict(new_x, x_lat_dim=self.y_lat_dim, x_lon_dim=self.y_lon_dim, x_sample_dim=self.y_sample_dim, x_feature_dim=new_x_feature)
-        return preds.mean('ND')
+        return preds.mean('ND').swap_dims({new_x_feature: x_feature_dim}).assign_coords({x_feature_dim: preds.coords[new_x_feature].values})
 
     def predict_proba(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, quantile=None):
         x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim)
@@ -508,7 +501,7 @@ class PCR:
         else:
             new_x_feature='mode'
         preds = self.mlr.predict_proba(new_x, x_lat_dim=self.y_lat_dim, x_lon_dim=self.y_lon_dim, x_sample_dim=self.y_sample_dim, x_feature_dim=new_x_feature, quantile=quantile)
-        return preds.mean('ND')
+        return preds.mean('ND').swap_dims({new_x_feature: x_feature_dim}).assign_coords({x_feature_dim: preds.coords[new_x_feature].values})
 
     def scores(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, quantile=None):
         x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim)
@@ -543,6 +536,32 @@ class PCR:
         else:
             new_x_feature='mode'
         return  eof_scores
+
+    def show_report(self):
+        assert self.separate_members, "PCA report is not available if separate_members=False "
+        for feat in self.eof_loadings.coords[self.x_feature_dim].values:
+            # save loadings maps
+            if self.eof_modes > 1:
+                el = self.eof_loadings.sel(**{self.x_feature_dim: feat}).plot(col='mode', col_wrap=self.eof_modes, subplot_kws={'projection': ccrs.PlateCarree()})
+                plt.suptitle(str(feat).upper())
+                for i, ax in enumerate(el.axs.flat):
+                    ax.set_ylim(self.eof_loadings.coords[self.x_lat_dim].values.min(), self.eof_loadings.coords[self.x_lat_dim].values.max())
+                    ax.set_xlim(self.eof_loadings.coords[self.x_lon_dim].values.min(), self.eof_loadings.coords[self.x_lon_dim].values.max())
+                    ax.coastlines()
+                    sd = {self.x_feature_dim: feat, 'mode': i+1}
+                    ax.set_title('EOF {} ({}%)'.format(i+1, round(self.eof_variance_explained.sel(**sd ).values*100, 1)))
+            else:
+                ax = self.eof_loadings.sel(**{self.x_feature_dim: feat}).plot(subplot_kws={'projection': ccrs.PlateCarree()}).axes
+                ax.set_ylim(self.eof_loadings.coords[self.x_lat_dim].values.min(), self.eof_loadings.coords[self.x_lat_dim].values.max())
+                ax.set_xlim(self.eof_loadings.coords[self.x_lon_dim].values.min(), self.eof_loadings.coords[self.x_lon_dim].values.max())
+                ax.coastlines()
+                sd = {self.x_feature_dim: feat, 'mode': 1}
+                ax.set_title('EOF {} ({}%)'.format(1, round(self.eof_variance_explained.sel(**sd ).values*100, 1)))
+            plt.show()
+
+            # save time series scores
+            ts = self.eof_scores.sel(**{self.x_feature_dim: feat}).plot.line(hue='mode')
+            plt.show()
 
 
     def report(self, filename):

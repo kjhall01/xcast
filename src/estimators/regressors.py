@@ -1,15 +1,15 @@
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, ElasticNet
+from sklearn.svm import SVR
 from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Ridge
 from ..flat_estimators.regressors import PoissonRegressionOne, GammaRegressionOne, ELMRegressor, RandomForestRegressorOne
-from ..flat_estimators import EinsteinLearningMachine
 from .base_estimator import BaseEstimator
 from ..preprocessing.spatial import regrid
 from ..preprocessing.normal import Normal
 from ..core.utilities import check_all, guess_coords
-
+from ..verification.flat_metrics import index_of_agreement
 
 class EnsembleMean:
     def __init__(self, **kwargs):
@@ -88,6 +88,15 @@ class rMultipleLinearRegression(BaseEstimator):
         super().__init__(**kwargs)
         self.model_type = LinearRegression
 
+class rElasticNet(BaseEstimator):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_type = ElasticNet
+
+class rSVM(BaseEstimator):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.model_type = SVR
 
 class rPoissonRegression(BaseEstimator):
     def __init__(self, **kwargs):
@@ -99,13 +108,6 @@ class rGammaRegression(BaseEstimator):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.model_type = GammaRegressionOne
-
-
-
-class rEinsteinLearningMachine(BaseEstimator):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.model_type = EinsteinLearningMachine
 
 class rMultiLayerPerceptron(BaseEstimator):
     def __init__(self, hidden_layer_sizes=None, **kwargs):

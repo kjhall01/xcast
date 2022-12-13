@@ -87,6 +87,8 @@ class cProbabilityAnomalyCorrelation:
         probs = self._predict_proba(X, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
         probs = probs * self.sdratio * self.pac
         featcoord = probs.coords[x_feature_dim].values
+
+
         for iteration in range(3):
             # adjust negative anomalies
             feats = []
@@ -101,6 +103,7 @@ class cProbabilityAnomalyCorrelation:
                     if i!=j:
                         feats[j] = feats[j] + negative_discrepancy / 2.0
             probs = xr.concat(feats, x_feature_dim).assign_coords({x_feature_dim: featcoord})
+
             #adjust positive anomalies
             feats = []
             for i in range(probs.shape[list(probs.dims).index(x_feature_dim)]):

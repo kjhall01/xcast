@@ -6,6 +6,95 @@ from .base_verification import *
 from scipy.special import ndtr
 import itertools
 
+def reliability(ypred, t, bin_minimum_pct=0.01):
+    countnonnan = np.ones_like(ypred.squeeze())[~np.isnan(ypred.squeeze())].sum()
+    #assert len(ypred.shape) == 2 and ypred.shape[1] == 1, 'ypred must be of shape n_samples x 1'
+    ypred = ypred * 0.9999999999999
+    assert ypred.shape == t.shape, 'inconsistent shapes between ypred and t - {} vs {}'.format(ypred.shape, t.shape)
+    epoelm_rel = []
+    epoelm_hist = []
+    base_rate = np.nanmean(t)
+    uncertainty = base_rate * (1 - base_rate)
+    bin_base_rate_diffs = []
+    rel_score = []
+    for i in range(3):
+        forecasts_in_bin = ypred.squeeze()[np.where((ypred.squeeze() >= (i /3.0)) & (ypred.squeeze() < (i/3.0 +1.0/3.0)) ) ]
+        obs_in_bin = t.squeeze()[np.where((ypred.squeeze() >= (i /3.0)) & (ypred.squeeze() < (i/3.0 +1.0/3.0)) ) ]
+
+        #n = forecasts_in_bin.shape[0]
+        n = np.ones_like(ypred.squeeze())[np.where((ypred.squeeze() >= (i /3.0)) & (ypred.squeeze() < (i/3.0 +1.0/3.0)) ) ].sum()
+        m = np.ones_like(ypred.squeeze())[np.where((ypred.squeeze() >= (i /3.0)) & (ypred.squeeze() < (i/3.0 +1.0/3.0)) & (t.squeeze() == 1) )].sum()
+        epoelm_hist.append(n)
+        if n == 0:
+            reliability = np.nan
+            bin_base_rate = np.nan
+            rel=np.nan
+        else:
+            avg_forecast = np.nanmean(forecasts_in_bin)
+            bin_base_rate = np.nanmean(obs_in_bin)
+            rel = (avg_forecast - bin_base_rate)**2 * n
+            reliability = m / n
+
+        epoelm_rel.append(reliability) # / epoelm_xval.shape[0])
+        bin_base_rate_diffs.append((base_rate - bin_base_rate)**2 * n)
+        rel_score.append(rel)
+
+    reliability = np.asarray(rel_score)
+    reliability = np.nansum(reliability) / t.shape[0]
+
+    bin_base_rate_diffs = np.asarray(bin_base_rate_diffs)
+    resolution = np.nansum(bin_base_rate_diffs) / t.shape[0]
+
+    epoelm_rel = np.asarray(epoelm_rel)
+    epoelm_hist = np.asarray(epoelm_hist) / countnonnan
+    nan = np.where(epoelm_hist < bin_minimum_pct)
+
+    epoelm_hist[nan] = np.nan
+    epoelm_rel[nan] = np.nan
+
+    worst = np.asarray([ 1.0, 1.0, 0.0]) #1.0/6.0 + 0.5*np.asarray([ 1.0/6.0, 0.5, 5.0/6.0])
+    perf = np.asarray([1.0/6.0, 0.5, 5.0/6.0])
+    worst[nan] = np.nan
+    perf[nan] = np.nan
+
+    furthest_dist = np.sqrt(np.nansum((worst - perf)**2))
+    fcst = np.sqrt(np.nansum((epoelm_rel - perf)**2))
+    rel_score = fcst / furthest_dist
+    return rel_score
+
+def grel(predicted, observed):
+    relscores = np.asarray([reliability(predicted[:, i], observed[:,i]) for i in range(predicted.shape[1])])
+    return 1 - np.sqrt(np.nansum((relscores)**2 )) / np.sqrt(3)
+
+def ordinal_weighted_logarithm_score(predicted, observed, eps=np.finfo('float').eps):
+    if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+        return np.asarray([np.nan])
+    correct_categories = np.where(observed == 1)
+
+    observed = np.abs(observed - eps )
+    predicted = np.abs(predicted - eps)
+
+    ccs = np.argmax(observed, axis=-1)
+    clim_base_rate = np.nanmean(observed, axis=0).reshape(1, -1)
+    ls = 1 - np.log(predicted) / np.log(clim_base_rate)
+    lss = ls[correct_categories].reshape(-1,1)
+    ndxs = np.ones(observed.shape, dtype=float) * np.arange(observed.shape[-1]).reshape(1, -1)
+    dists = np.abs(ndxs - ccs.reshape(-1,1))
+    penalties = np.nanmean(dists * ls, axis=-1).reshape(-1,1)
+    return np.nanmean(lss - penalties)
+
+def logarithm_skill_score(predicted, observed, eps=np.finfo('float').eps):
+    if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+        return np.asarray([np.nan])
+    correct_categories = np.where(observed == 1)
+    observed = np.abs(observed - eps )
+    predicted = np.abs(predicted - eps)
+    ccs = np.argmax(observed, axis=-1)
+    clim_base_rate = np.nanmean(observed, axis=0).reshape(1, -1)
+    ls = 1 - np.log(predicted) / np.log(clim_base_rate)
+    lss = ls[correct_categories].reshape(-1,1)
+    return np.nanmean(lss)
+
 
 def generalized_roc(predicted, observed):
     samples, classes = predicted.shape
@@ -27,6 +116,8 @@ def generalized_roc(predicted, observed):
     hit_scores[hit_scores < 0.5] = 0
     hit_scores[hit_scores > 0.5] = 1
     hit_scores[hit_scores == 0.5] = 0.5
+    if pairs.shape[0] == 0:
+        return np.asarray([np.nan])
     return np.sum(hit_scores) / pairs.shape[0]
 
 
@@ -71,6 +162,15 @@ def log_likelihood(predicted, observed):
     residuals = np.squeeze(predicted - observed)
     return np.squeeze(-(n * 1/2) * (1 + np.log(2 * np.pi)) - (n / 2) * np.log(residuals.dot(residuals) / n))
 
+def bias_ratio(predicted, observed):
+    return np.nanmean(predicted) / np.nanmean(observed)
+
+def normalized_centered_root_mean_squared_error(predicted, observed):
+    denom = np.nanmean(observed)
+    if denom == 0:
+        return np.nan
+    num = np.nanmean( (predicted - observed - np.nanmean(predicted - observed) )**2 )
+    return np.sqrt(num) / denom
 
 def akaike_information_criterion(predicted, observed):
     if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
@@ -157,6 +257,14 @@ def point_biserial_correlation(predicted, observed):
         rs.append(stats.pointbiserialr(np.squeeze(
             observed[i]), np.squeeze(predicted[i])))
     return np.asarray(rs)
+
+def generalized_brier_skill_score(predicted, observed):
+    if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+        return np.asarray([np.nan])
+    bs = np.nanmean((predicted - observed)**2, axis=0)
+    br = np.nanmean((observed.mean(axis=0).reshape(1, -1) - observed)**2, axis=0)
+    bss = 1 - (bs/br)
+    return np.nanmean(bss)
 
 
 def index_of_agreement(predicted, observed):

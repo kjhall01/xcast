@@ -74,9 +74,20 @@ def reliability_diagram(ypred, t, title=None, tercile_skill_area=True,  perfect_
     epoelm_hist[nan] = np.nan
     epoelm_rel[nan] = np.nan
 
+    worst = np.asarray([ 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0 ])
+    perf = np.asarray([0.05, 0.15, 0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95])
+    worst[nan] = np.nan
+    perf[nan] = np.nan
+
+    furthest_dist = np.sqrt(np.nansum((worst - perf)**2))
+    fcst = np.sqrt(np.nansum((epoelm_rel - perf)**2))
+    rel_score = 1 - fcst / furthest_dist
 
     if ax is None:
         ax = plt.gca()
+
+    b, t = ax.set_ylim(0, 1)
+    l, r = ax.set_xlim(0, 1)
 
     #plt.hist(epoelm_xval[:, 0], bins=11)
     if tercile_skill_area:

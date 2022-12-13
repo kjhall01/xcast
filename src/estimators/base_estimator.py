@@ -207,8 +207,6 @@ class BaseEstimator:
                     self.latitude // self.lat_chunks, 1), max(self.longitude // self.lon_chunks, 1), self.ND))
 
     def predict_proba(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True, **kwargs):
-        if 'n_out' not in kwargs.keys():
-            kwargs['n_out'] = 3
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
             X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -309,8 +307,6 @@ class BaseEstimator:
         return xr.DataArray(name='transformed', data=results, coords=coords, dims=dims, attrs=attrs)
 
     def predict(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True, **kwargs):
-        if 'n_out' not in kwargs.keys():
-            kwargs['n_out'] = 1
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
             X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -319,7 +315,13 @@ class BaseEstimator:
         assert xlat == self.latitude, 'XCast Estimators require new predictors to have the same dimensions as the training data- lat mismatch'
         assert xlon == self.longitude, 'XCast Estimators require new predictors to have the same dimensions as the training data- lon mismatch'
         assert xfeat == self.features, 'XCast Estimators require new predictors to have the same dimensions as the training data- feat mismatch'
-
+        if 'n_out' not in kwargs.keys():
+            if 'quantile' in kwargs.keys() and kwargs['quantile'] is not None:
+                if not isinstance(kwargs['quantile'], Iterable):
+                    kwargs['quantile'] = [kwargs['quantile']]
+                kwargs['n_out'] = len(kwargs['quantile'])
+            else:
+                kwargs['n_out'] = 1
         if rechunk:
             X1 = X.chunk({x_lat_dim: max(xlat // self.lat_chunks, 1), x_lon_dim: max(xlon //
                          self.lon_chunks, 1)}).transpose(x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)

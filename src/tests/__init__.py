@@ -1,1 +1,1 @@
-from .data import load_sample_data
+from .test_data import * 

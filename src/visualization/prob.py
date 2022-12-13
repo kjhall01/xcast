@@ -10,6 +10,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 import cartopy.io.shapereader as shpreader
 import cartopy
+import matplotlib.cm as cm
 from cartopy.feature import NaturalEarthFeature
 from ..core.utilities import *
 
@@ -51,7 +52,38 @@ def lighten_color(color,amount):
     return colorsys.hls_to_rgb(c[0], 1 - amount * (1 - c[1]), c[2])
 
 
-def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None):
+bounds = [40,45,50,55,60,65,70,75,80]
+nbounds = [40,45,50]
+
+bn_cmap = plt.get_cmap('BrBG_r')  # define the colormap
+bn_cmaplist = [bn_cmap(i) for i in range(bn_cmap.N)][bn_cmap.N//2:]
+
+# create the new map
+bn_cmap = mpl.colors.LinearSegmentedColormap.from_list('BNCMAP', bn_cmaplist, bn_cmap.N//2)
+cm.register_cmap( cmap=bn_cmap, name=None, override_builtin=True)
+# define the bins and normalize
+bn_norm = mpl.colors.BoundaryNorm(bounds, bn_cmap.N//2)
+
+an_cmap = plt.get_cmap('BrBG')  # define the colormap
+an_cmaplist = [an_cmap(i) for i in range(an_cmap.N)][an_cmap.N//2:]
+
+# create the new map
+an_cmap = mpl.colors.LinearSegmentedColormap.from_list('ANCMAP', an_cmaplist, an_cmap.N//2)
+cm.register_cmap( cmap=an_cmap, name=None, override_builtin=True)
+# define the bins and normalize
+an_norm = mpl.colors.BoundaryNorm(bounds, an_cmap.N//2)
+
+
+nn_cmap = plt.get_cmap('Greys')  # define the colormap
+nn_cmaplist = [nn_cmap(i) for i in range(nn_cmap.N)][:nn_cmap.N//2+2]
+
+# create the new map
+nn_cmap = mpl.colors.LinearSegmentedColormap.from_list('NNCMAP', nn_cmaplist, nn_cmap.N//2)
+cm.register_cmap( cmap=nn_cmap, name=None, override_builtin=True)
+# define the bins and normalize
+nn_norm = mpl.colors.BoundaryNorm(nbounds, nn_cmap.N//2)
+
+def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None, drymask=None):
     x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords_view_prob(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
     assert x_sample_dim is None, 'View probabilistic requires you to select across sample dim to eliminate that dimension first'
     #check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
@@ -60,44 +92,13 @@ def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_f
     assert x_feature_dim in X.coords.keys(), 'XCast requires a dataset_feature_dim to be a coordinate on X'
     check_type(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-    bounds = [40,45,50,55,60,65,70,75,80]
-    nbounds = [40,45,50]
-
-    bn_cmap = plt.get_cmap('BrBG_r')  # define the colormap
-    bn_cmaplist = [bn_cmap(i) for i in range(bn_cmap.N)][bn_cmap.N//2:]
-
-    # create the new map
-    bn_cmap = mpl.colors.LinearSegmentedColormap.from_list('BNCMAP', bn_cmaplist, bn_cmap.N//2)
-    mpl.colormaps.register(bn_cmap)
-    # define the bins and normalize
-    bn_norm = mpl.colors.BoundaryNorm(bounds, bn_cmap.N//2)
-
-    an_cmap = plt.get_cmap('BrBG')  # define the colormap
-    an_cmaplist = [an_cmap(i) for i in range(an_cmap.N)][an_cmap.N//2:]
-
-    # create the new map
-    an_cmap = mpl.colors.LinearSegmentedColormap.from_list('ANCMAP', an_cmaplist, an_cmap.N//2)
-    mpl.colormaps.register(an_cmap)
-    # define the bins and normalize
-    an_norm = mpl.colors.BoundaryNorm(bounds, an_cmap.N//2)
-
-
-    nn_cmap = plt.get_cmap('Greys')  # define the colormap
-    nn_cmaplist = [nn_cmap(i) for i in range(nn_cmap.N)][:nn_cmap.N//2+2]
-
-    # create the new map
-    nn_cmap = mpl.colors.LinearSegmentedColormap.from_list('NNCMAP', nn_cmaplist, nn_cmap.N//2)
-    mpl.colormaps.register(nn_cmap)
-    # define the bins and normalize
-    nn_norm = mpl.colors.BoundaryNorm(nbounds, nn_cmap.N//2)
-
-
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 9), subplot_kw={'projection': ccrs.PlateCarree()})
     bounds = [40,45,50,55,60,65,70,75,80]
     nbounds = [40,45,50]
     mask = X.mean(x_feature_dim)
     mask = mask.where(np.isnan(mask), other=1)
     argmax = X.fillna(-999).argmax(x_feature_dim) * mask
+
 
     flat = mask.where(argmax != 2, other=X.isel(M=2))
     flat = flat.where(argmax != 1, other=X.isel(M=1))
@@ -107,6 +108,13 @@ def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_f
     CS3 = flat.where(argmax == 2, other=np.nan).plot(ax=ax, add_colorbar=False, vmin=0.35, vmax=0.85, cmap=plt.get_cmap('ANCMAP', 10))
     CS1 = flat.where(argmax == 0, other=np.nan).plot(ax=ax, add_colorbar=False, vmin=0.35, vmax=0.85, cmap=plt.get_cmap('BNCMAP', 10))
     CS2 = flat.where(argmax == 1, other=np.nan).plot(ax=ax, add_colorbar=False, vmin=0.35, vmax=0.55, cmap=plt.get_cmap('NNCMAP', 4))
+
+    if drymask is not None:
+        dmcmap = plt.get_cmap('RdBu').copy()
+        dmcmap.set_under('lavenderblush')
+        drymask = xr.ones_like(drymask).where(np.isnan(drymask), other=np.nan)
+        drymask.plot(ax=ax, add_colorbar=False, vmin=22, vmax=23, cmap=dmcmap)
+
 
     axins_f_bottom = inset_axes(ax, width="35%", height="5%", loc='lower left', bbox_to_anchor=(-0, -0.15, 1, 1), bbox_transform=ax.transAxes,borderpad=0.1 )
     axins2_bottom = inset_axes(ax, width="20%",  height="5%", loc='lower center', bbox_to_anchor=(-0.0, -0.15, 1, 1), bbox_transform=ax.transAxes, borderpad=0.1 )

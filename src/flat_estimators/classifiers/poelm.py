@@ -12,7 +12,7 @@ from scipy.spatial.distance import cdist
 class POELMClassifier:
     """Probabilistic Output Extreme Learning Machine"""
 
-    def __init__(self, activation='sigm', hidden_layer_size=5, initialization='random', pruning='none', pca=-999, c=1, preprocessing='none', dropconnect_pr=-1.0, dropout_pr=-1.0, verbose=False, threshold=0.5):
+    def __init__(self, activation='sigm', hidden_layer_size=5, initialization='random', pruning='none', pca=-999, c=1, eps=np.finfo('float').eps, preprocessing='none', dropconnect_pr=-1.0, dropout_pr=-1.0, verbose=False, threshold=0.5):
         assert type(hidden_layer_size) == int and hidden_layer_size > 0, 'Invalid hidden_layer_size {}'.format(
             hidden_layer_size)
         assert type(initialization) == str and initialization in [
@@ -29,7 +29,7 @@ class POELMClassifier:
             dropout_pr)
         assert activation in ['sigm', 'relu', 'lin', 'tanh', 'rbf_l1', 'rbf_l2',
                               'rbf_linf'], 'invalid activation function for poelm- must be one of {}'.format(['sigm', 'relu', 'lin', 'tanh', 'rbf_l1', 'rbf_l2', 'rbf_linf'])
-
+        self.eps = eps
         self.activation = activation
         self.threshold = threshold
         self.initialization = initialization
@@ -52,8 +52,8 @@ class POELMClassifier:
         # if np.mean(np.sum(y, axis=1)) == 1 else False #### Fore now hard-code to true
         self.using_multiclass = True
 
-        y[y < 0.5] = 0.0001
-        y[y > 0.5] = 0.9999
+        y[y < 0.5] = self.eps
+        y[y > 0.5] = 1 - self.eps
 
         # first, take care of preprocessing
         if self.preprocessing == 'std':

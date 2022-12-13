@@ -5,6 +5,19 @@ from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, br
 from .base_verification import *
 from .flat_metrics import *
 
+
+@metric
+def GREL(predicted, observed):
+	return grel(predicted, observed)
+
+@metric
+def OWLS(predicted, observed):
+	return ordinal_weighted_logarithm_score(predicted, observed)
+
+@metric
+def LSS(predicted, observed):
+	return logarithm_skill_score(predicted, observed)
+
 @metric
 def BrierScoreLoss(predicted, observed):
 	return brier_score_loss(predicted, observed)
@@ -20,6 +33,18 @@ def RankProbabilityScore(predicted, observed):
 @metric
 def ContinuousRankProbabilityScore(predicted, observed):
 	return continuous_rank_probability_score(predicted, observed)
+
+@metric
+def BiasRatio(predicted, observed):
+	return bias_ratio(predicted, observed)
+
+@metric
+def GeneralizedBSS(predicted, observed):
+	return generalized_brier_skill_score(predicted, observed)
+
+@metric
+def NCRMSE(predicted, observed):
+	return normalized_centered_root_mean_squared_error(predicted, observed)
 
 @metric
 def Ignorance(predicted, observed):
@@ -59,6 +84,8 @@ def RocAuc(predicted, observed):
 		return np.asarray([np.nan])
 	ret =  roc_auc_score(predicted, observed, average=None, multi_class='ovr', labels=[0,1,2])
 	return ret
+
+
 
 
 @metric

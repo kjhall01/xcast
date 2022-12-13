@@ -10,7 +10,7 @@ setup(
     author="Kyle Hall",
     author_email="kjhall@iri.columbia.edu",
     description=(
-        "High Performance Gridpoint-Wise Machine Learning for the Earth Sciences"),
+        "Python Climate Forecasting Toolkit"),
     license="MIT",
     keywords="Machine-Learning High-Performance AI Climate Forecasting ",
     url="https://github.com/kjhall01/xcast/",
@@ -24,7 +24,9 @@ setup(
         'xcast.preprocessing',
         'xcast.validation',
         'xcast.verification',
-        'xcast.tests'],
+        'xcast.visualization',
+        'xcast.tests'
+        'xcast.tests.test_data'],
     package_data={},
     package_dir={
         'xcast': '{}/../src'.format(os.getenv('RECIPE_DIR')),
@@ -36,7 +38,10 @@ setup(
         'xcast.preprocessing': '{}/../src/preprocessing'.format(os.getenv('RECIPE_DIR')),
         'xcast.validation': '{}/../src/validation'.format(os.getenv('RECIPE_DIR')),
         'xcast.verification': '{}/../src/verification'.format(os.getenv('RECIPE_DIR')),
-        'xcast.tests': '{}/../src/tests/'.format(os.getenv('RECIPE_DIR'))},
+        'xcast.visualization': '{}/../src/visualization'.format(os.getenv('RECIPE_DIR')),
+        'xcast.tests': '{}/../src/tests/'.format(os.getenv('RECIPE_DIR')),
+        'xcast.tests.test_data': '{}/../src/tests/test_data'.format(os.getenv('RECIPE_DIR'))
+        },
     python_requires=">=3.4",
     long_description=long_description,
     long_description_content_type='text/markdown',

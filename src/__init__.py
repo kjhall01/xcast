@@ -5,11 +5,12 @@ from .validation import *
 from .verification import *
 from .estimators import *
 from .visualization import *
+from .tests import test_data as exp
 
 import warnings
 
 
-__version__ = "0.5.8"
+__version__ = "0.6.0"
 __licence__ = "MIT"
 __author__ = "KYLE HALL (hallkjc01@gmail.com)"
 
