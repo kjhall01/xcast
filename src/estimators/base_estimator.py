@@ -126,7 +126,7 @@ class BaseEstimator:
 
     def __init__(self, client=None, ND=1, lat_chunks=1, lon_chunks=1, verbose=False, **kwargs):
         self.model_type = POELMClassifier
-        self.models, self.ND = None, ND
+        self.models_, self.ND = None, ND
         self.client, self.kwargs = client, kwargs
         self.verbose = verbose
         self.lat_chunks, self.lon_chunks = lat_chunks, lon_chunks
@@ -173,13 +173,13 @@ class BaseEstimator:
 
             if self.verbose:
                 with dd.ProgressBar():
-                    self.models = da.blockwise(apply_fit_to_block, 'ijn', x_data, 'ijkl', y_data, 'ijkm', new_axes={
+                    self.models_ = da.blockwise(apply_fit_to_block, 'ijn', x_data, 'ijkl', y_data, 'ijkm', new_axes={
                         'n': self.ND}, mme=self.model_type, ND=self.ND, concatenate=True, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).persist()
             else:
-                self.models = da.blockwise(apply_fit_to_block, 'ijn', x_data, 'ijkl', y_data, 'ijkm', new_axes={
+                self.models_ = da.blockwise(apply_fit_to_block, 'ijn', x_data, 'ijkl', y_data, 'ijkm', new_axes={
                     'n': self.ND}, mme=self.model_type, ND=self.ND, concatenate=True, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).persist()
-            if type(self.models) == np.ndarray:
-                self.models = da.from_array(self.models, chunks=(max(
+            if type(self.models_) == np.ndarray:
+                self.models_ = da.from_array(self.models_, chunks=(max(
                     self.latitude // self.lat_chunks, 1), max(self.longitude // self.lon_chunks, 1), self.ND))
         else:
             x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
@@ -196,15 +196,16 @@ class BaseEstimator:
 
             if self.verbose:
                 with dd.ProgressBar():
-                    self.models = da.blockwise(apply_fit_x_to_block, 'ijn', x_data, 'ijkl', new_axes={
+                    self.models_ = da.blockwise(apply_fit_x_to_block, 'ijn', x_data, 'ijkl', new_axes={
                         'n': self.ND}, mme=self.model_type, concatenate=True, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).persist()
             else:
-                self.models = da.blockwise(apply_fit_x_to_block, 'ijn', x_data, 'ijkl',  new_axes={
+                self.models_ = da.blockwise(apply_fit_x_to_block, 'ijn', x_data, 'ijkl',  new_axes={
                     'n': self.ND}, mme=self.model_type, concatenate=True, ND=self.ND, kwargs=self.kwargs, meta=np.array((), dtype=np.dtype('O'))).persist()
 
-            if type(self.models) == np.ndarray:
-                self.models = da.from_array(self.models, chunks=(max(
+            if type(self.models_) == np.ndarray:
+                self.models_ = da.from_array(self.models_, chunks=(max(
                     self.latitude // self.lat_chunks, 1), max(self.longitude // self.lon_chunks, 1), self.ND))
+        self.models = xr.DataArray(name='models', data=self.models_, dims=[x_lat_dim, x_lon_dim, 'ND'], coords={x_lat_dim: X1.coords[x_lat_dim].values, x_lon_dim: X1.coords[x_lon_dim].values, 'ND': [iii+1 for iii in range(self.ND)]})
 
     def predict_proba(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True, **kwargs):
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
@@ -222,6 +223,10 @@ class BaseEstimator:
                 if not isinstance(kwargs['quantile'], Iterable):
                     kwargs['quantile'] = [kwargs['quantile']]
                 kwargs['n_out'] = len(kwargs['quantile'])
+            elif 'threshold' in kwargs.keys() and kwargs['threshold'] is not None:
+                if not isinstance(kwargs['threshold'], Iterable):
+                    kwargs['threshold'] = [kwargs['threshold']]
+                kwargs['n_out'] = len(kwargs['threshold'])
             else:
                 kwargs['n_out'] = 3
 
@@ -238,17 +243,23 @@ class BaseEstimator:
         x_data = X1.data
         if self.verbose:
             with dd.ProgressBar():
-                results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+                results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models_, 'ijn', new_axes={
                     'm': kwargs['n_out']},  dtype=float, concatenate=True, kwargs=kwargs).persist()
         else:
-            results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+            results = da.blockwise(apply_predict_proba_to_block, 'ijnkm', x_data, 'ijkl', self.models_, 'ijn', new_axes={
                     'm': kwargs['n_out']},  dtype=float, concatenate=True, kwargs=kwargs).persist()
 
+
+        feature_coords = [i for i in range(kwargs['n_out'])]
+        if 'quantile' in kwargs.keys():
+            feature_coords = kwargs['quantile']
+        if 'threshold' in kwargs.keys():
+            feature_coords = kwargs['threshold']
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,
             x_lon_dim: X1.coords[x_lon_dim].values,
             x_sample_dim: X1.coords[x_sample_dim].values,
-            x_feature_dim: [i for i in range(kwargs['n_out'])],
+            x_feature_dim:  feature_coords,
             'ND': [i for i in range(self.ND)]
         }
 
@@ -286,10 +297,10 @@ class BaseEstimator:
         x_data = X1.data
         if self.verbose:
             with dd.ProgressBar():
-                results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+                results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models_, 'ijn', new_axes={
                                        'm': kwargs['n_out']}, dtype=float, concatenate=True, kwargs=kwargs).persist()
         else:
-            results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+            results = da.blockwise(apply_transform_to_block, 'ijnkm', x_data, 'ijkl', self.models_, 'ijn', new_axes={
                                    'm': kwargs['n_out']}, dtype=float, concatenate=True, kwargs=kwargs).persist()
 
         coords = {
@@ -320,6 +331,10 @@ class BaseEstimator:
                 if not isinstance(kwargs['quantile'], Iterable):
                     kwargs['quantile'] = [kwargs['quantile']]
                 kwargs['n_out'] = len(kwargs['quantile'])
+            elif 'threshold' in kwargs.keys() and kwargs['threshold'] is not None:
+                if not isinstance(kwargs['threshold'], Iterable):
+                    kwargs['threshold'] = [kwargs['threshold']]
+                kwargs['n_out'] = len(kwargs['threshold'])
             else:
                 kwargs['n_out'] = 1
         if rechunk:
@@ -335,17 +350,21 @@ class BaseEstimator:
         x_data = X1.data
         if self.verbose:
             with dd.ProgressBar():
-                results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+                results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models_, 'ijn', new_axes={
                                        'm': kwargs['n_out']}, dtype=float, concatenate=True, kwargs=kwargs).persist()
         else:
-            results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models, 'ijn', new_axes={
+            results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models_, 'ijn', new_axes={
                                    'm': kwargs['n_out']}, dtype=float, concatenate=True, kwargs=kwargs).persist()
-
+        feature_coords = [i for i in range(kwargs['n_out'])]
+        if 'quantile' in kwargs.keys():
+            feature_coords = kwargs['quantile']
+        if 'threshold' in kwargs.keys():
+            feature_coords = kwargs['threshold']
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,
             x_lon_dim: X1.coords[x_lon_dim].values,
             x_sample_dim: X1.coords[x_sample_dim].values,
-            x_feature_dim: [i for i in range(kwargs['n_out'])],
+            x_feature_dim: feature_coords,
             'ND': [i for i in range(self.ND)]
         }
 

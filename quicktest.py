@@ -4,59 +4,77 @@ import matplotlib.pyplot as plt
 import cptcore as cc
 import cartopy.crs as ccrs
 import numpy as np
-import einstein_epoelm as ee
-
+import numpy as np
+from sklearn.model_selection import KFold
+import datetime as dt
+import itertools
 
 
 X, Y = cc.load_southasia_nmme()
 Y = Y.expand_dims({'M':[0]})
 X = X.expand_dims({'M':[0]})
-
 ohc = xc.RankedTerciles()
 ohc.fit(Y)
 T = ohc.transform(Y)
 
-#xc.view_taylor(X, Y)
-#plt.show()
+y = Y.sel(X=75, Y=10, method='nearest').values.T
+x = X.sel(X=75, Y=10, method='nearest').values.T
 
-#print(Y)
-#print()
-#gamm = xc.EmpiricalTransformer()
-#gamm.fit(Y)
+ht = {
+    'save_y': [True],
+    'standardize_y': [True],
+    'c': [ 3],
+    'hidden_layer_size': [ 5,],
+    'n_estimators': [50],
+    'activation': ['relu', ],
+    'preprocessing': ['minmax', ],
+    'encoding': [ 'nonexceedance'],
+    'quantiles': [  [0.2, 0.4, 0.6, 0.8] ]
+}
 
-#print(Y)
-#print()
-#gam_y = gamm.transform(Y)
+params, score, score2 = xc.exp.tune(x, y, verbosity=2, params=ht)
+print()
+print('best_params: ', params)
+print('best score: ', score)
+print('associated old style score: ', score2)
+#score = xc.exp.get_crpss({'save_y': True, 'quantiles': [0.2, 0.4, 0.6, 0.8] }, x, y)
 
-#gam2 = xc.EmpiricalTransformer()
-#gam2.fit(X)
-#gam_x = gam2.transform(X)
-
-#xc.view_taylor(gam_x, gam_y)
-#plt.show()
-
-#pe = xc.Pearson(gam_x, gam_y)
-#pe.plot()
-#plt.show()
 
 
 probs, preds = [], []
+quants, threshs = [], []
+pdfs = []
 i=0
 for x_train, y_train, x_test, y_test in xc.CrossValidator(X, Y):
     print(i)
     i += 1
-    elm = ee.rEPOELM()
+    elm = xc.exp.rEPOELM(**params)
     elm.fit(x_train, y_train)
     pd = elm.predict(x_test)
+    pdf = elm.predict(x_test, quantile=[0.1, 0.2, 0.5, 0.8, 0.9])
     pr = elm.predict_proba(x_test)
+    pq = elm.predict_proba(x_test, quantile=0.2)#[0.2, 0.8])
+    pt = elm.predict_proba(x_test, threshold=500)#[500, 900, 1100, 2000])
     probs.append(pr)
     preds.append(pd)
+    quants.append(pq)
+    threshs.append(pt)
+    pdfs.append(pdf)
 
 probs = xr.concat(probs, 'T').mean('ND')
-preds = xr.concat(preds, 'T').mean('ND')
+pdfs = xr.concat(pdfs, 'T').mean('ND')
 
-probs = xc.gaussian_smooth(probs, kernel=9)
-preds = xc.gaussian_smooth(preds, kernel=9)
+preds = xr.concat(preds, 'T').mean('ND')
+quants = xr.concat(quants, 'T').mean('ND')
+threshs = xr.concat(threshs, 'T').mean('ND')
+
+probs = xc.gaussian_smooth(probs, kernel=3)
+preds = xc.gaussian_smooth(preds, kernel=3)
+
+Y.sel(X=75, Y=10, method='nearest').plot.line(x='T', label='obs')
+pdfs.sel(X=75, Y=10, method='nearest').plot.line(x='T', hue='M')
+plt.legend()
+plt.show()
 
 pearson = xc.Pearson(preds, Y).mean('SKILLDIM').mean('M')
 ioa = xc.IndexOfAgreement(preds, Y).mean('SKILLDIM').mean('M')

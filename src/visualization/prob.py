@@ -60,7 +60,8 @@ bn_cmaplist = [bn_cmap(i) for i in range(bn_cmap.N)][bn_cmap.N//2:]
 
 # create the new map
 bn_cmap = mpl.colors.LinearSegmentedColormap.from_list('BNCMAP', bn_cmaplist, bn_cmap.N//2)
-cm.register_cmap( cmap=bn_cmap, name=None, override_builtin=True)
+if 'BNCMAP' not in plt.colormaps():
+    cm.register_cmap( cmap=bn_cmap, name=None, override_builtin=True)
 # define the bins and normalize
 bn_norm = mpl.colors.BoundaryNorm(bounds, bn_cmap.N//2)
 
@@ -69,7 +70,8 @@ an_cmaplist = [an_cmap(i) for i in range(an_cmap.N)][an_cmap.N//2:]
 
 # create the new map
 an_cmap = mpl.colors.LinearSegmentedColormap.from_list('ANCMAP', an_cmaplist, an_cmap.N//2)
-cm.register_cmap( cmap=an_cmap, name=None, override_builtin=True)
+if 'ANCMAP' not in plt.colormaps():
+    cm.register_cmap( cmap=an_cmap, name=None, override_builtin=True)
 # define the bins and normalize
 an_norm = mpl.colors.BoundaryNorm(bounds, an_cmap.N//2)
 
@@ -79,7 +81,8 @@ nn_cmaplist = [nn_cmap(i) for i in range(nn_cmap.N)][:nn_cmap.N//2+2]
 
 # create the new map
 nn_cmap = mpl.colors.LinearSegmentedColormap.from_list('NNCMAP', nn_cmaplist, nn_cmap.N//2)
-cm.register_cmap( cmap=nn_cmap, name=None, override_builtin=True)
+if 'NNCMAP' not in plt.colormaps():
+    cm.register_cmap( cmap=nn_cmap, name=None, override_builtin=True)
 # define the bins and normalize
 nn_norm = mpl.colors.BoundaryNorm(nbounds, nn_cmap.N//2)
 

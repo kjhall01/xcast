@@ -6,7 +6,7 @@ with open('{}/../README.md'.format(os.getenv('RECIPE_DIR')), 'r', encoding='utf-
 
 setup(
     name="xcast",
-    version="0.6.0",
+    version="0.6.1",
     author="Kyle Hall",
     author_email="kjhall@iri.columbia.edu",
     description=(
@@ -25,8 +25,8 @@ setup(
         'xcast.validation',
         'xcast.verification',
         'xcast.visualization',
-        'xcast.tests'
-        'xcast.tests.test_data'],
+        'xcast.tests',
+        'xcast.tests.testdata'],
     package_data={},
     package_dir={
         'xcast': '{}/../src'.format(os.getenv('RECIPE_DIR')),
@@ -39,8 +39,8 @@ setup(
         'xcast.validation': '{}/../src/validation'.format(os.getenv('RECIPE_DIR')),
         'xcast.verification': '{}/../src/verification'.format(os.getenv('RECIPE_DIR')),
         'xcast.visualization': '{}/../src/visualization'.format(os.getenv('RECIPE_DIR')),
-        'xcast.tests': '{}/../src/tests/'.format(os.getenv('RECIPE_DIR')),
-        'xcast.tests.test_data': '{}/../src/tests/test_data'.format(os.getenv('RECIPE_DIR'))
+        'xcast.tests': '{}/../src/tests'.format(os.getenv('RECIPE_DIR')),
+        'xcast.tests.testdata': '{}/../src/tests/testdata'.format(os.getenv('RECIPE_DIR'))
         },
     python_requires=">=3.4",
     long_description=long_description,

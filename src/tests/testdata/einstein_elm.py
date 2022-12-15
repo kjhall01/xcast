@@ -6,7 +6,7 @@ import scipy.linalg.lapack as la
 class ELM:
     """Ensemble Extreme Learning Machine using Einstein Notation"""
 
-    def __init__(self, activation='lin', hidden_layer_size=5, c=3, preprocessing='minmax', n_estimators=30, eps=np.finfo('float').eps, activations=None):
+    def __init__(self, activation='relu', hidden_layer_size=5, c=-10, preprocessing='minmax', n_estimators=300, eps=np.finfo('float').eps, activations=None):
         assert isinstance(hidden_layer_size, int) and hidden_layer_size > 0, 'Invalid hidden_layer_size {}'.format(hidden_layer_size)
         assert type(c) is int, 'Invalid C {}'.format(c)
         assert type(preprocessing) is str and preprocessing in ['std', 'minmax', 'none'], 'Invalid preprocessing {}'.format(preprocessing)
