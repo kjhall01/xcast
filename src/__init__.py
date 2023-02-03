@@ -10,7 +10,7 @@ from .tests import testdata as exp
 import warnings
 
 
-__version__ = "0.6.1"
+__version__ = "0.6.5"
 __licence__ = "MIT"
 __author__ = "KYLE HALL (hallkjc01@gmail.com)"
 

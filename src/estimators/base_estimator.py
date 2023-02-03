@@ -251,9 +251,9 @@ class BaseEstimator:
 
 
         feature_coords = [i for i in range(kwargs['n_out'])]
-        if 'quantile' in kwargs.keys():
+        if 'quantile' in kwargs.keys() and kwargs['quantile'] is not None:
             feature_coords = kwargs['quantile']
-        if 'threshold' in kwargs.keys():
+        if 'threshold' in kwargs.keys() and kwargs['quantile'] is not None:
             feature_coords = kwargs['threshold']
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,
@@ -356,9 +356,9 @@ class BaseEstimator:
             results = da.blockwise(apply_predict_to_block, 'ijnkm', x_data, 'ijkl', self.models_, 'ijn', new_axes={
                                    'm': kwargs['n_out']}, dtype=float, concatenate=True, kwargs=kwargs).persist()
         feature_coords = [i for i in range(kwargs['n_out'])]
-        if 'quantile' in kwargs.keys():
+        if 'quantile' in kwargs.keys() and kwargs['quantile'] is not None:
             feature_coords = kwargs['quantile']
-        if 'threshold' in kwargs.keys():
+        if 'threshold' in kwargs.keys() and kwargs['quantile'] is not None:
             feature_coords = kwargs['threshold']
         coords = {
             x_lat_dim: X1.coords[x_lat_dim].values,

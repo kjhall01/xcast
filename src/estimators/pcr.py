@@ -490,7 +490,6 @@ class PCR:
             eof_scores = np.stack(eof_scores, axis=0)
             eof_scores = xr.DataArray(name='eof_scores', data=eof_scores, dims=[x_feature_dim, self.y_sample_dim, 'mode'], coords={'mode': [i+1 for i in range(self.eofs[0].eof_scores.shape[1])], self.y_sample_dim: X.coords[x_sample_dim].values,  x_feature_dim: getattr(X, x_feature_dim)}, attrs={'generated_by': 'XCast CCA Regressor X EOF Scores'})
             new_x = xr.concat([ xr.ones_like(self.ymask) for i in range(x_data.shape[0]) ], self.y_sample_dim).assign_coords({self.y_sample_dim: X.coords[x_sample_dim].values}).swap_dims(**{ self.y_lat_dim: x_lat_dim, self.y_lon_dim: x_lon_dim})
-
         new_x = new_x * eof_scores
         if x_feature_dim in new_x.dims and new_x.shape[list(new_x.dims).index(x_feature_dim)] > 1:
             new_x = new_x.stack(F=(x_feature_dim, 'mode'))
