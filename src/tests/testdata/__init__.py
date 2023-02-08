@@ -7,3 +7,4 @@ from .hyperparams import tune, get_crpss, get_rmse
 from .ests import rEinsteinLearningMachine, rQuantileRandomForest, rEPOELM, rPOELM
 from .pcelm import PCELM
 from .pcpoelm import PCPOELM
+from .rolling import RollingOneHotEncoder, RollingMinMax

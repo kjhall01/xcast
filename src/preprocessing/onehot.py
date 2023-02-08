@@ -36,7 +36,7 @@ def quantile(X, threshold, method='midpoint', x_lat_dim=None, x_lon_dim=None, x_
     return xr.DataArray(data=results, coords=coords, dims=dims, attrs=attrs)
 
 
-class RankedTerciles:
+class OneHotEncoder:
     def __init__(self, low_thresh=None, high_thresh=None, explicit=False):
         self.low_thresh, self.high_thresh = low_thresh, high_thresh
         self.explicit = explicit

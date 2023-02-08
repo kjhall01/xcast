@@ -2,7 +2,7 @@ from ..flat_estimators.classifiers import *
 from sklearn.neural_network import MLPClassifier
 from sklearn.ensemble import RandomForestClassifier
 from .base_estimator import BaseEstimator
-from ..preprocessing.onehot import RankedTerciles, quantile
+from ..preprocessing.onehot import OneHotEncoder, quantile
 from ..preprocessing.spatial import regrid
 from ..core.utilities import guess_coords, check_all
 import xarray as xr
@@ -56,7 +56,7 @@ class cProbabilityAnomalyCorrelation:
         self.low_threshold = quantile(X1, (1/3.0), method=method,  x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim='member', x_feature_dim='MTemp').mean('MTemp')
 
         probs = self._predict_proba(X, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
-        ohc = RankedTerciles()
+        ohc = OneHotEncoder()
         ohc.fit(Y, x_lat_dim=y_lat_dim, x_lon_dim=y_lon_dim, x_sample_dim=y_sample_dim, x_feature_dim=y_feature_dim)
         T = ohc.transform(Y, x_lat_dim=y_lat_dim, x_lon_dim=y_lon_dim, x_sample_dim=y_sample_dim, x_feature_dim=y_feature_dim)
 

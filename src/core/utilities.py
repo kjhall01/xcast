@@ -107,32 +107,71 @@ def guess_coords2(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_featur
 	return ret['lat'], ret['lon'], ret['samp'], ret['feat']
 
 def guess_coords_view_prob(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
-	assert type(X) == xr.DataArray, 'X must be a data array'
+	dims = [x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim]
+	dims = [dim for dim in dims if dim is not None]
+	dims.extend(list(X.dims))
+	dims = list(set(dims))
 	common_x = ['LONGITUDE', 'LONG', 'X', 'LON']
 	common_y = ['LATITUDE', 'LAT', 'LATI', 'Y']
-	common_t = ['T', 'S', 'TIME', 'SAMPLES', 'SAMPLE', 'INITIALIZATION', 'INIT', "TARGET"]
-	common_m = ['M', 'FEATURES', 'F', 'REALIZATION', 'MEMBER', 'Z', 'C', 'CAT']
+	common_t = ['T', 'S', 'TIME', 'SAMPLES', 'SAMPLE', 'INITIALIZATION', 'INIT','D', 'DATE', "TARGET", 'YEAR', 'I', 'N']
+	common_m = ['M', 'MODE', 'FEATURES', 'F', 'REALIZATION', 'MEMBER', 'Z', 'C', 'CAT', 'NUMBER', 'V', 'VARIABLE', 'VAR', 'P', 'LEVEL']
 	ret = {'lat': x_lat_dim, 'lon': x_lon_dim, 'samp': x_sample_dim, 'feat': x_feature_dim}
-	for dim in X.dims:
+	while len(dims) > 0:
+		dim = dims.pop(0)
+		assigned = False
+
 		for x in common_x:
-			if x in dim.upper() and ret['lon'] is None:
+			if x==dim.upper() and ret['lon'] is None and assigned is False:
 				ret['lon'] = dim
+				assigned=True
 		for y in common_y:
-			if y in dim.upper() and ret['lat'] is None:
+			if y == dim.upper() and ret['lat'] is None and assigned is False:
 				ret['lat'] = dim
+				assigned=True
 		for t in common_t:
-			if t in dim.upper() and ret['samp'] is None:
+			if t==dim.upper() and ret['samp'] is None and assigned is False:
 				ret['samp'] = dim
+				assigned=True
 		for m in common_m:
-			if m in dim.upper() and ret['feat'] is None:
+			if m==dim.upper()  and ret['feat'] is None and assigned is False:
 				ret['feat'] = dim
-	#assert None not in ret.values(), 'Could not detect one or more dimensions: \n  LATITUDE: {lat}\n  LONGITUDE: {lon}\n  SAMPLE: {samp}\n  FEATURE: {feat}\n'.format(**ret)
-	vals = []
-	for val in ret.values():
-		if val not in vals:
-			vals.append(val)
-	#assert len(vals) == 4, 'Detection Faild - Duplicated Coordinate: \n  LATITUDE: {lat}\n  LONGITUDE: {lon}\n  SAMPLE: {samp}\n  FEATURE: {feat}\n'.format(**ret)
+				assigned=True
+
+		for x in common_x:
+			if (x in dim.upper()) and ret['lon'] is None and assigned is False:
+				ret['lon'] = dim
+				assigned=True
+		for y in common_y:
+			if (y in dim.upper() ) and ret['lat'] is None and assigned is False:
+				ret['lat'] = dim
+				assigned=True
+		for t in common_t:
+			if (t in dim.upper() ) and ret['samp'] is None and assigned is False:
+				ret['samp'] = dim
+				assigned=True
+		for m in common_m:
+			if (m in dim.upper() )  and ret['feat'] is None and assigned is False:
+				ret['feat'] = dim
+				assigned=True
+
+		for x in common_x:
+			if (x in dim.upper() or dim.upper() in x) and ret['lon'] is None and assigned is False:
+				ret['lon'] = dim
+				assigned=True
+		for y in common_y:
+			if (y in dim.upper() or dim.upper() in y) and ret['lat'] is None and assigned is False:
+				ret['lat'] = dim
+				assigned=True
+		for t in common_t:
+			if (t in dim.upper() or dim.upper() in t) and ret['samp'] is None and assigned is False:
+				ret['samp'] = dim
+				assigned=True
+		for m in common_m:
+			if (m in dim.upper() or dim.upper() in m)  and ret['feat'] is None and assigned is False:
+				ret['feat'] = dim
+				assigned=True
 	return ret['lat'], ret['lon'], ret['samp'], ret['feat']
+
 
 def to_xss(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	"""rename dims to labels required for xskillscore"""

@@ -9,25 +9,31 @@ import matplotlib.pyplot as plt
 class EPOELM:
     """Ensemble Extreme Learning Machine using Einstein Notation"""
 
-    def __init__(self, encoding='nonexceedance', activation='relu', hidden_layer_size=5, c=3, preprocessing='minmax', n_estimators=10, eps=np.finfo('float').eps, activations=None, quantiles=[0.2, 0.4, 0.6, 0.8], standardize_y=False, save_y=False):
+    def __init__(self, encoding='nonexceedance', activation='relu', hidden_layer_size=5, regularization=0, regularize_lambda=True, preprocessing='minmax', n_estimators=25, eps=np.finfo('float').eps, activations=None, quantiles=[0.2, 0.4, 0.6, 0.8], standardize_y=False, save_y=True):
         assert isinstance(hidden_layer_size, int) and hidden_layer_size > 0, 'Invalid hidden_layer_size {}'.format(hidden_layer_size)
-        assert type(c) is int, 'Invalid C {}'.format(c)
+        #assert type(c) is int, 'Invalid C {}'.format(c)
         assert type(preprocessing) is str and preprocessing in ['std', 'minmax', 'none'], 'Invalid preprocessing {}'.format(preprocessing)
         self.activation = activation
-        self.c = c
+        #self.c = c
         self.save_y = save_y
         self.quantiles=quantiles
+        self.regularize_lambda = regularize_lambda
         self.encoding=encoding
         assert encoding.lower() in ['nonexceedance', 'binary'], 'invalid encoding for epoelm - must be "nonexceedance" or "binary"'
         self.hidden_layer_size = hidden_layer_size
         self.preprocessing = preprocessing
         self.n_estimators=n_estimators
         self.eps=eps
+        regularizations = [0, 0.000976562, 0.0078125, 0.0625, 0.25, 0.5, 1, 4, 16, 256, 1028  ]
+        self.regularization = regularizations[regularization]
         self.activations = {
             'sigm': expit,
             'tanh': np.tanh,
             'relu': lambda ret: np.maximum(0, ret),
-            'lin': lambda ret: ret
+            'lin': lambda ret: ret,
+            'softplus': lambda ret: np.logaddexp(ret, 0),
+            'leaky': lambda ret: np.where(ret > 0, ret, 0.1*ret ),
+            'elu': lambda ret: np.where(ret > 0, ret, 0.1* (np.exp(ret) - 1) ),
         } if activations is None else activations
         self.standardize_y = standardize_y
         assert activation in self.activations.keys(), 'invalid activation function {}'.format(activation)
@@ -97,7 +103,9 @@ class EPOELM:
         qhth = np.stack([hqs[i, :, :].T.dot(hqs[i,:,:]) for i in range(self.n_estimators)], axis=0)
         qeye = np.zeros(qhth.shape)
         np.einsum('jii->ji', qeye)[:] = 1.0
-        qhth_plus_ic = qhth + qeye / (2**self.c)
+        if not self.regularize_lambda:
+            qeye[:, -1, -1] = 0.0
+        qhth_plus_ic = qhth + qeye * self.regularization
 
         qht_logs = np.einsum('kni,ij->knj', np.transpose(hqs, [0, 2, 1]), logs)
         self.gammas = []
@@ -114,6 +122,13 @@ class EPOELM:
                 B = np.linalg.lstsq(qhth_plus_ic[i,:,:], qht_logs[i,:,:], rcond=None)[0]
             self.gammas.append(B)
         self.gamma = np.stack(self.gammas, axis=0)
+        # enforce gamma > 0
+        self.lambdas = self.gamma[:, -1, :].mean(axis=-1)
+        self.gamma = self.gamma[self.lambdas > np.finfo(float).eps**19, :, :]
+        self.w = self.w[self.lambdas > np.finfo(float).eps**19, :, :]
+        self.b = self.b[self.lambdas > np.finfo(float).eps**19, :, :]
+        self.n_estimators = self.gamma.shape[0]
+        #self.gamma = self.gamma[]
 
     def crps(self, x, y):
         x, y = x.astype(np.float64), y.astype(np.float64)
@@ -132,7 +147,6 @@ class EPOELM:
             y = ( y - self.ymean) / self.ystd
         act = np.concatenate( [ h, np.expand_dims(qtemplate * y.squeeze(), axis=-1) ], axis=2)
         act = np.einsum('kin,knj->kij', act, self.gamma)
-
 
         ret = np.logaddexp(act, 0) -1 + np.logaddexp( -1*act, 0)
         gam = np.expand_dims(self.gamma[:, -1, :], axis=1)

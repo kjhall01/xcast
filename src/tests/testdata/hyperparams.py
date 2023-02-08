@@ -6,12 +6,14 @@ from .crpss import CRPSS, crps
 import itertools
 
 HYPERPARAMETER_TUNING = {
-    'c': [-10, -5,  -3, 3, 5, 10],
-    'hidden_layer_size': [3, 5, 10, 15, 25, 50, 100, 250],
-    'activation': ['relu', 'sigm', 'tanh', 'lin'],
+    'regularization': [0, 5, 9],
+    'regularize_lambda': [True, False],
+    'hidden_layer_size': [5, 10, 50],
+    'activation': ['relu', 'sigm', 'tanh', 'lin', 'leaky', 'elu', 'softplus'],
     'preprocessing': ['minmax', 'std', 'none'],
-    'encoding': [ 'binary', 'nonexceedance'],
-    'quantiles': [  [0.2, 0.4, 0.6, 0.8], [0.33, 0.67], [0.01, 0.5, 0.99], [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]]
+    'encoding': [ 'nonexceedance', 'binary'],
+    'quantiles': [  [0.2, 0.4, 0.6, 0.8]],
+    'standardize_y': [False, True]
 }
 
 def get_crpss(params, x, y, estimator=EPOELM):
@@ -29,8 +31,8 @@ def get_crpss(params, x, y, estimator=EPOELM):
         xval_y.append(ytest)
         epoelm = estimator(**params)
         epoelm.fit(xtrain, ytrain)
-        pred_crps.append(epoelm.crps(xtest, ytest))
-
+        acrps  = epoelm.crps(xtest, ytest)
+        pred_crps.append(acrps)
         predicted_cdfs = epoelm.predict_proba(xtest, quantile=quantiles)
         xval_predicted_cdfs.append(predicted_cdfs)
         ndx += 1
@@ -62,6 +64,7 @@ def get_rmse(params, x, y, estimator=EPOELM):
 
 def tune(x, y, params=HYPERPARAMETER_TUNING, scorer=get_crpss, verbosity=1):
     best_crpss = -9999
+    best_old_score = -9999
     i = 1
     keys = sorted([key for key in params.keys()])
     lists = [ params[key] for key in keys]
@@ -80,6 +83,8 @@ def tune(x, y, params=HYPERPARAMETER_TUNING, scorer=get_crpss, verbosity=1):
         if verbosity > 0:
             print('Progress: {}% (Best Score: {}; Associated Old-Style: {})'.format(round( i / float(total) * 100, 2), round(best_crpss, 3), round(best_old_score, 3)), end='\r')
             i += 1
+            if verbosity > 1:
+                print()
     if verbosity == 1:
         print()
     return best_params, best_crpss, best_old_score

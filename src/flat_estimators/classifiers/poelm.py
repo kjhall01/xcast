@@ -12,7 +12,7 @@ from scipy.spatial.distance import cdist
 class POELMClassifier:
     """Probabilistic Output Extreme Learning Machine"""
 
-    def __init__(self, activation='sigm', hidden_layer_size=5, initialization='random', pruning='none', pca=-999, c=1, eps=np.finfo('float').eps, preprocessing='none', dropconnect_pr=-1.0, dropout_pr=-1.0, verbose=False, threshold=0.5):
+    def __init__(self, activation='sigm', hidden_layer_sizes=5, initialization='random', pruning='none', pca=-999, c=1, eps=np.finfo('float').eps, preprocessing='none', dropconnect_pr=-1.0, dropout_pr=-1.0, verbose=False, threshold=0.5):
         assert type(hidden_layer_size) == int and hidden_layer_size > 0, 'Invalid hidden_layer_size {}'.format(
             hidden_layer_size)
         assert type(initialization) == str and initialization in [
