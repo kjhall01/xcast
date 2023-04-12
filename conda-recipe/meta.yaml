@@ -1,9 +1,8 @@
 package:
   name: xcast
-  version: "0.6.5"
+  version: "0.6.9"
 
 source:
-  #url: https://github.com/kjhall01/xcast/archive/refs/tags/v0.4.1.tar.gz
   path: ../src
 
 build:
@@ -26,24 +25,21 @@ requirements:
     - statsmodels
     - pandas
     - numba
+    - bottleneck
 
 test:
   imports:
     - xcast
     - xcast.core
     - xcast.flat_estimators
-    - xcast.flat_estimators.classifiers
-    - xcast.flat_estimators.regressors
     - xcast.estimators
     - xcast.preprocessing
     - xcast.validation
     - xcast.verification
     - xcast.visualization
-    - xcast.tests
-    - xcast.tests.testdata
 about:
   home:
   license: MIT
-  summary: "A Gridpoint-Wise Statistical and Machine Learning library for the Earth Sciences"
-  description: "High-Performance Gridpoint-Wise Machine Learning for the Earth Sciences"
+  summary: "A Python Climate Forecasting Toolkit"
+  description: "An Open-Source Python Climate Forecasting Toolkit"
   dev_url: https://github.com/kjhall01/xcast/

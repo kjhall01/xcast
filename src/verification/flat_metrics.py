@@ -2,69 +2,10 @@ import numpy as np
 from scipy import stats
 from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
 from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, brier_score_loss, confusion_matrix
-from .base_verification import *
+from .base_verification import metric
 from scipy.special import ndtr
 import itertools
 
-def reliability(ypred, t, bin_minimum_pct=0.01):
-    countnonnan = np.ones_like(ypred.squeeze())[~np.isnan(ypred.squeeze())].sum()
-    #assert len(ypred.shape) == 2 and ypred.shape[1] == 1, 'ypred must be of shape n_samples x 1'
-    ypred = ypred * 0.9999999999999
-    assert ypred.shape == t.shape, 'inconsistent shapes between ypred and t - {} vs {}'.format(ypred.shape, t.shape)
-    epoelm_rel = []
-    epoelm_hist = []
-    base_rate = np.nanmean(t)
-    uncertainty = base_rate * (1 - base_rate)
-    bin_base_rate_diffs = []
-    rel_score = []
-    for i in range(3):
-        forecasts_in_bin = ypred.squeeze()[np.where((ypred.squeeze() >= (i /3.0)) & (ypred.squeeze() < (i/3.0 +1.0/3.0)) ) ]
-        obs_in_bin = t.squeeze()[np.where((ypred.squeeze() >= (i /3.0)) & (ypred.squeeze() < (i/3.0 +1.0/3.0)) ) ]
-
-        #n = forecasts_in_bin.shape[0]
-        n = np.ones_like(ypred.squeeze())[np.where((ypred.squeeze() >= (i /3.0)) & (ypred.squeeze() < (i/3.0 +1.0/3.0)) ) ].sum()
-        m = np.ones_like(ypred.squeeze())[np.where((ypred.squeeze() >= (i /3.0)) & (ypred.squeeze() < (i/3.0 +1.0/3.0)) & (t.squeeze() == 1) )].sum()
-        epoelm_hist.append(n)
-        if n == 0:
-            reliability = np.nan
-            bin_base_rate = np.nan
-            rel=np.nan
-        else:
-            avg_forecast = np.nanmean(forecasts_in_bin)
-            bin_base_rate = np.nanmean(obs_in_bin)
-            rel = (avg_forecast - bin_base_rate)**2 * n
-            reliability = m / n
-
-        epoelm_rel.append(reliability) # / epoelm_xval.shape[0])
-        bin_base_rate_diffs.append((base_rate - bin_base_rate)**2 * n)
-        rel_score.append(rel)
-
-    reliability = np.asarray(rel_score)
-    reliability = np.nansum(reliability) / t.shape[0]
-
-    bin_base_rate_diffs = np.asarray(bin_base_rate_diffs)
-    resolution = np.nansum(bin_base_rate_diffs) / t.shape[0]
-
-    epoelm_rel = np.asarray(epoelm_rel)
-    epoelm_hist = np.asarray(epoelm_hist) / countnonnan
-    nan = np.where(epoelm_hist < bin_minimum_pct)
-
-    epoelm_hist[nan] = np.nan
-    epoelm_rel[nan] = np.nan
-
-    worst = np.asarray([ 1.0, 1.0, 0.0]) #1.0/6.0 + 0.5*np.asarray([ 1.0/6.0, 0.5, 5.0/6.0])
-    perf = np.asarray([1.0/6.0, 0.5, 5.0/6.0])
-    worst[nan] = np.nan
-    perf[nan] = np.nan
-
-    furthest_dist = np.sqrt(np.nansum((worst - perf)**2))
-    fcst = np.sqrt(np.nansum((epoelm_rel - perf)**2))
-    rel_score = fcst / furthest_dist
-    return rel_score
-
-def grel(predicted, observed):
-    relscores = np.asarray([reliability(predicted[:, i], observed[:,i]) for i in range(predicted.shape[1])])
-    return 1 - np.sqrt(np.nansum((relscores)**2 )) / np.sqrt(3)
 
 def ordinal_weighted_logarithm_score(predicted, observed, eps=np.finfo('float').eps):
     if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
@@ -96,7 +37,7 @@ def logarithm_skill_score(predicted, observed, eps=np.finfo('float').eps):
     return np.nanmean(lss)
 
 
-def generalized_roc(predicted, observed):
+def generalized_receiver_operating_characteristics_score(predicted, observed):
     samples, classes = predicted.shape
     observed_cats = np.squeeze(np.argmax(observed, axis=1))
     cat_comps = np.array(np.meshgrid(
@@ -120,39 +61,6 @@ def generalized_roc(predicted, observed):
         return np.asarray([np.nan])
     return np.sum(hit_scores) / pairs.shape[0]
 
-
-def generalized_roc_slow(predicted, observed):
-    samples, classes = predicted.shape
-    observed = np.argmax(observed, axis=1)
-    if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
-        return np.asarray([np.nan])
-    pairs = []
-    for i, j in itertools.permutations(range(samples), 2):
-        if observed[i] > observed[j]:
-            pairs.append([j, i])
-    pairs = np.asarray(pairs)
-    if len(pairs) == 0:
-        return np.asarray([1])
-    predictions1 = predicted[pairs[:, 0], :]
-    predictions2 = predicted[pairs[:, 1], :]
-    numerators = np.zeros((predictions1.shape[0], 1))
-
-    for i in range(classes-1):
-        for j in range(i+1, classes):
-            pr, ps = predictions1[:,
-                                  i].reshape(-1, 1), predictions2[:, j].reshape(-1, 1)
-            numerators += pr*ps
-
-    denominators = np.ones((predictions1.shape[0], 1))
-    for i in range(classes):
-        denominators -= predictions1[:,
-                                     i].reshape(-1, 1) * predictions2[:, i].reshape(-1, 1)
-
-    hit_scores = numerators.astype(float) / denominators.astype(float)
-    hit_scores[hit_scores < 0.5] = 0
-    hit_scores[hit_scores > 0.5] = 1
-    hit_scores[hit_scores == 0.5] = 0.5
-    return np.squeeze(np.sum(hit_scores) / float(pairs.shape[0]))
 
 
 def log_likelihood(predicted, observed):
@@ -190,15 +98,6 @@ def rank_probability_score(predicted, observed):
     if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
         return np.asarray([np.nan])
     return np.squeeze(np.mean(np.sum((observed-predicted)**2, axis=-1), axis=0))
-
-
-def continuous_rank_probability_score(predicted, observed):
-    if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
-        return np.asarray([np.nan])
-    observed = np.cumsum(observed, axis=1)
-    predicted = np.cumsum(predicted, axis=1)
-    return np.squeeze(np.nanmean(np.sum((predicted - observed)**2, axis=1), axis=0))
-
 
 def ignorance(predicted, observed):
     """ where predicted is predicted and observed is observed """
@@ -258,14 +157,6 @@ def point_biserial_correlation(predicted, observed):
             observed[i]), np.squeeze(predicted[i])))
     return np.asarray(rs)
 
-def generalized_brier_skill_score(predicted, observed):
-    if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
-        return np.asarray([np.nan])
-    bs = np.nanmean((predicted - observed)**2, axis=0)
-    br = np.nanmean((observed.mean(axis=0).reshape(1, -1) - observed)**2, axis=0)
-    bss = 1 - (bs/br)
-    return np.nanmean(bss)
-
 
 def index_of_agreement(predicted, observed):
     """implements index of agreement metric"""
@@ -311,10 +202,4 @@ def kling_gupta_components(predicted, observed, sr=1, sa=1, sb=1, component='all
         return predicted.mean() / observed.mean()
     if component == 'r':
         return stats.pearsonr(np.squeeze(predicted).astype(float), np.squeeze(observed).astype(float))[0]
-    return np.asarray([predicted.std() / observed.std(), predicted.mean() / observed.mean(), stats.pearsonr(np.squeeze(predicted).astype(float), np.squeeze(observed).astype(float))[0]])
-
-
-flat_classification_metrics = [point_biserial_correlation, hansen_kuiper, ignorance,
-                               continuous_rank_probability_score, rank_probability_score, brier_score, generalized_roc]
-flat_regression_metrics = [kling_gupta_components, kling_gupta_efficiency, normalized_nash_sutcliffe_efficiency, nash_sutcliffe_efficiency,
-                           index_of_agreement, kendalls_tau, bayesian_information_criterion, akaike_information_criterion, log_likelihood]
+    return np.asarray([predicted.var() / observed.var(), predicted.mean() / observed.mean(), stats.pearsonr(np.squeeze(predicted).astype(float), np.squeeze(observed).astype(float))[0]])

@@ -1,5 +1,4 @@
 import xarray as xr
-from pathlib import Path
 import numpy as np
 import pandas as pd
 
@@ -9,7 +8,43 @@ def shape(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=No
 	return X.shape[list(X.dims).index(x_lat_dim)], X.shape[list(X.dims).index(x_lon_dim)], X.shape[list(X.dims).index(x_sample_dim)], X.shape[list(X.dims).index(x_feature_dim)]
 
 
+often_used = { 
+	'longitude': ['LONGITUDE', 'LONG', 'X', 'LON'],
+	'latitude': ['LATITUDE', 'LAT', 'LATI', 'Y'],
+	'sample': ['T', 'S', 'TIME', 'SAMPLES', 'SAMPLE', 'INITIALIZATION', 'INIT','D', 'DATE', "TARGET", 'YEAR', 'I', 'N'],
+	'feature': ['M', 'MODE', 'FEATURES', 'F', 'REALIZATION', 'MEMBER', 'Z', 'C', 'CAT', 'NUMBER', 'V', 'VARIABLE', 'VAR', 'P', 'LEVEL'],
+}
+
 def guess_coords(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
+	ret = {'latitude': x_lat_dim, 'longitude': x_lon_dim, 'sample': x_sample_dim, 'feature': x_feature_dim}
+	user_provided_labels = [ ret[i] for i in ret.keys() if ret[i] is not None]
+	labels_on_x = list(X.dims)
+	for label in user_provided_labels: 
+		assert label in labels_on_x, 'user-provided dimension ({}) not found on data-array: {}'.format(label, labels_on_x)
+	labels_on_x_minus_user_provided = [ label for label in labels_on_x if label not in user_provided_labels]
+	dims_left_to_find = [i for i in ret.keys() if ret[i] is None]
+	for label in labels_on_x_minus_user_provided:
+		for dim in dims_left_to_find: 
+			for candidate in often_used[dim][::-1]:
+				if label.upper() == candidate: 
+					ret[dim] = label
+					dims_left_to_find.pop(dims_left_to_find.index(dim))
+	assigned_labels = [ ret[i] for i in ret.keys() if ret[i] is not None]
+	unassigned_labels = [ label for label in labels_on_x if label not in assigned_labels]
+	if len(unassigned_labels) == 1 and len(dims_left_to_find) == 1: 
+		ret[dims_left_to_find[0]] = unassigned_labels[0]
+		unassign_labels.pop(0)
+		dims_left_to_find.pop(0)
+
+	if len(unassigned_labels) > 0: 
+		print('UNABLE TO ASSIGN FOLLOWING LABELS: {}'.format(unassigned_labels))
+	if len(dims_left_to_find) > 0: 
+		print('UNABLE TO FIND NAMES FOR FOLLOWING DIMS: {}'.format(dims_left_to_find))
+	return ret['latitude'], ret['longitude'], ret['sample'], ret['feature']
+
+
+
+def old_guess_coords(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
 	dims = [x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim]
 	dims = [dim for dim in dims if dim is not None]
 	dims.extend(list(X.dims))
@@ -170,17 +205,9 @@ def guess_coords_view_prob(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None,
 			if (m in dim.upper() or dim.upper() in m)  and ret['feat'] is None and assigned is False:
 				ret['feat'] = dim
 				assigned=True
-	return ret['lat'], ret['lon'], ret['samp'], ret['feat']
+	return ret['lat'], ret['lon'],  ret['feat']
 
 
-def to_xss(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
-	"""rename dims to labels required for xskillscore"""
-	return X.rename({
-		x_lat_dim: 'lat',
-		x_lon_dim: 'lon',
-		x_sample_dim: 'time',
-		x_feature_dim: 'member'
-	}).transpose('time', 'member', 'lat', 'lon')
 
 def check_transposed(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim):
 	"""Checks that X is transposed to [Lat, Lon, Sample, Feature] order"""
@@ -236,23 +263,4 @@ def check_xyt_compatibility(X, Y, x_lat_dim=None, x_lon_dim=None, x_sample_dim=N
 	assert xlon == ylon, "XCAST model training requires X and Y to have the same dimensions across XYT - longitude mismatch"
 	assert xsamp == ysamp, "XCAST model training requires X and Y to have the same dimensions across XYT - sample mismatch"
 
-def open_csvdataset(filename, delimiter='\t', name='variable'):
-	"""wrapper for pd.read_csv which gets you an xarray dataarray"""
-	assert Path(filename).absolute().is_file(), 'Cant find {}'.format(Path(filename).absolute())
-	df = pd.read_csv(filename, delimiter=delimiter)
-	return xr.DataArray(name=name, data=df[df.columns[1:]].values, dims=[df.columns[0], 'M'], coords={df.columns[0]: df[df.columns[0]].values, 'M': df.columns[1:].values} )
 
-
-### BASH Utilities
-def rmrf(dirn):
-	subfiles = [file for file in dirn.glob('*') if file.is_file()]
-	subdirs = [diro for diro in dirn.glob('*') if diro.is_dir()]
-
-	for file in subfiles:
-		file.unlink()
-	for subdir in subdirs:
-		try:
-			subdir.rmdir()
-		except:
-			rmrf(subdir)
-	dirn.rmdir()

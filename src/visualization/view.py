@@ -52,8 +52,8 @@ def lighten_color(color,amount):
 
 
 def view(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None, drymask=None, **plt_kwargs):
-    x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords_view_prob(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
-    assert x_sample_dim is None, 'View probabilistic requires you to select across sample dim to eliminate that dimension first'
+    x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+    assert x_sample_dim is None, 'View requires you to select across sample dim to eliminate that dimension first'
     assert x_feature_dim is None, 'View  requires you to select across featyre dim to eliminate that dimension first'
 
     #check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)

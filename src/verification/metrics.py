@@ -2,13 +2,9 @@ import numpy as np
 from scipy import stats
 from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
 from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, brier_score_loss, confusion_matrix
-from .base_verification import *
-from .flat_metrics import *
+from .base_verification import metric
+from .flat_metrics import kling_gupta_components, kling_gupta_efficiency, normalized_nash_sutcliffe_efficiency, nash_sutcliffe_efficiency, index_of_agreement, point_biserial_correlation, bayesian_information_criterion, kendalls_tau, hansen_kuiper, ignorance, rank_probability_score, brier_score, akaike_information_criterion, normalized_centered_root_mean_squared_error, bias_ratio, log_likelihood, generalized_receiver_operating_characteristics_score, logarithm_skill_score, ordinal_weighted_logarithm_score
 
-
-@metric
-def GREL(predicted, observed):
-	return grel(predicted, observed)
 
 @metric
 def OWLS(predicted, observed):
@@ -31,16 +27,8 @@ def RankProbabilityScore(predicted, observed):
 	return rank_probability_score(predicted, observed)
 
 @metric
-def ContinuousRankProbabilityScore(predicted, observed):
-	return continuous_rank_probability_score(predicted, observed)
-
-@metric
 def BiasRatio(predicted, observed):
 	return bias_ratio(predicted, observed)
-
-@metric
-def GeneralizedBSS(predicted, observed):
-	return generalized_brier_skill_score(predicted, observed)
 
 @metric
 def NCRMSE(predicted, observed):
@@ -79,18 +67,15 @@ def LogLikelihood(predicted, observed):
 	return np.asarray([ log_likelihood(predicted[:,i].reshape(-1,1), observed[:,i].reshape(-1,1) ) for i in range(predicted.shape[1]) ])
 
 @metric
-def RocAuc(predicted, observed):
+def AUC(predicted, observed):
 	if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
 		return np.asarray([np.nan])
 	ret =  roc_auc_score(predicted, observed, average=None, multi_class='ovr', labels=[0,1,2])
 	return ret
 
-
-
-
 @metric
-def GeneralizedROC(predicted, observed):
-	return generalized_roc(predicted, observed)
+def GROCS(predicted, observed):
+	return generalized_receiver_operating_characteristics_score(predicted, observed)
 
 @metric
 def F1(predicted, observed):
@@ -161,9 +146,3 @@ def PearsonP(predicted, observed):
 		return np.asarray([np.nan])
 	coef, p = stats.pearsonr(np.squeeze(predicted).astype(float), np.squeeze(observed).astype(float))
 	return p
-
-generalized_probabilistic_metrics = [ RankProbabilityScore, ContinuousRankProbabilityScore, Ignorance, GeneralizedROC, F1, AveragePrecision,  ]
-categorical_probabilistic_metrics = [RocAuc, BrierScore, PointBiserialCorrelation, HansenKuiper, PointBiserialCorrelation]
-
-single_output_deterministic_metrics = [PearsonP, Pearson, SpearmanP, Spearman, KlingGuptaEfficiency, NormalizedNashSutcliffeEfficiency, NashSutcliffeEfficiency, IndexOfAgreement, BayesianInformationCriterion, AkaikeInformationCriterion, LogLikelihood]
-multiple_output_deterministic_metrics = [KlingGuptaComponents, BayesianInformationCriterion, AkaikeInformationCriterion, LogLikelihood]

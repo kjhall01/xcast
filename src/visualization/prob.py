@@ -87,8 +87,9 @@ if 'NNCMAP' not in plt.colormaps():
 nn_norm = mpl.colors.BoundaryNorm(nbounds, nn_cmap.N//2)
 
 def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None, drymask=None):
-    x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords_view_prob(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+    x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
     assert x_sample_dim is None, 'View probabilistic requires you to select across sample dim to eliminate that dimension first'
+    
     #check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
     assert x_lat_dim in X.coords.keys(), 'XCast requires a dataset_lat_dim to be a coordinate on X'
     assert x_lon_dim in X.coords.keys(), 'XCast requires a dataset_lon_dim to be a coordinate on X'
@@ -103,9 +104,10 @@ def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_f
     argmax = X.fillna(-999).argmax(x_feature_dim) * mask
 
 
-    flat = mask.where(argmax != 2, other=X.isel(M=2))
-    flat = flat.where(argmax != 1, other=X.isel(M=1))
-    flat = flat.where(argmax != 0, other=X.isel(M=0)) * mask
+    dct1, dct2, dct3 = {x_feature_dim: 0}, {x_feature_dim: 1}, {x_feature_dim: 2}
+    flat = mask.where(argmax != 2, other=X.isel(**dct3))
+    flat = flat.where(argmax != 1, other=X.isel(**dct2))
+    flat = flat.where(argmax != 0, other=X.isel(**dct1)) * mask
 
 
     CS3 = flat.where(argmax == 2, other=np.nan).plot(ax=ax, add_colorbar=False, vmin=0.35, vmax=0.85, cmap=plt.get_cmap('ANCMAP', 10))

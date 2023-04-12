@@ -1,3 +1,2 @@
-from .utilities import check_all, guess_coords, check_xyt_compatibility, shape, guess_coords2
-from .progressbar import ProgressBar
+from .utilities import shape, guess_coords, guess_coords2, guess_coords_view_prob,  check_all
 from .chunking import align_chunks

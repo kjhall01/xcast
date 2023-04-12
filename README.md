@@ -30,20 +30,16 @@
     <img src="images/XCastLogo.png" alt="Logo" width="200" height="200">
   </a>
 
-  <h3 align="center">XCast: A Gridpoint-Wise Statistical Modeling Library for the Earth Sciences </h3>
+  <h3 align="center">XCast: A Climate Forecasting Toolkit  </h3>
   
-  XCast is a free and open source (passion) project by Kyle Hall & Nachiketa Acharya,  designed  to help Earth Scientists scale single-point-in-space regression approaches to spatial gridded data using the popular Earth Science data tool, Xarray. XCast is designed to be high-performance, intuitive, and easily extensible. It is our hope that XCast will serve to bridge the gap between the two-dimensional world of Python Data Science (Samples x Features), and the four-dimensional world of climate data (Samples x Features x Latitude x Longitude).
+  XCast is a free and open source climate forecasting toolkit written by Kyle Hall & Nachiketa Acharya, designed to help forecasters and earth scientists apply state-of-the-art postprocessing techniques to gridded data sets. 
     <br />
-    <a href="https://xcast-lib.github.io/"><strong>Explore the docs (Our Website) »</strong></a>
-    <br />
+    <a href="https://xcast-lib.github.io/"><strong>Explore the docs»</strong></a>
     <br />
     <a href="https://github.com/kjhall01/xcast/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/kjhall01/xcast/issues">Request Feature</a>
   </p>
 </p>
 
-**XCAST HAS A NEW HOME: https://xcast-lib.github.io/**
 
 <!-- TABLE OF CONTENTS -->
 <details open="open">
@@ -58,29 +54,29 @@
 </details>
 
 
-
-<!-- Why XCast -->
-## Why XCast?
-
-Numerous problems in the Earth Sciences are solved by finding statistical relationships (multiple-regression type) between variables measured at a given point in space, across time. Often, it's desirable to apply these approaches at many points in space, on a 'gridpoint-wise' basis. While Python has numerous [statistical](http://www.scipy.org/) and [machine learning](http://scikit-learn.org/stable/) libraries, none are designed to accomodate fitting more than one statistical model at once, i.e., at many points in space, as is required by this gridpoint-wise approach. 
-
-XCast enables users to apply Python's various statistical tools to spatial gridded data on a gridpoint-wise basis, without having to manually track and manage different dimensions, lists of model instances, or metadata. Built on [Xarray](http://xarray.pydata.org/en/stable/) and [Dask](https://dask.org/), two powerful data science libraries, XCast is capable of analyzing "Big-Data" that won't fit in RAM, and can be scaled to supercomputer clusters. It is designed to be extended to accomodate new statistical libraries easily, and to maximize synergy with the PanGEO stack and other Earth Science data analytics packages like XClim, ClimPred, and XSkillScore. 
-
 ## Installation 
-XCAST Is distributed on Anaconda , And can be installed like any other Python library  with the following command:
+XCast is distributed on Anaconda , and can be installed like any other Python library  with the following command:
 
 ```
 conda install -c conda-forge -c hallkjc01 xcast 
 ```
 
+to set up an XCast environment for use with Jupyter notebook, please use the following commands: 
+
+```
+conda create -n xcast_env -c conda-forge -c hallkjc01 xcast xarray netcdf4 jupyter ipykernel 
+conda activate xcast_env 
+python -m ipykernel install --name=xcast_env --user 
+```
+you'll then be able to select `xcast_env` from the list of available jupyter kernels in your jupyter notebook
+
 <!-- LICENSE -->
 ## License
-
 Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- CONTACT -->
 ## Contact
-Email: kyle.hall@noaa.gov (This is a side project, so it may take a while to get back to you)
+Please make an issue [here](https://github.com/kjhall01/xcast/issues). 
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->

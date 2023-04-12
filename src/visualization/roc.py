@@ -39,16 +39,8 @@ def view_roc(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x_sample_
     # Finally average it and compute AUC
     mean_tpr /= n_classes
 
-    fpr["macro"] = all_fpr
-    tpr["macro"] = mean_tpr
-    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
-
     # Plot all ROC curves
     plt.figure()
-    plt.plot(fpr["macro"], tpr["macro"],
-                label='macro-average ROC curve (area = {0:0.2f})'
-                ''.format(roc_auc["macro"]),
-                color='navy', linestyle=':', linewidth=4)
 
     colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
     for i, color in zip(range(n_classes), colors):

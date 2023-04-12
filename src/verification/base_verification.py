@@ -4,7 +4,6 @@ import numpy as np
 import dask.array as da
 import uuid
 from ..core.utilities import *
-from ..core.progressbar import *
 
 import dask.diagnostics as dd
 
@@ -52,7 +51,10 @@ def apply_func_to_block(x_data, y_data, func1=mean_squared_error, kwargs={}, n=1
 		for j in range(x_data.shape[1]):
 			x_train = reformat_vector(x_data[i, j, :, :], xfmt)
 			y_train = reformat_vector(y_data[i, j, :, :], yfmt)
-			x = np.squeeze(func1(x_train, y_train, **kwargs))
+			if np.isnan(np.min(x_train)) or np.isnan(np.min(y_train)):
+				x = np.asarray([np.nan for ii in range(n)]).squeeze()
+			else:
+				x = np.squeeze(func1(x_train, y_train, **kwargs))
 			ret[i].append(x)
 		#ret[i] = np.asarray(ret[i]).astype(float)
 	ret = np.asarray(ret)
@@ -80,11 +82,7 @@ def metric(func):
 			Y1 = Y1.chunk({y_lat_dim: max(Y1.shape[list(Y1.dims).index(y_lat_dim)] // lat_chunks, 1), y_lon_dim: max(Y1.shape[list(Y1.dims).index(y_lon_dim)] // lon_chunks,1), y_feature_dim: -1, y_sample_dim: -1})
 			
 		x_data, y_data = X1.data, Y1.data
-		if verbose:
-			with dd.ProgressBar():
-				scores = da.map_blocks(apply_func_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3,4], func1=func, kwargs=kwargs,n=n, xfmt=xfmt, yfmt=yfmt, meta=np.array((), dtype=float) ).compute()
-		else:
-			scores = da.map_blocks(apply_func_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3,4], func1=func,  kwargs=kwargs,n=n, xfmt=xfmt, yfmt=yfmt,  meta=np.array((), dtype=float)).compute()
-		return xr.DataArray(data=scores, dims=[x_lat_dim, x_lon_dim , x_feature_dim, 'SKILLDIM'], coords={x_lat_dim: X1.coords[x_lat_dim].values, x_lon_dim: X1.coords[x_lon_dim].values, x_feature_dim: [i for i in range(scores.shape[2])], 'SKILLDIM': [i for i in range(scores.shape[3])] } , attrs=X1.attrs, name = func.__name__)
+		scores = da.map_blocks(apply_func_to_block, x_data, y_data, drop_axis=[2,3], new_axis=[3,4], func1=func,  kwargs=kwargs,n=n, xfmt=xfmt, yfmt=yfmt,  meta=np.array((), dtype=float)).compute()
+		return xr.DataArray(data=scores, dims=[x_lat_dim, x_lon_dim , x_feature_dim, 'SKILLDIM'], coords={x_lat_dim: X1.coords[x_lat_dim].values, x_lon_dim: X1.coords[x_lon_dim].values, x_feature_dim: [i for i in range(scores.shape[2])], 'SKILLDIM': [i for i in range(scores.shape[3])] } , attrs=X1.attrs, name = func.__name__).mean('SKILLDIM').mean(x_feature_dim)
 	func1.__name__ = func.__name__
 	return func1

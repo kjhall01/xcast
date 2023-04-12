@@ -7,8 +7,6 @@ import numpy as np
 import uuid
 from pathlib import Path
 from ..core.utilities import *
-from ..core.progressbar import *
-from .missing_values import *
 
 
 def regrid(X, lons, lats, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, use_dask=True, feat_chunks=1, samp_chunks=1, kind='linear'):
@@ -31,7 +29,7 @@ def regrid(X, lons, lats, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_f
     if same:
         return X
 
-    X1 = fill_space_mean(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
+    X1 = X.fillna(X.mean([x_lat_dim, x_lon_dim]))#fill_space_mean(X, x_lat_dim, x_lon_dim,  x_sample_dim, x_feature_dim)
     X1 = X1.chunk({x_feature_dim: max(X.shape[list(X.dims).index(x_feature_dim)] // feat_chunks, 1), x_sample_dim: max(
         X.shape[list(X.dims).index(x_sample_dim)] // samp_chunks, 1)}).transpose(x_feature_dim, x_sample_dim, x_lat_dim, x_lon_dim)
 

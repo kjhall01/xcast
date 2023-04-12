@@ -6,15 +6,15 @@ import sys
 import os
 from ..core.utilities import check_all, check_xyt_compatibility, guess_coords, shape
 from ..core.chunking import align_chunks
-from ..core.progressbar import ProgressBar
 import dask.diagnostics as dd
-from ..flat_estimators.classifiers import NanClassifier, RFClassifier, POELMClassifier
-from ..flat_estimators.regressors import NanRegression
+from ..flat_estimators.wrappers import nan_classifier, rf_classifier, nan_regression
+from ..flat_estimators.einstein_elm import extreme_learning_machine
+from ..flat_estimators.einstein_epoelm import epoelm
 from sklearn.decomposition import PCA
 from collections.abc import Iterable
 
 
-def apply_fit_to_block(x_data, y_data, mme=POELMClassifier, ND=1, kwargs={}):
+def apply_fit_to_block(x_data, y_data, mme=epoelm, ND=1, kwargs={}):
     models = np.empty(
         (x_data.shape[0], x_data.shape[1], ND), dtype=np.dtype('O'))
     for i in range(x_data.shape[0]):
@@ -22,7 +22,7 @@ def apply_fit_to_block(x_data, y_data, mme=POELMClassifier, ND=1, kwargs={}):
             x_train = x_data[i, j, :, :]
             y_train = y_data[i, j, :, :]
             if np.isnan(np.min(x_train)) or np.isnan(np.min(y_train)):
-                temp_mme = NanClassifier
+                temp_mme = nan_classifier
             else:
                 temp_mme = mme
             if len(x_train.shape) < 2:
@@ -42,7 +42,7 @@ def apply_fit_x_to_block(x_data, mme=PCA, ND=1, kwargs={}):
         for j in range(x_data.shape[1]):
             x_train = x_data[i, j, :, :]
             if np.isnan(np.min(x_train)):
-                temp_mme = NanClassifier
+                temp_mme = nan_classifier
             else:
                 temp_mme = mme
             if len(x_train.shape) < 2:
@@ -68,7 +68,7 @@ def apply_predict_proba_to_block(x_data, models, kwargs={}):
             if len(x_train.shape) < 2:
                 x_train = x_train.reshape(-1, 1)
             for k in range(models.shape[2]):
-                if isinstance(models[i][j][k],  NanClassifier):
+                if isinstance(models[i][j][k],  nan_classifier):
                     ret[i, j, k, :, :] = models[i][j][k].predict_proba(
                         x_train, n_out=n_out, **kwargs)
                 else:
@@ -106,7 +106,7 @@ def apply_predict_to_block(x_data, models, kwargs={}):
             if len(x_train.shape) < 2:
                 x_train = x_train.reshape(-1, 1)
             for k in range(models.shape[2]):
-                if isinstance(models[i][j][k],  NanClassifier):
+                if isinstance(models[i][j][k],  nan_classifier):
                     ret1 = models[i][j][k].predict(
                         x_train, n_out=n_out, **kwargs)
                 else:
@@ -125,7 +125,7 @@ class BaseEstimator:
     and then sub-class's .model_type must be set to the constructor of the new method """
 
     def __init__(self, client=None, ND=1, lat_chunks=1, lon_chunks=1, verbose=False, **kwargs):
-        self.model_type = POELMClassifier
+        self.model_type = epoelm
         self.models_, self.ND = None, ND
         self.client, self.kwargs = client, kwargs
         self.verbose = verbose
@@ -267,7 +267,7 @@ class BaseEstimator:
         attrs = X1.attrs
         attrs.update(
             {'generated_by': 'XCast Classifier - {}'.format(self.model_type)})
-        return xr.DataArray(name='predicted_probability', data=results, coords=coords, dims=dims, attrs=attrs)
+        return xr.DataArray(name='predicted_probability', data=results, coords=coords, dims=dims, attrs=attrs).mean('ND')
 
     def transform(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True, **kwargs):
         if 'n_out' not in kwargs.keys():
@@ -315,7 +315,7 @@ class BaseEstimator:
         attrs = X1.attrs
         attrs.update(
             {'generated_by': 'XCast Classifier - {}'.format(self.model_type)})
-        return xr.DataArray(name='transformed', data=results, coords=coords, dims=dims, attrs=attrs)
+        return xr.DataArray(name='transformed', data=results, coords=coords, dims=dims, attrs=attrs).mean('ND')
 
     def predict(self, X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, rechunk=True, **kwargs):
         x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
@@ -372,4 +372,4 @@ class BaseEstimator:
         attrs = X1.attrs
         attrs.update(
             {'generated_by': 'XCast Classifier - {}'.format(self.model_type)})
-        return xr.DataArray(name='predicted', data=results, coords=coords, dims=dims, attrs=attrs)
+        return xr.DataArray(name='predicted', data=results, coords=coords, dims=dims, attrs=attrs).mean('ND')
