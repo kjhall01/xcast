@@ -1,4 +1,5 @@
 import numpy as np
+import xarray as xr
 from scipy import stats
 from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
 from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, brier_score_loss, confusion_matrix
@@ -25,6 +26,12 @@ def BrierScore(predicted, observed):
 @metric
 def RankProbabilityScore(predicted, observed):
 	return rank_probability_score(predicted, observed)
+
+def RPSS(predicted, observed):
+	clim = 0.333 * xr.ones_like(predicted).where(~np.isnan(predicted), other=np.nan)
+	clim_rps = RankProbabilityScore(clim, observed)
+	rps = RankProbabilityScore(predicted, observed)
+	return 1 - rps / clim_rps
 
 @metric
 def BiasRatio(predicted, observed):

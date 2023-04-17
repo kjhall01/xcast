@@ -2,6 +2,7 @@ import copy
 import numpy as np
 from sklearn.decomposition import PCA
 import statsmodels.api as sm
+from collections.abc import Iterable
 
 class extended_logistic_regression:
     def __init__(self, pca=-999, preprocessing='none', verbose=False, **kwargs):
@@ -27,7 +28,9 @@ class extended_logistic_regression:
                 x[:, i].reshape(-1, 1), quantile=quantile))
         res = np.stack(res, axis=0)
         return np.nanmean(res, axis=0)
-
+    
+    def predict(self, x, quantile=None):
+        raise NotImplementedError
 
 
 class multivariate_extended_logistic_regression:
@@ -66,7 +69,9 @@ class multivariate_extended_logistic_regression:
         self.model = model.fit()
 
 
-    def nonexceedance(self, x, threshold=0.5):
+    def nonexceedance(self, x, quantile=0.5):
+        if not isinstance(quantile, Iterable):
+            quantile = np.asarray([quantile])
         x2 = copy.deepcopy(x)
         if self.preprocessing == 'std':
             x2 = (copy.deepcopy(x) - self.mean) / \
@@ -74,27 +79,27 @@ class multivariate_extended_logistic_regression:
         if self.preprocessing == 'minmax':
             x2 = ((copy.deepcopy(x) - self.min) /
                   (self.max - self.min)) * 2 - 1  # scales to [-1, 1]
-        thresh = np.quantile(self.y, threshold, method='midpoint')
+        thresh = np.quantile(self.y, quantile, method='midpoint')
         x_an = np.hstack([x2, np.ones((x.shape[0], 1)) * thresh])
         # self.x_an.append(x_an)
         x_an = sm.add_constant(x_an, has_constant='add')
         return self.model.predict(x_an).reshape(-1, 1)
 
 
-    def exceedance(self, x, threshold=0.5):
-        return 1 - self.nonexceedance(x, threshold=threshold)
+    def exceedance(self, x, quantile=0.5):
+        return 1 - self.nonexceedance(x, quantile=quantile)
 
     def predict_proba(self, x, quantile=None):
         if quantile is None:
-            bn = self.nonexceedance(x, threshold=(1/3))
-            an = self.exceedance(x, threshold=(2/3))
+            bn = self.nonexceedance(x, quantile=(1/3))
+            an = self.exceedance(x, quantile=(2/3))
             nn = 1 - (bn + an)
             return np.hstack([bn, nn, an])
         else:
-            if isinstance(quantile, float):
-                quantile = [quantile]
-
-            quantile = np.array(quantile)
-            return np.hstack([self.nonexceedance(x, threshold=q) for q in quantile])
+            if not isinstance(quantile, Iterable):
+                quantile = np.asarray([quantile])
+            return np.hstack([self.nonexceedance(x, quantile=q) for q in quantile])
 
 
+    def predict(self, x, quantile=None):
+        raise NotImplementedError

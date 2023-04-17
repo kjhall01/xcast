@@ -1,10 +1,12 @@
 import scipy.stats as ss
-from ..core.utilities import check_all, guess_coords
+from ..core.utilities import check_all, guess_coords, check_xyt_compatibility
+from ..core.chunking import align_chunks
 import numpy as np
 import xarray as xr 
 import dask.array as da
 from .onehot import quantile
 import pandas as pd 
+from .spatial import regrid 
 
 def drymask(X, dry_threshold=0.001, quantile_threshold=0.33, method='quantile', x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
     x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
@@ -35,8 +37,26 @@ def reformat(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim
         X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
     check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-    X = X.assign_coords({x_lon_dim: [ i - 360 if i > 180 else i for i in X.coords[x_lon_dim].values] }).sortby(x_lon_dim).sortby(x_lat_dim)
+    X = X.assign_coords({x_lon_dim: np.asarray([ float(i - 360) if i > 180 else float(i) for i in X.coords[x_lon_dim].values]).astype(float) }).sortby(x_lon_dim).sortby(x_lat_dim)
     return X 
+
+def match(X, Y, lat_chunks=5, lon_chunks=5,  x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, y_lat_dim=None, y_lon_dim=None, y_sample_dim=None, y_feature_dim=None ):
+    x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(
+            X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+    y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim = guess_coords(
+        Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+    check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
+    check_all(Y, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+
+    # now reformat both of them
+    X = reformat(X, x_lat_dim=x_lat_dim, x_lon_dim=x_lon_dim, x_sample_dim=x_sample_dim, x_feature_dim=x_feature_dim)
+    Y = reformat(Y, x_lat_dim=y_lat_dim, x_lon_dim=y_lon_dim, x_sample_dim=y_sample_dim, x_feature_dim=y_feature_dim)
+
+    X = regrid(X, getattr(Y, y_lon_dim), getattr(Y, y_lat_dim))
+    X, Y = align_chunks(X, Y, lat_chunks=lat_chunks, lon_chunks=lon_chunks )
+    check_xyt_compatibility(X, Y, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim, y_lat_dim, y_lon_dim, y_sample_dim, y_feature_dim)
+    Y = Y.swap_dims({y_lon_dim: x_lon_dim, y_lat_dim: x_lat_dim, y_sample_dim: x_sample_dim}).drop(y_lon_dim).drop(y_lat_dim).drop(y_sample_dim).assign_coords({x_sample_dim: Y.coords[y_sample_dim].values, x_lat_dim: Y.coords[y_lat_dim].values, x_lon_dim: Y.coords[y_lon_dim].values})
+    return X, Y
 
 def remove_climatology(X, method='monthly', x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None):
     assert method.lower() in ['monthly'], 'invalid method, must be either daily or monthly '

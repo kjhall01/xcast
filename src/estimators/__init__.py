@@ -6,5 +6,5 @@ from .ensemble import Ensemble
 from .eof import EOF 
 from .pcr import PCR
 from .regressors import QRF, MLR, ELM, EPOELM
-
+from .tuning import DFS, score_decorator
 

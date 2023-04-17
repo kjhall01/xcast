@@ -181,6 +181,8 @@ class quantile_regression_forest:
         if quantile is None:
             qntl = [0.33, 0.67]
         else:
+            if not isinstance(quantile, Iterable):
+                quantile = np.asarray([quantile])
             qntl = quantile
         
         qntl = np.asarray(qntl).flatten()

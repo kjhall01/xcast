@@ -1,2 +1,2 @@
-from .utilities import shape, guess_coords, guess_coords2, guess_coords_view_prob,  check_all
+from .utilities import shape, guess_coords, check_all, load_parameters, save_parameters
 from .chunking import align_chunks
