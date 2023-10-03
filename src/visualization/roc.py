@@ -3,7 +3,7 @@ import numpy as np
 from scipy import interp
 from itertools import cycle
 from sklearn.metrics import roc_curve, auc
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 
 def view_roc(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x_sample_dim=None, y_lat_dim=None, y_lon_dim=None, y_feature_dim=None, y_sample_dim=None ):
     """where X is predicted, and Y is observed"""
@@ -39,18 +39,30 @@ def view_roc(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x_sample_
     # Finally average it and compute AUC
     mean_tpr /= n_classes
 
+    fpr["macro"] = all_fpr
+    tpr["macro"] = mean_tpr
+    roc_auc["macro"] = auc(fpr["macro"], tpr["macro"])
+
+    # Plot all ROC curves
     # Plot all ROC curves
     plt.figure()
-
+    #plt.plot(fpr["macro"], tpr["macro"],
+                #label='macro-average ROC curve (area = {0:0.2f})'
+                #''.format(roc_auc["macro"]),
+                #color='navy', linestyle=':', linewidth=4)
+    names=['Below Normal','Near Normal', 'Above Normal']
     colors = cycle(['aqua', 'darkorange', 'cornflowerblue'])
     for i, color in zip(range(n_classes), colors):
         plt.plot(fpr[i], tpr[i], color=color, lw=2,
-                label='ROC curve of class {0} (area = {1:0.2f})'
-                ''.format(X.coords[x_feature_dim].values[i], roc_auc[i]))
+                label='ROC curve of {0} (AUC = {1:0.2f})'
+                ''.format(names[i], roc_auc[i]))
 
-    plt.plot([0, 1], [0, 1], 'k--', lw=2)
+    #plt.plot([0, 1], [0, 1], 'g--', lw=2)#'0.8'
+    #plot(x, y, color='green', linestyle='dashed', marker='o',
+     #markerfacecolor='blue', markersize=12).
+    plt.plot([0, 1], [0, 1], color='0.8', linestyle='dashed', lw=1)
     plt.xlim([0.0, 1.0])
-    plt.ylim([0.0, 1.05])
+    plt.ylim([0.0, 1.0])
     plt.xlabel('False Positive Rate')
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curve')

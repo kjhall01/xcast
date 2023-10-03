@@ -18,21 +18,25 @@ def view_reliability(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x
     x_data = X.stack(point=(x_lat_dim, x_lon_dim, x_sample_dim)).transpose('point', x_feature_dim)
     y_data = Y.stack(point=(y_lat_dim, y_lon_dim, y_sample_dim)).transpose('point', y_feature_dim)
 
-
+    titles = ['Below Normal', 'Near Normal', 'Above Normal']
     fig, ax = plt.subplots(nrows=1, ncols=Y.shape[list(Y.dims).index(y_feature_dim)], figsize=(14,4) )
     for i, label in enumerate(Y.coords[y_feature_dim].values):
         xx = x_data.isel(**{x_feature_dim:i }).values.flatten()
         yy = y_data.isel(**{y_feature_dim:i }).values.flatten()
-        reliability_diagram(xx, yy, ax=ax[i], title=label, **kwargs)
+        reliability_diagram(xx, yy, ax=ax[i], title=titles[i], **kwargs)
 
 
 
 
-def reliability_diagram(ypred, t, title=None, tercile_skill_area=True,  perfect_reliability_line=True,   plot_hist=True, fig=None, ax=None, bin_minimum_pct=0.01, scores=True):
-    countnonnan = np.ones_like(ypred.squeeze())[~np.isnan(ypred.squeeze())].sum()
+def reliability_diagram(ypred, t, title=None, tercile_skill_area=False,  perfect_reliability_line=True,   plot_hist=True, fig=None, ax=None, bin_minimum_pct=0.01, scores=False):
     #assert len(ypred.shape) == 2 and ypred.shape[1] == 1, 'ypred must be of shape n_samples x 1'
     ypred = ypred * 0.9999999999999
     assert ypred.shape == t.shape, 'inconsistent shapes between ypred and t - {} vs {}'.format(ypred.shape, t.shape)
+    msk = np.where(~np.isnan(ypred+t))
+    ypred=ypred[msk]
+    t=t[msk]
+    countnonnan = np.ones_like(ypred).sum()
+
     epoelm_rel = []
     epoelm_hist = []
     base_rate = np.nanmean(t)
@@ -116,7 +120,8 @@ def reliability_diagram(ypred, t, title=None, tercile_skill_area=True,  perfect_
         disp_ratio = (figH * h) / (figW * w)
         data_ratio = sub(*ax.get_ylim()) / sub(*ax.get_xlim())
         angle = (180.0/np.pi)*np.arctan(disp_ratio / data_ratio)
-        ax.plot([0, 1], [0,1], lw=0.25, linestyle='dotted')
+        #ax.plot([0, 1], [0,1], lw=0.25, linestyle='dotted')# plt.plot([0, 1], [0, 1], color='0.8', linestyle='dashed', lw=1)
+        ax.plot([0, 1], [0,1], color='0.8', linestyle='dashed', lw=1)
         ax.text(0.66, 0.58, 'Perfect Reliability', rotation=angle)
 
     if scores:
