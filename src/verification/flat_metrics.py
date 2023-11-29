@@ -133,6 +133,30 @@ def hansen_kuiper(predicted, observed):
     return np.squeeze(np.asarray(ret))
 
 
+def heidke_skill_score(predicted, observed):
+    if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
+        return np.asarray([np.nan for i in range(predicted.shape[1])])
+    cm = confusion_matrix(np.squeeze(np.argmax(observed, axis=1)), np.squeeze(
+        np.argmax(predicted, axis=1)), labels=[i for i in range(observed.shape[1])])
+    ret = []
+    for i in range(observed.shape[1]):
+        try:
+            n, k = predicted.shape
+            total = np.sum(cm[i, :])
+            hits = cm[i, i]
+            misses = total - hits
+            negs = np.delete(cm, i, axis=0)
+            false_alarms = np.sum(negs[:, i])
+            correct_negatives = np.sum(negs) - false_alarms
+            expected_correct = (float(hits+ misses)*float(hits+ false_alarms))+ \
+                                          (float(correct_negatives+ misses)*float(correct_negatives+ false_alarms))/n
+            heidke_skill_score = (float(hits + correct_negatives) - float(expected_correct))/(float(n-expected_correct)) 
+            ret.append(heidke_skill_score)
+        except:
+            ret.append(np.nan)
+    return np.squeeze(np.asarray(ret))
+
+
 def kendalls_tau(predicted, observed):
     if np.isnan(np.min(predicted)) or np.isnan(np.min(observed)):
         return np.asarray([np.nan])
