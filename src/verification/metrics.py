@@ -4,7 +4,7 @@ from scipy import stats
 from sklearn.metrics import mean_absolute_error, mean_squared_error, mean_absolute_percentage_error
 from sklearn.metrics import roc_auc_score, average_precision_score, f1_score, brier_score_loss, confusion_matrix
 from .base_verification import metric
-from .flat_metrics import kling_gupta_components, kling_gupta_efficiency, normalized_nash_sutcliffe_efficiency, nash_sutcliffe_efficiency, index_of_agreement, point_biserial_correlation, bayesian_information_criterion, kendalls_tau, hansen_kuiper, ignorance, rank_probability_score, brier_score, akaike_information_criterion, normalized_centered_root_mean_squared_error, bias_ratio, log_likelihood, generalized_receiver_operating_characteristics_score, logarithm_skill_score, ordinal_weighted_logarithm_score
+from .flat_metrics import kling_gupta_components, kling_gupta_efficiency, normalized_nash_sutcliffe_efficiency, nash_sutcliffe_efficiency, index_of_agreement, point_biserial_correlation, bayesian_information_criterion, kendalls_tau, hansen_kuiper, ignorance, rank_probability_score, brier_score, akaike_information_criterion, normalized_centered_root_mean_squared_error, bias_ratio, log_likelihood, generalized_receiver_operating_characteristics_score, logarithm_skill_score, ordinal_weighted_logarithm_score, heidke_skill_score
 
 
 @metric
@@ -52,6 +52,10 @@ def PointBiserialCorrelation(predicted, observed):
 @metric
 def HansenKuiper(predicted, observed):
 	return hansen_kuiper(predicted, observed)
+
+@metric
+def HeidkeSkillScore(predicted, observed):
+	return heidke_skill_score(predicted, observed)
 
 @metric
 def MeanAbsolutePercentError(predicted, observed):
