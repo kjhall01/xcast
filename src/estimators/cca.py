@@ -41,7 +41,10 @@ class CCA:
         self.y_lat_dim, self.y_lon_dim = y_lat_dim, y_lon_dim
         ymask =  Y.mean(y_sample_dim, skipna=False).mean(y_feature_dim, skipna=False)
         self.ymask = xr.ones_like( ymask ).where(~np.isnan(ymask), other=np.nan)
-
+        
+        xmask =  X.mean(x_sample_dim, skipna=False).mean(x_feature_dim, skipna=False)
+        self.xmask = xr.ones_like( xmask ).where(~np.isnan(xmask), other=np.nan)
+        
         if self.latitude_weighting:
             self.xweights = np.cos(np.deg2rad(getattr(X, x_lat_dim)))
             self.xweights.name = "weights"
@@ -56,8 +59,8 @@ class CCA:
             #Y = Y * self.yweights
             yweights_flat = (Y.where(np.isnan(Y), other=1).transpose(y_sample_dim, y_lat_dim, y_lon_dim,  y_feature_dim) * self.yweights).mean(y_sample_dim, skipna=False).stack(point=(y_lat_dim, y_lon_dim,  y_feature_dim))
 
-        flat_x = X.transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim)).dropna('point', how='any')
-        flat_y = Y.transpose(y_sample_dim, y_lat_dim, y_lon_dim,  y_feature_dim).stack(point=(y_lat_dim, y_lon_dim,  y_feature_dim)).dropna('point', how='any')
+        flat_x = (self.xmask * X).transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim)).dropna('point', how='any')
+        flat_y = (self.ymask * Y).transpose(y_sample_dim, y_lat_dim, y_lon_dim,  y_feature_dim).stack(point=(y_lat_dim, y_lon_dim,  y_feature_dim)).dropna('point', how='any')
         self.xpoint = flat_x.point
         self.ypoint = flat_y.point
 
@@ -101,7 +104,7 @@ class CCA:
             X, x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-        flat_x = X.transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
+        flat_x = (self.xmask * X).transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
         flat_x = flat_x.sel(point=self.xpoint)
         x_data = flat_x.values
 
@@ -118,7 +121,7 @@ class CCA:
             X, x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-        flat_x = X.transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
+        flat_x = (self.xmask*X).transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
         flat_x = flat_x.sel(point=self.xpoint)
         x_data = flat_x.values
         x_eof_scores, x_cca_scores, y_eof_scores = self.ccareg.patterns(x_data)
@@ -133,7 +136,7 @@ class CCA:
             X, x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-        flat_x = X.transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
+        flat_x = (self.xmask * X).transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
         flat_x = flat_x.sel(point=self.xpoint)
         x_data = flat_x.values
 
@@ -150,7 +153,7 @@ class CCA:
             X, x_lat_dim, x_lon_dim, x_sample_dim,  x_feature_dim)
         check_all(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-        flat_x = X.transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
+        flat_x = (self.xmask*X).transpose(x_sample_dim, x_lat_dim, x_lon_dim,  x_feature_dim).stack(point=(x_lat_dim, x_lon_dim,  x_feature_dim))
         flat_x = flat_x.sel(point=self.xpoint)
         x_data = flat_x.values
 

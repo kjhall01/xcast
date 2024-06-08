@@ -67,3 +67,5 @@ def view_roc(X, Y, x_lat_dim=None, x_lon_dim=None, x_feature_dim=None, x_sample_
     plt.ylabel('True Positive Rate')
     plt.title('ROC Curve')
     plt.legend(loc="lower right")
+
+    

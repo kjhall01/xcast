@@ -33,7 +33,7 @@ def guess_coords(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature
 	unassigned_labels = [ label for label in labels_on_x if label not in assigned_labels]
 	if len(unassigned_labels) == 1 and len(dims_left_to_find) == 1: 
 		ret[dims_left_to_find[0]] = unassigned_labels[0]
-		unassign_labels.pop(0)
+		unassigned_labels.pop(0)
 		dims_left_to_find.pop(0)
 
 	if len(unassigned_labels) > 0: 

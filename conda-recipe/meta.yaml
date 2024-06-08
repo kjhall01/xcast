@@ -1,6 +1,6 @@
 package:
   name: xcast
-  version: "0.6.9"
+  version: "0.6.10"
 
 source:
   path: ../src
@@ -16,7 +16,7 @@ requirements:
     - pip
     - setuptools
   run:
-    - scipy
+    - scipy <=1.11.3
     - scikit-learn
     - xarray
     - dask

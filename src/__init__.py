@@ -6,6 +6,6 @@ from .verification import metric,  kling_gupta_efficiency,  index_of_agreement, 
 from .estimators import BaseEstimator, ACPAC, CCA, PCR, EOF, MELR, ELR, QRF, MLR, ELM, EPOELM, Ensemble, DFS, score_decorator
 from .visualization import view_probabilistic, view_reliability, reliability_diagram, view_taylor, view_roc, view
 
-__version__ = "0.6.9"
+__version__ = "0.6.10"
 __licence__ = "MIT"
 __author__ = "KYLE HALL (hallkjc01@gmail.com)"
