@@ -31,7 +31,8 @@
   </a>
 
   <h3 align="center">XCast: A Climate Forecasting Toolkit  </h3>
-  
+  <h3 align="center">**working on xcast v2 -- keep an eye out** </h3>
+
   XCast is a free and open source climate forecasting toolkit written by Kyle Hall & Nachiketa Acharya, designed to help forecasters and earth scientists apply state-of-the-art postprocessing techniques to gridded data sets. 
     <br />
     <a href="https://xcast-lib.github.io/"><strong>Explore the docs»</strong></a>
