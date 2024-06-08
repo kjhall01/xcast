@@ -51,7 +51,7 @@ def lighten_color(color,amount):
     return colorsys.hls_to_rgb(c[0], 1 - amount * (1 - c[1]), c[2])
 
 
-def view(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None, drymask=None, **plt_kwargs):
+def view(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', cross_dateline=False, coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None, drymask=None, **plt_kwargs):
     x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
     assert x_sample_dim is None, 'View requires you to select across sample dim to eliminate that dimension first'
     assert x_feature_dim is None, 'View  requires you to select across featyre dim to eliminate that dimension first'
@@ -61,8 +61,16 @@ def view(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=Non
     assert x_lon_dim in X.coords.keys(), 'XCast requires a dataset_lon_dim to be a coordinate on X'
     check_type(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
+    if cross_dateline:
+        proj = ccrs.PlateCarree(central_longitude=180)
+        X = X.assign_coords({x_lon_dim: [i+360 if i < 0 else i for i in X.coords[x_lon_dim].values]}).sortby(x_lon_dim)
+        X = X.assign_coords({x_lon_dim: X.coords[x_lon_dim].values - 180})
+    else:
+        proj = ccrs.PlateCarree()
+
+
     mask = X.where(np.isnan(X), other=1)
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 9), subplot_kw={'projection': ccrs.PlateCarree()})
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 9), subplot_kw={'projection': proj})
     CS3 = X.plot(ax=ax, add_colorbar=False, **plt_kwargs)
 
     if drymask is not None:
@@ -106,3 +114,4 @@ def view(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=Non
 
     if savefig is not None:
         plt.savefig(savefig, dpi=100)
+    return ax

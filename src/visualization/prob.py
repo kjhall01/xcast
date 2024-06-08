@@ -86,7 +86,7 @@ if 'NNCMAP' not in plt.colormaps():
 # define the bins and normalize
 nn_norm = mpl.colors.BoundaryNorm(nbounds, nn_cmap.N//2)
 
-def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None, drymask=None):
+def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_feature_dim=None, title='', cross_dateline=False, coastlines=False, borders=True, ocean=True, label=None, label_loc=(0.01, 0.98), savefig=None, drymask=None):
     x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim = guess_coords(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
     assert x_sample_dim is None, 'View probabilistic requires you to select across sample dim to eliminate that dimension first'
     
@@ -96,7 +96,15 @@ def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_f
     assert x_feature_dim in X.coords.keys(), 'XCast requires a dataset_feature_dim to be a coordinate on X'
     check_type(X, x_lat_dim, x_lon_dim, x_sample_dim, x_feature_dim)
 
-    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 9), subplot_kw={'projection': ccrs.PlateCarree()})
+    if cross_dateline:
+        proj = ccrs.PlateCarree(central_longitude=180)
+        X = X.assign_coords({x_lon_dim: [i+360 if i < 0 else i for i in X.coords[x_lon_dim].values]}).sortby(x_lon_dim)
+        X = X.assign_coords({x_lon_dim: X.coords[x_lon_dim].values - 180})
+    else:
+        proj = ccrs.PlateCarree()
+    
+
+    fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(7, 9), subplot_kw={'projection': proj})
     bounds = [40,45,50,55,60,65,70,75,80]
     nbounds = [40,45,50]
     mask = X.mean(x_feature_dim)
@@ -170,5 +178,9 @@ def view_probabilistic(X, x_lat_dim=None, x_lon_dim=None, x_sample_dim=None, x_f
 
     ax.set_title(title)
 
+        
+
     if savefig is not None:
         plt.savefig(savefig, dpi=100)
+        
+    return ax 
